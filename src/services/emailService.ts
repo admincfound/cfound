@@ -1,44 +1,54 @@
 /// <reference types="vite/client" />
 import emailjs from '@emailjs/browser';
 
-// These are loaded from environment variables (see .env.example)
-const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID; 
+const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY; 
+const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-export const sendApplication = async (data: any) => {
+export const sendApplicationEmail = async (data: { 
+  to_name: string; 
+  to_email: string; 
+  role_title: string; 
+  application_type: string;
+  user_name: string;
+  phone?: string;
+  skills?: string;
+  resume_url?: string;
+  portfolio_url?: string;
+  user_id?: string;
+}) => {
   if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
-    console.error('EmailJS credentials missing. Please set VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, and VITE_EMAILJS_PUBLIC_KEY.');
-    throw new Error('Email configuration is incomplete.');
+    console.warn("EmailJS credentials missing. Email not sent.");
+    return;
   }
 
   try {
-    const response = await emailjs.send(
+    // We send payload to emailJS. User can map these fields to templates.
+    const payload = {
+      to_name: data.user_name,
+      to_email: data.to_email,
+      role_title: data.role_title,
+      application_type: data.application_type,
+      reply_to: 'admin.cfound@gmail.com',
+      from_name: 'C Found',
+      phone: data.phone || 'N/A',
+      skills: data.skills || 'N/A',
+      resume_url: data.resume_url || 'N/A',
+      portfolio_url: data.portfolio_url || 'N/A',
+      user_id: data.user_id || 'N/A',
+      timestamp: new Date().toLocaleString(),
+      admin_email: 'admin.cfound@gmail.com'
+    };
+
+    const result = await emailjs.send(
       SERVICE_ID,
       TEMPLATE_ID,
-      {
-        to_email: 'admin.cfound@gmail.com',
-        from_name: data.fullName,
-        from_email: data.email,
-        phone: data.phone,
-        location: data.location,
-        college: data.college,
-        qualification: data.qualification,
-        year_of_study: data.yearOfStudy,
-        start_date: data.startDate,
-        domain: data.domain,
-        duration: data.duration,
-        skills: data.skills,
-        portfolio: data.portfolio || 'N/A',
-        experience: data.experience,
-        reason: data.reason,
-        resume_link: 'Attached via email (if configured)', // EmailJS attachments handled via dashboard or specific params
-      },
+      payload,
       PUBLIC_KEY
     );
-    return response;
+    return result;
   } catch (error) {
-    console.error('EmailJS Error:', error);
+    console.error("Email error:", error);
     throw error;
   }
 };

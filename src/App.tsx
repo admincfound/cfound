@@ -1,31 +1,100 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Navbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+
+// Public Pages
 import Home from './pages/Home';
-import About from './pages/About';
-import Services from './pages/Services';
 import Projects from './pages/Projects';
+import Internship from './pages/Internship';
 import Careers from './pages/Careers';
-import Technologies from './pages/Technologies';
-import Certificates from './pages/Certificates';
+import Blog from './pages/Blog';
 import Contact from './pages/Contact';
+import Login from './pages/Login';
+import Courses from './pages/Courses';
 
-// Scroll to top on route change
-function ScrollToTop() {
-  const { pathname } = useLocation();
+// User Section
+import Profile from './pages/Profile';
+import Dashboard from './pages/Dashboard';
+
+// Admin Panel
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ApplicationManagement from './pages/admin/ApplicationManagement';
+import UserLookup from './pages/admin/UserLookup';
+import ApiSettings from './pages/admin/ApiSettings';
+import AdminLayout from './components/AdminLayout';
+
+const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: 'admin' | 'user' }) => {
+  const { user, isAdmin, loading } = useAuth();
+  
+  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-[var(--bg-main)] text-[var(--text-main)] font-display text-xl font-bold italic tracking-tighter">AUTHENTICATING...</div>;
+  if (!user) return <Navigate to="/login" />;
+  
+  // User trying to access admin routes
+  if (role === 'admin' && !isAdmin) return <Navigate to="/dashboard" />;
+  
+  return <>{children}</>;
+};
+
+import { Toaster } from 'react-hot-toast';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+function AppContent() {
+  const location = useLocation();
+
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-  return null;
-}
+    const titles: { [key: string]: string } = {
+      '/': 'C FOUND | Premier Indian Game & Software Studio',
+      '/projects': 'Portfolio | C FOUND Digital Works',
+      '/internship': 'Training Labs | Graduate Engineering @ C FOUND',
+      '/careers': 'Fleet Careers | Join C FOUND India',
+      '/blog': 'Research Journal | C FOUND Insights',
+      '/courses': 'Academy | Skill Procurement Sector',
+      '/contact': 'Protocol Contact | C FOUND Studio',
+      '/login': 'Secure Access | C FOUND Console',
+      '/admin': 'Command Center | C FOUND Admin',
+      '/dashboard': 'User Terminal | C FOUND Dashboard',
+      '/profile': 'Engineer Profile | C FOUND System',
+    };
+    
+    const pageTitle = titles[location.pathname] || 'C FOUND | Digital Worlds';
+    document.title = pageTitle;
+  }, [location]);
 
-function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col selection:bg-cyan-glow/30">
+    <div className="min-h-screen bg-[var(--bg-main)]">
+      <Toaster position="bottom-right" toastOptions={{
+        className: 'glass text-[10px] font-black uppercase tracking-widest text-[var(--text-main)] border-[var(--border-main)] rounded-2xl',
+        duration: 4000,
+      }} />
       <Navbar />
-      <main className="flex-grow">
-        {children}
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/internship" element={<Internship />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+
+          {/* User Section */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+
+          {/* Admin Dashboard */}
+          <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
+          <Route path="/admin/applications" element={<ProtectedRoute role="admin"><AdminLayout><ApplicationManagement /></AdminLayout></ProtectedRoute>} />
+          <Route path="/admin/talent" element={<ProtectedRoute role="admin"><AdminLayout><UserLookup /></AdminLayout></ProtectedRoute>} />
+          <Route path="/admin/api-settings" element={<ProtectedRoute role="admin"><AdminLayout><ApiSettings /></AdminLayout></ProtectedRoute>} />
+          
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </main>
       <Footer />
     </div>
@@ -35,19 +104,11 @@ function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Router>
-      <ScrollToTop />
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/careers" element={<Careers />} />
-          <Route path="/technologies" element={<Technologies />} />
-          <Route path="/certificates" element={<Certificates />} />
-          <Route path="/contact" element={<Contact />} />
-        </Routes>
-      </Layout>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 }

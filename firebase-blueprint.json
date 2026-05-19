@@ -1,0 +1,149 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Extended user profile information for C Found members.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "bio": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "education": { "type": "array", "items": { "type": "object" } },
+        "experience": { "type": "array", "items": { "type": "object" } },
+        "portfolioLinks": { "type": "array", "items": { "type": "string" } },
+        "github": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "instagram": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Showcase of projects built by C Found.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["Game", "AI", "Website", "App", "Software"] },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "demoUrl": { "type": "string" },
+        "githubUrl": { "type": "string" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["title", "category", "description"]
+    },
+    "Opportunity": {
+      "title": "Job/Internship Opportunity",
+      "description": "Job and internship openings at C Found.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["job", "internship"] },
+        "location": { "type": "string" },
+        "salary": { "type": "string" },
+        "description": { "type": "string" },
+        "requirements": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["active", "closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "type", "status"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Industry-level training programs.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "duration": { "type": "string" },
+        "price": { "type": "string" },
+        "instructor": { "type": "string" },
+        "description": { "type": "string" },
+        "syllabus": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["title", "description"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "User applications for roles or courses.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userName": { "type": "string" },
+        "type": { "type": "string", "enum": ["job", "internship", "course"] },
+        "targetId": { "type": "string" },
+        "targetTitle": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "accepted", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "targetId", "status"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Announcements and notifications.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string", "enum": ["public", "member"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "type"]
+    },
+    "Post": {
+      "title": "Blog Post",
+      "description": "Lab insights and updates.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "hidden"] },
+        "author": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "status"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "User profiles and account settings."
+    },
+    "projects": {
+      "schema": "Project",
+      "description": "Portfolio projects."
+    },
+    "opportunities": {
+      "schema": "Opportunity",
+      "description": "Jobs and internships."
+    },
+    "courses": {
+      "schema": "Course",
+      "description": "Training courses."
+    },
+    "applications": {
+      "schema": "Application",
+      "description": "User applications tracking."
+    },
+    "announcements": {
+      "schema": "Announcement",
+      "description": "Company announcements."
+    },
+    "posts": {
+      "schema": "Post",
+      "description": "Blog posts and lab updates."
+    },
+    "system_config": {
+      "description": "System-wide settings and API configurations."
+    }
+  }
+}

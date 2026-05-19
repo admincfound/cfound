@@ -1,0 +1,482 @@
+import { useState, useEffect, FormEvent } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import { Briefcase, MapPin, DollarSign, Clock, CheckCircle2, ArrowRight, Edit3, Trash2, Plus, X, Search, Activity, AlertTriangle } from 'lucide-react';
+import { sendApplicationEmail } from '../services/emailService';
+import { getProfileCompletion } from '../lib/profileUtils';
+
+import { toast } from 'react-hot-toast';
+
+export default function Internship() {
+  const { user, profile, isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const [internships, setInternships] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editingInternship, setEditingInternship] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [userApplications, setUserApplications] = useState<Set<string>>(new Set());
+
+  const fetchInternships = async () => {
+    setLoading(true);
+    try {
+      const q = isAdmin 
+        ? query(collection(db, 'opportunities'), where('type', '==', 'internship'))
+        : query(collection(db, 'opportunities'), where('type', '==', 'internship'), where('status', 'in', ['active', 'featured']));
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setInternships(data);
+    } catch (err) {
+      console.error("Error fetching internships:", err);
+      setInternships([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserApplications = async () => {
+    if (!user) return;
+    try {
+      const q = query(collection(db, 'internshipApplications'), where('userId', '==', user.uid));
+      const snap = await getDocs(q);
+      const appliedIds = new Set(snap.docs.map(doc => doc.data().targetId));
+      setUserApplications(appliedIds);
+    } catch (err) {
+      console.error("Error fetching user applications:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchInternships();
+    fetchUserApplications();
+  }, [isAdmin, user]);
+
+  const handleApply = async (opp: any) => {
+    if (isAdmin) return;
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: '/internship' } } });
+      return;
+    }
+
+    const completion = getProfileCompletion(profile);
+    if (!completion.isComplete) {
+      toast.error("Complete your profile before applying.");
+      return;
+    }
+
+    if (userApplications.has(opp.id)) {
+      toast.error("You have already applied for this opening.");
+      return;
+    }
+
+    setApplyingId(opp.id);
+    try {
+      await addDoc(collection(db, 'internshipApplications'), {
+        userId: user.uid,
+        userEmail: user.email,
+        phone: profile.phone || '',
+        userName: profile.displayName,
+        skills: profile.skills || [],
+        resumeUrl: profile.resumeUrl || '',
+        portfolioUrl: profile.portfolioUrl || profile.githubUrl || profile.linkedinUrl || '',
+        type: 'internship',
+        targetId: opp.id,
+        targetTitle: opp.title,
+        status: 'pending',
+        appliedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      });
+      
+      setUserApplications(prev => new Set(prev).add(opp.id));
+
+      try {
+        await sendApplicationEmail({
+          to_name: profile.displayName,
+          to_email: user.email || '',
+          role_title: opp.title,
+          application_type: 'Internship',
+          user_name: profile.displayName,
+          phone: profile.phone || 'N/A',
+          skills: profile.skills ? profile.skills.join(', ') : 'N/A',
+          resume_url: profile.resumeUrl || 'N/A',
+          portfolio_url: profile.portfolioUrl || profile.githubUrl || profile.linkedinUrl || 'N/A',
+          user_id: user.uid,
+        });
+      } catch (e) {
+        console.error("Confirmation email failed", e);
+      }
+
+      toast.success(`Application submitted successfully for ${opp.title}.`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error submitting application.");
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (deletingId !== id) {
+      setDeletingId(id);
+      setTimeout(() => setDeletingId(null), 3000);
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'opportunities', id));
+      setDeletingId(null);
+      fetchInternships();
+      toast.success("Internship opening purged.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete opening. Access denied.");
+    }
+  };
+
+  const filtered = internships.filter(i => i.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const completion = getProfileCompletion(profile);
+
+  return (
+    <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
+      <div className="max-w-7xl mx-auto">
+        {!isAdmin && user && !completion.isComplete && (
+          <div className="mb-10 bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4 text-red-500">
+              <AlertTriangle size={24} />
+              <div>
+                <h3 className="font-bold text-lg">Incomplete Profile</h3>
+                <p className="text-sm opacity-80">Complete your profile before applying or enrolling. Missing: {completion.missing.length} section(s).</p>
+              </div>
+            </div>
+            <Link to="/profile" className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-red-600 transition-colors whitespace-nowrap">
+              Complete Profile
+            </Link>
+          </div>
+        )}
+
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20">
+          <div className="max-w-3xl">
+            <motion.span 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-primary-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-6 block"
+            >
+              Junior Engineering / Laboratories
+            </motion.span>
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-5xl md:text-8xl font-black font-display tracking-tight text-[var(--text-main)] mb-8 uppercase italic"
+            >
+              Junior <span className="text-primary-600">Internships.</span>
+            </motion.h1>
+            <p className="text-[var(--text-muted)] text-lg font-medium leading-relaxed">
+              Our training laboratories provide immersive experiences for junior engineers. Contribute to production-grade game engines and enterprise software under high-stack mentorship.
+            </p>
+          </div>
+          <div className="flex items-center gap-6">
+            {isAdmin && (
+              <button 
+                onClick={() => {
+                  setEditingInternship(null);
+                  setShowModal(true);
+                }}
+                className="btn-primary flex items-center gap-2 group"
+              >
+                <Plus size={16} className="group-hover:rotate-90 transition-transform" /> Create Opportunity
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-16 border-b border-[var(--border-main)] pb-10">
+           <div className="relative w-full md:w-96">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
+            <input 
+              type="text"
+              placeholder="Query laboratory database..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-[var(--text-main)]"
+            />
+          </div>
+          <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+            <Activity size={14} className="text-primary-600" /> Active Openings: {internships.length}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[1, 2, 3, 4].map(n => <div key={n} className="h-64 bg-[var(--bg-card)] rounded-[2.5rem] animate-pulse border border-[var(--border-main)]" />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-32 border border-dashed border-[var(--border-main)] rounded-[3rem] bg-[var(--bg-card)]/50">
+            <Briefcase size={48} className="mx-auto text-[var(--text-muted)] mb-6 opacity-20" />
+            <h3 className="text-xl font-bold font-display text-[var(--text-muted)] uppercase italic">No active opportunities in the laboratory sector.</h3>
+            {isAdmin && <p className="text-[10px] font-bold uppercase tracking-widest text-primary-500 mt-4">Create an opening to begin recruitment protocol.</p>}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <AnimatePresence mode="popLayout">
+              {filtered.map((opp, i) => (
+                <motion.div 
+                  layout
+                  key={opp.id}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className={`group p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2.5rem] hover:border-primary-600/30 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-8">
+                      <div className="flex items-center gap-3">
+                        <span className="px-3 py-1 bg-primary-600/10 text-primary-600 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                          <MapPin size={12} /> {opp.location}
+                        </span>
+                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
+                          opp.internshipType === 'paid' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                        }`}>
+                          {opp.internshipType || 'Free'}
+                        </span>
+                      </div>
+                      {isAdmin && (
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              setEditingInternship(opp);
+                              setShowModal(true);
+                            }}
+                            className="p-2.5 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-muted)] hover:text-primary-600 rounded-xl transition-all"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(opp.id)}
+                            className={`p-2.5 border rounded-xl transition-all ${deletingId === opp.id ? 'bg-red-600 text-white border-red-700 animate-pulse' : 'bg-[var(--bg-main)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-red-500'}`}
+                            title={deletingId === opp.id ? "Confirm Purge" : "Purge Opening"}
+                          >
+                            <Trash2 size={14} className={deletingId === opp.id ? 'animate-bounce' : ''} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                    <div className="space-y-4 mb-10">
+                      {(typeof opp.requirements === 'string' ? opp.requirements.split('\n') : opp.requirements)?.slice(0, 3).map((req: string, idx: number) => (
+                        <div key={idx} className="flex items-start gap-3 text-xs text-[var(--text-muted)]">
+                          <CheckCircle2 size={14} className="text-primary-600 mt-0.5 flex-shrink-0" />
+                          <span className="font-bold uppercase tracking-tight">{req}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-8 border-t border-[var(--border-main)]">
+                    <div className="text-xl font-black font-display text-[var(--text-main)] uppercase">
+                      {opp.internshipType === 'free' ? 'No Fee' : (opp.salary.startsWith('₹') ? opp.salary : `₹${opp.salary}`)}
+                    </div>
+                    
+                    {!isAdmin ? (
+                      <button 
+                        onClick={() => handleApply(opp)}
+                        disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
+                        className={`btn-primary flex items-center gap-2 px-8 py-3 transition-all ${
+                          userApplications.has(opp.id) 
+                            ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
+                            : !completion.isComplete 
+                              ? 'opacity-50 cursor-not-allowed grayscale' 
+                              : 'group'
+                        }`}
+                      >
+                        {applyingId === opp.id ? "Applying..." : userApplications.has(opp.id) ? "Applied" : !completion.isComplete ? "Profile Incomplete" : <>Apply Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" /></>}
+                      </button>
+                    ) : (
+                      <div className="text-[9px] font-black uppercase tracking-widest text-primary-500 bg-primary-500/5 px-4 py-2 rounded-xl border border-primary-500/10">
+                        Admin Mode
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      <InternshipModal 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)} 
+        internship={editingInternship} 
+        onSuccess={fetchInternships}
+      />
+    </div>
+  );
+}
+
+function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
+  const [formData, setFormData] = useState({
+    title: '',
+    location: 'Remote',
+    salary: '',
+    requirements: '',
+    internshipType: 'free',
+    status: 'active',
+    type: 'internship'
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (internship) {
+      setFormData({
+        ...internship,
+        requirements: Array.isArray(internship.requirements) ? internship.requirements.join('\n') : internship.requirements,
+        internshipType: internship.internshipType || 'free'
+      });
+    } else {
+      setFormData({
+        title: '',
+        location: 'Remote',
+        salary: '',
+        requirements: '',
+        internshipType: 'free',
+        status: 'active',
+        type: 'internship'
+      });
+    }
+  }, [internship, isOpen]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const data = {
+        ...formData,
+        requirements: formData.requirements.split('\n').filter(r => r.trim())
+      };
+
+      if (internship?.id) {
+        await updateDoc(doc(db, 'opportunities', internship.id), {
+          ...data,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        await addDoc(collection(db, 'opportunities'), {
+          ...data,
+          createdAt: serverTimestamp()
+        });
+      }
+      onSuccess();
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[3rem] overflow-hidden shadow-2xl"
+          >
+            <div className="p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
+              <div>
+                <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
+                  {internship ? 'Edit' : 'Create'} <span className="text-primary-600">Internship.</span>
+                </h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">Recruitment Management Mode</p>
+              </div>
+              <button 
+                onClick={onClose}
+                className="p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-10 space-y-6 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Position Title</label>
+                  <input 
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    placeholder="e.g., Graphics Engineering Intern"
+                    className="input-main"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Program Type</label>
+                  <select 
+                    value={formData.internshipType}
+                    onChange={(e) => setFormData({...formData, internshipType: e.target.value})}
+                    className="input-main"
+                  >
+                    <option value="free">Free Internship</option>
+                    <option value="paid">Paid Internship</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Deployment Location</label>
+                  <input 
+                    required
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    placeholder="Remote / Hybrid / On-site"
+                    className="input-main"
+                  />
+                </div>
+              </div>
+
+              {formData.internshipType === 'paid' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Compensation (INR)</label>
+                  <input 
+                    required
+                    value={formData.salary}
+                    onChange={(e) => setFormData({...formData, salary: e.target.value})}
+                    placeholder="₹10,000 / Mo"
+                    className="input-main"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Requirements (One per line)</label>
+                <textarea 
+                  required
+                  value={formData.requirements}
+                  onChange={(e) => setFormData({...formData, requirements: e.target.value})}
+                  placeholder="Advanced C++ Knowledge&#10;Git Mastery"
+                  className="input-main min-h-[150px] font-mono"
+                />
+              </div>
+
+              <div className="pt-6 border-t border-[var(--border-main)] flex justify-end gap-4">
+                <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
+                  {loading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus size={16} />}
+                  {internship ? 'Save Changes' : 'Create Opening'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}

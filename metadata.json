@@ -1,6 +1,8 @@
 {
-  "name": "C Found",
-  "description": "Premium technology development and career-focused internship platform. Building modern digital solutions and future developers.",
+  "name": "C FOUND",
+  "description": "Premier Indian technology studio specializing in high-performance game engines, bespoke software products, and mobile application ecosystems.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
