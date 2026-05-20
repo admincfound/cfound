@@ -33,7 +33,7 @@ export default function Footer() {
           <div>
              <h4 className="text-[10px] font-bold uppercase text-primary-600 tracking-widest mb-8">Ecosystem</h4>
              <ul className="space-y-4">
-                <li><Link to="/projects" className="text-sm font-semibold text-[var(--text-muted)] hover:text-primary-600 transition-colors">Portfolio</Link></li>
+                <li><Link to="/projects" className="text-sm font-semibold text-[var(--text-muted)] hover:text-primary-600 transition-colors">Projects</Link></li>
                 <li><Link to="/internship" className="text-sm font-semibold text-[var(--text-muted)] hover:text-primary-600 transition-colors">Internship</Link></li>
                 {isAdmin && (
                   <li><Link to="/blog" className="text-sm font-semibold text-[var(--text-muted)] hover:text-primary-600 transition-colors">Journal</Link></li>

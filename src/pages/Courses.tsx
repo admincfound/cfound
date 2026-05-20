@@ -169,7 +169,7 @@ export default function Courses() {
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         {!isAdmin && user && !completion.isComplete && (
-          <div className="mb-10 bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mb-6 bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4 text-red-500">
               <AlertTriangle size={24} />
               <div>
@@ -191,7 +191,7 @@ export default function Courses() {
           >
             <div className="flex-1">
               <span className="text-primary-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 block underline decoration-4 underline-offset-8">Academy / Skill Sector</span>
-              <h1 className="text-5xl md:text-8xl font-black font-display tracking-tight text-[var(--text-main)] mb-8 leading-none italic uppercase">Master the <span className="text-primary-600">Machine.</span></h1>
+              <h1 className="text-4xl md:text-8xl font-black font-display tracking-tight text-[var(--text-main)] mb-8 leading-none italic uppercase">Master the <span className="text-primary-600">Machine.</span></h1>
               <p className="text-[var(--text-muted)] max-w-xl text-lg font-medium italic opacity-80">Industrial-grade training protocols for the next generation of digital architects and systems engineers.</p>
             </div>
             {isAdmin && (
@@ -215,7 +215,7 @@ export default function Courses() {
               <button
                 key={c}
                 onClick={() => setFilter(c)}
-                className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`px-5 py-3 md:px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   filter === c 
                   ? 'bg-primary-600 text-white shadow-xl shadow-primary-600/30 border-primary-500' 
                   : 'bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border-main)] hover:border-primary-600/30'
@@ -239,17 +239,17 @@ export default function Courses() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[1, 2, 3].map(n => <div key={n} className="h-[450px] bg-[var(--bg-card)] rounded-[3rem] animate-pulse border border-[var(--border-main)]" />)}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:p-10">
+            {[1, 2, 3].map(n => <div key={n} className="h-[450px] bg-[var(--bg-card)] rounded-[2rem] md:rounded-[3rem] animate-pulse border border-[var(--border-main)]" />)}
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-40 border border-dashed border-[var(--border-main)] rounded-[4rem] bg-[var(--bg-card)]/30 backdrop-blur-sm">
             <BookOpen size={64} className="mx-auto text-[var(--text-muted)] mb-8 opacity-10" />
-            <h3 className="text-2xl font-black font-display text-[var(--text-muted)] uppercase italic tracking-tighter">Sector Offline / No Courses Detected</h3>
+            <h3 className="text-xl md:text-2xl font-black font-display text-[var(--text-muted)] uppercase italic tracking-tighter">Sector Offline / No Courses Detected</h3>
             {isAdmin && <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary-500 mt-6">Deploy new training modules to active directory.</p>}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10">
             <AnimatePresence mode="popLayout">
               {filtered.map((c, i) => (
                 <motion.div
@@ -259,18 +259,18 @@ export default function Courses() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: i * 0.1 }}
                   key={c.id}
-                  className={`group relative bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[3rem] overflow-hidden hover:border-primary-600/30 transition-all card-hover flex flex-col shadow-2xl ${c.status === 'hidden' ? 'opacity-50 grayscale' : ''}`}
+                  className={`group relative min-h-[520px] bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] overflow-hidden hover:border-primary-600/30 transition-all card-hover flex flex-col shadow-2xl ${c.status === 'hidden' ? 'opacity-50 grayscale' : ''}`}
                 >
-                  <div className="aspect-[16/10] overflow-hidden relative">
+                  <div className="relative h-56 overflow-hidden rounded-t-[2rem] md:rounded-t-[3rem]">
                     <img 
                       src={c.imageUrl || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800"} 
                       alt={c.title}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     
-                    <div className="absolute top-8 left-8 flex gap-2">
+                    <div className="absolute top-5 left-5 flex gap-2">
                        <span className="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest shadow-xl border border-primary-500/50">
                          {c.level || 'Intermediate'}
                        </span>
@@ -283,7 +283,7 @@ export default function Courses() {
                     </div>
 
                     {isAdmin && (
-                      <div className="absolute top-8 right-8 flex gap-3">
+                      <div className="absolute top-5 right-5 flex gap-3">
                         <button 
                           onClick={() => {
                             setEditingCourse(c);
@@ -303,21 +303,21 @@ export default function Courses() {
                     )}
                   </div>
 
-                  <div className="p-10 flex-1 flex flex-col">
+                  <div className="p-6 md:p-10 flex-1 flex flex-col">
                     <div className="flex items-center gap-6 mb-8 text-[var(--text-muted)] text-[9px] uppercase font-black tracking-widest opacity-60">
                        <div className="flex items-center gap-1.5"><Clock size={12} className="text-primary-600"/> {c.duration || '24h Content'}</div>
                        <div className="flex items-center gap-1.5"><Users size={12} className="text-primary-600"/> {c.students || '1.2k'} Logged</div>
                     </div>
                     
-                    <h3 className="text-2xl font-black font-display text-[var(--text-main)] mb-6 tracking-tight leading-tight group-hover:text-primary-600 transition-colors uppercase italic underline-offset-[12px] group-hover:underline decoration-primary-600/30">
+                    <h3 className="text-xl md:text-2xl font-black font-display text-[var(--text-main)] mb-6 tracking-tight leading-tight break-words group-hover:text-primary-600 transition-colors uppercase italic underline-offset-[12px] group-hover:underline decoration-primary-600/30">
                       {c.title}
                     </h3>
                     
-                    <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-10 line-clamp-3 font-medium opacity-80">
+                    <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-6 line-clamp-3 font-medium opacity-80">
                       {c.description}
                     </p>
 
-                    <div className="mt-auto pt-8 border-t border-[var(--border-main)] flex items-center justify-between">
+                    <div className="mt-auto pt-6 border-t border-[var(--border-main)] flex flex-col md:flex-row items-center justify-between gap-4">
                       <div className="flex items-center gap-1 text-yellow-400">
                         {[1, 2, 3, 4, 5].map(s => <Star key={s} size={10} fill="currentColor" />)}
                         <span className="text-[9px] font-black text-[var(--text-muted)] ml-2 uppercase tracking-tighter">(4.9/5)</span>
@@ -416,11 +416,11 @@ function CourseModal({ isOpen, onClose, course, onSuccess }: any) {
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
-            className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[3rem] overflow-hidden shadow-2xl"
+            className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl"
           >
-            <div className="p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
+            <div className="p-6 md:p-10 border-b border-[var(--border-main)] flex flex-col md:flex-row items-center justify-between gap-4 bg-[var(--bg-card)]">
               <div>
-                <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
+                <h2 className="text-xl md:text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
                   {course ? 'Recalibrate' : 'Deploy'} <span className="text-primary-600">Module.</span>
                 </h2>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">Curriculum Management Protocol</p>
@@ -430,7 +430,7 @@ function CourseModal({ isOpen, onClose, course, onSuccess }: any) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-10 space-y-6 overflow-y-auto max-h-[70vh]">
+            <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Module Title</label>
@@ -483,7 +483,7 @@ function CourseModal({ isOpen, onClose, course, onSuccess }: any) {
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-[var(--border-main)] flex justify-end gap-4">
+              <div className="pt-6 border-t border-[var(--border-main)] flex justify-end gap-4">
                 <button type="button" onClick={onClose} className="btn-secondary">Abort</button>
                 <button type="submit" disabled={loading} className="btn-primary flex items-center gap-3">
                   {loading ? <Zap size={16} className="animate-spin" /> : <ShieldCheck size={16} />}

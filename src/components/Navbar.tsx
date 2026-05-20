@@ -4,14 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Menu, X, LogOut, LayoutDashboard, ShieldCheck, User, Moon, Sun, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
+import logo from '../assets/logo.png';
 import { auth } from '../lib/firebase';
 
 const navLinks = [
-  { name: 'Portfolio', path: '/projects' },
+  { name: 'Projects', path: '/projects' },
   { name: 'Internship', path: '/internship' },
   { name: 'Careers', path: '/careers' },
   { name: 'Academy', path: '/courses' },
-  { name: 'Blog', path: '/blog' },
   { name: 'Contact', path: '/contact' },
 ];
 
@@ -19,7 +19,7 @@ const adminLinks = [
   { name: 'Console', path: '/admin' },
   { name: 'Talent', path: '/admin/talent' },
   { name: 'Intake', path: '/admin/applications' },
-  { name: 'Portfolio', path: '/projects' },
+  { name: 'Projects', path: '/projects' },
   { name: 'Journal', path: '/blog' },
   { name: 'Academy', path: '/courses' },
   { name: 'Security', path: '/admin/api-settings' },
@@ -35,7 +35,7 @@ export default function Navbar() {
   
   // Custom navigation based on role and section
   const userLinks = [
-    { name: 'Portfolio', path: '/projects' },
+    { name: 'Projects', path: '/projects' },
     { name: 'Internship', path: '/internship' },
     { name: 'Careers', path: '/careers' },
     { name: 'Academy', path: '/courses' },
@@ -46,19 +46,26 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-20 flex items-center border-b border-[var(--border-main)] bg-[var(--bg-main)]/80 backdrop-blur-md">
-      <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-primary-600/20">C</div>
-          <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-[var(--text-main)]">FOUND</span>
+      <div className="w-full max-w-[1400px] mx-auto flex items-center justify-between px-6 lg:px-8">
+        <Link to="/" className="flex items-center gap-3 group shrink-0">
+          <img
+            src={logo}
+            alt="C Found"
+            className="w-11 h-11 object-cover rounded-2xl shadow-lg"
+          />
+          <div className="flex flex-col leading-none">            
+            <span className="text-2xl font-black text-[var(--text-main)] tracking-tight">
+              C Found
+            </span>
+          </div>
         </Link>
-
         {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6 lg:gap-7">
           {currentLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors hover:text-primary-600 ${
+              className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors hover:text-primary-600 ${
                 location.pathname === link.path ? 'text-primary-600' : 'text-[var(--text-muted)]'
               }`}
             >
@@ -68,7 +75,7 @@ export default function Navbar() {
           {isAdmin && (
              <Link 
                to={isInAdminSection ? "/" : "/admin"} 
-               className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-600 px-5 py-2.5 bg-primary-600/5 rounded-xl flex items-center gap-2 hover:bg-primary-600/10 transition-all border border-primary-600/20 h-10 shadow-sm"
+               className="text-[10px] font-black uppercase tracking-[0.15em] text-primary-600 px-5 py-2.5 bg-primary-600/5 rounded-xl flex items-center gap-2 hover:bg-primary-600/10 transition-all border border-primary-600/20 h-10 shadow-sm"
              >
                {isInAdminSection ? (
                  <>View Site <ExternalLink size={14} /></>
@@ -80,7 +87,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
           <button 
             onClick={toggleTheme}
             className="p-2.5 text-[var(--text-muted)] hover:text-primary-600 hover:bg-[var(--bg-hover)] rounded-xl transition-all"
@@ -90,13 +97,13 @@ export default function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <Link to="/dashboard" className="btn-primary py-2 px-6 text-[10px]">
+              <Link to="/dashboard" className="btn-primary py-2 px-5 text-[9px] shrink-0">
                 DASHBOARD
               </Link>
               <div className="w-px h-6 bg-[var(--border-main)] mx-1" />
               <Link to="/profile" className="flex items-center gap-2 pr-4 pl-1 py-1 rounded-full hover:bg-[var(--bg-hover)] transition-all">
                 <img src={profile?.photoURL} alt="" className="w-8 h-8 rounded-full border border-[var(--border-main)]" referrerPolicy="no-referrer" />
-                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[100px]">{profile?.displayName?.split(' ')[0]}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[80px]">{profile?.displayName?.split(' ')[0]}</span>
               </Link>
               <button 
                 onClick={() => auth.signOut()}
@@ -107,7 +114,7 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link to="/login" className="btn-primary py-2 px-6 text-[10px]">
+            <Link to="/login" className="btn-primary py-2 px-5 text-[9px] shrink-0">
               SIGN IN
             </Link>
           )}
@@ -139,7 +146,7 @@ export default function Navbar() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
-                  className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${
+                  className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${
                     location.pathname === link.path ? 'text-primary-600' : 'text-[var(--text-muted)]'
                   }`}
                 >

@@ -44,6 +44,10 @@ import { useLocation } from 'react-router-dom';
 
 function AppContent() {
   const location = useLocation();
+  
+    useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     const titles: { [key: string]: string } = {

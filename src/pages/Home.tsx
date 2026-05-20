@@ -104,7 +104,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(var(--primary-600-rgb),0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(var(--primary-600-rgb),0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
         
         <div className="max-w-7xl mx-auto px-6 lg:px-10 relative">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-24">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-8 mb-24">
             <div className="max-w-2xl">
               <h2 className="text-[10px] font-black text-primary-600 uppercase tracking-[0.4em] mb-6">Expertise Domains</h2>
               <p className="text-5xl md:text-8xl font-black font-display tracking-tighter text-[var(--text-main)] mb-6 uppercase italic leading-none">High-Stack <br /><span className="text-primary-600">Operations.</span></p>
@@ -138,34 +138,34 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-24 lg:py-40">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="relative p-12 lg:p-32 rounded-[4rem] bg-[var(--bg-card)] border border-[var(--border-main)] overflow-hidden text-center shadow-2xl">
+          <div className="relative max-w-5xl mx-auto p-6 md:p-12 lg:p-32 rounded-[4rem] bg-[var(--bg-card)] border border-[var(--border-main)] overflow-hidden text-center shadow-2xl">
             <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-primary-600/5 rounded-full blur-[100px]" />
             <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-indigo-600/5 rounded-full blur-[100px]" />
             
             <motion.h2 
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              className="text-5xl lg:text-9xl font-black font-display tracking-tighter mb-10 uppercase italic leading-none"
+              className="text-4xl md:text-6xl lg:text-9xl font-black font-display tracking-tighter mb-10 uppercase italic leading-none"
             >
               Architect the <span className="text-primary-600">Future.</span>
             </motion.h2>
-            <p className="text-[var(--text-muted)] text-lg md:text-2xl mb-16 max-w-3xl mx-auto font-semibold leading-relaxed opacity-80 italic tracking-tight">
+            <p className="text-[var(--text-muted)] text-base md:text-2xl mb-10 md:mb-16 max-w-3xl mx-auto font-semibold leading-relaxed opacity-80 italic tracking-tight">
               {isAdmin 
                 ? "Manage Indian ecosystem operations, review candidates from the national grid, and curate the studio portfolio."
                 : "Join Bharat's elite network of engineers and visionaries. Start your journey with C Found today."}
             </p>
             
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-8">
               {isAdmin ? (
                 <>
-                  <Link to="/admin" className="btn-primary px-16 py-6 text-xs shadow-2xl">Console Entry</Link>
-                  <Link to="/admin/applications" className="btn-secondary px-16 py-6 text-xs">Review Queue</Link>
+                  <Link to="/admin" className="btn-primary px-6 py-3 md:px-10 md:py-5 text-xs shadow-2xl">Console Entry</Link>
+                  <Link to="/admin/applications" className="btn-secondary px-6 py-3 md:px-10 md:py-5 text-xs">Review Queue</Link>
                 </>
               ) : (
                 <>
-                  <Link to="/projects" className="btn-primary px-16 py-6 text-xs shadow-2xl">View Portfolio</Link>
-                  <Link to="/internship" className="btn-secondary px-16 py-6 text-xs">Graduate Labs</Link>
-                  <Link to="/careers" className="btn-secondary px-16 py-6 text-xs">Join the Fleet</Link>
+                  <Link to="/projects" className="btn-primary px-6 py-3 md:px-10 md:py-5 text-xs shadow-2xl">View Portfolio</Link>
+                  <Link to="/internship" className="btn-secondary px-6 py-3 md:px-10 md:py-5 text-xs">Graduate Labs</Link>
+                  <Link to="/careers" className="btn-secondary px-6 py-3 md:px-10 md:py-5 text-xs">Join the Fleet</Link>
                 </>
               )}
             </div>

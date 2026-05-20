@@ -42,7 +42,7 @@ export default function Contact() {
               <div className="space-y-10">
                 <ContactInfo icon={<Mail className="text-primary-600" />} label="Digital Communication" value="admin.cfound@gmail.com" />
                 <ContactInfo icon={<Globe className="text-primary-600" />} label="Social Operations" value="@cfound.in" />
-                <ContactInfo icon={<MapPin className="text-primary-600" />} label="Primary Studio" value="Bengalaru / Mumbai, India" />
+                <ContactInfo icon={<MapPin className="text-primary-600" />} label="Primary Studio" value=" Nagercoil, India" />
               </div>
 
               <div className="mt-20 pt-12 border-t border-[var(--border-main)] flex flex-wrap gap-12 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">

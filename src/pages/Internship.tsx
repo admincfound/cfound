@@ -173,7 +173,7 @@ export default function Internship() {
             <motion.h1 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-8xl font-black font-display tracking-tight text-[var(--text-main)] mb-8 uppercase italic"
+              className="text-4xl md:text-8xl font-black font-display tracking-tight text-[var(--text-main)] mb-8 uppercase italic"
             >
               Junior <span className="text-primary-600">Internships.</span>
             </motion.h1>
@@ -214,8 +214,8 @@ export default function Internship() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {[1, 2, 3, 4].map(n => <div key={n} className="h-64 bg-[var(--bg-card)] rounded-[2.5rem] animate-pulse border border-[var(--border-main)]" />)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+            {[1, 2, 3, 4].map(n => <div key={n} className="h-64 bg-[var(--bg-card)] rounded-[2rem] md:rounded-[2rem] md:rounded-[2.5rem] animate-pulse border border-[var(--border-main)]" />)}
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-32 border border-dashed border-[var(--border-main)] rounded-[3rem] bg-[var(--bg-card)]/50">
@@ -224,7 +224,7 @@ export default function Internship() {
             {isAdmin && <p className="text-[10px] font-bold uppercase tracking-widest text-primary-500 mt-4">Create an opening to begin recruitment protocol.</p>}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-8">
             <AnimatePresence mode="popLayout">
               {filtered.map((opp, i) => (
                 <motion.div 
@@ -233,7 +233,7 @@ export default function Internship() {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`group p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2.5rem] hover:border-primary-600/30 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                  className={`group p-5 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-4 mb-8">
@@ -268,7 +268,7 @@ export default function Internship() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                    <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
                     <div className="space-y-4 mb-10">
                       {(typeof opp.requirements === 'string' ? opp.requirements.split('\n') : opp.requirements)?.slice(0, 3).map((req: string, idx: number) => (
                         <div key={idx} className="flex items-start gap-3 text-xs text-[var(--text-muted)]">
@@ -279,7 +279,7 @@ export default function Internship() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-8 border-t border-[var(--border-main)]">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-6 border-t border-[var(--border-main)]">
                     <div className="text-xl font-black font-display text-[var(--text-main)] uppercase">
                       {opp.internshipType === 'free' ? 'No Fee' : (opp.salary.startsWith('₹') ? opp.salary : `₹${opp.salary}`)}
                     </div>
@@ -288,7 +288,7 @@ export default function Internship() {
                       <button 
                         onClick={() => handleApply(opp)}
                         disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                        className={`btn-primary flex items-center gap-2 px-8 py-3 transition-all ${
+                        className={`btn-primary flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
                           userApplications.has(opp.id) 
                             ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                             : !completion.isComplete 
@@ -392,9 +392,9 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
             exit={{ opacity: 0, scale: 1.05 }}
             className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[3rem] overflow-hidden shadow-2xl"
           >
-            <div className="p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
+            <div className="p-5 md:p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
               <div>
-                <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
+                <h2 className="text-xl md:text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
                   {internship ? 'Edit' : 'Create'} <span className="text-primary-600">Internship.</span>
                 </h2>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">Recruitment Management Mode</p>
@@ -407,7 +407,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-10 space-y-6 overflow-y-auto max-h-[70vh]">
+            <form onSubmit={handleSubmit} className="p-5 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Position Title</label>

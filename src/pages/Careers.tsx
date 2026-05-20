@@ -161,7 +161,7 @@ export default function Careers() {
           </div>
         )}
 
-        <div className="mb-24 flex flex-col md:flex-row items-center md:items-end justify-between gap-8">
+        <div className="mb-24 flex flex-col md:flex-row items-center md:items-end justify-between gap-4 md:gap-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -205,14 +205,14 @@ export default function Careers() {
         </div>
 
         {/* Benefits Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-32">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-32">
            <BenefitCard icon={<Zap size={24} />} title="Growth Mindset" desc="Structured career paths and mentorship from industry veterans." />
            <BenefitCard icon={<Target size={24} />} title="Global Impact" desc="Contribute to high-performance systems used at planetary scale." />
            <BenefitCard icon={<ShieldCheck size={24} />} title="Premium Benefits" desc="Competitive compensation, health coverage, and flexible work environments." />
         </div>
 
         <div className="space-y-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-2 md:px-10">
             <h2 className="text-3xl font-black font-display text-[var(--text-main)] flex items-center gap-4 uppercase italic">
               Open Positions
             </h2>
@@ -235,15 +235,15 @@ export default function Careers() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`group p-8 md:p-12 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col md:flex-row items-center justify-between gap-8 card-hover shadow-2xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                    className={`group p-5 md:p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6 card-hover shadow-2xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
-                    <div className="flex items-center gap-10 flex-1">
-                      <div className="w-20 h-20 rounded-[2rem] bg-primary-600/10 flex items-center justify-center text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-all shadow-xl group-hover:rotate-6">
+                    <div className="flex items-center gap-5 md:gap-6 md:p-10 flex-1">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-[2rem] bg-primary-600/10 flex items-center justify-center text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-all shadow-xl group-hover:rotate-6">
                          <Briefcase size={32} />
                       </div>
                       <div>
-                        <h3 className="text-2xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
-                        <div className="flex flex-wrap items-center gap-8 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-6">
+                        <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
+                        <div className="flex flex-wrap items-center gap-4 md:gap-8 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-6">
                           <span className="flex items-center gap-2"><MapPin size={16} className="text-primary-600"/> {opp.location}</span>
                           <span className="flex items-center gap-2"><IndianRupee size={16} className="text-primary-600"/> {opp.compModel === 'revenue' ? 'Revenue Share' : (opp.salary?.startsWith('₹') ? opp.salary : `₹${opp.salary}`)}</span>
                           <span className="flex items-center gap-2 transition-colors group-hover:text-primary-600"><Clock size={16} className="text-primary-600"/> {opp.timing || opp.type}</span>
@@ -281,7 +281,7 @@ export default function Careers() {
                         <button 
                           onClick={() => handleApply(opp)}
                           disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                          className={`btn-primary w-full md:w-auto px-12 py-5 flex items-center justify-center gap-3 transition-all ${
+                          className={`btn-primary w-full md:w-auto px-6 py-3 md:px-12 md:py-5 flex items-center justify-center gap-3 transition-all ${
                             userApplications.has(opp.id) 
                               ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                               : !completion.isComplete 
@@ -402,9 +402,9 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
-            className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[3rem] overflow-hidden shadow-2xl"
+            className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl"
           >
-            <div className="p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
+            <div className="p-6 md:p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
               <div>
                 <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
                   {job ? 'Edit' : 'Create'} <span className="text-primary-600">Position.</span>
@@ -419,7 +419,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-10 space-y-6 overflow-y-auto max-h-[70vh]">
+            <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Position Title</label>
@@ -533,7 +533,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
 
 function BenefitCard({ icon, title, desc }: any) {
   return (
-    <div className="p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[3rem] hover:border-primary-600/30 transition-all card-hover group shadow-2xl">
+    <div className="p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all card-hover group shadow-2xl">
       <div className="w-16 h-16 bg-primary-600/10 rounded-2xl flex items-center justify-center text-primary-600 mb-8 transition-all group-hover:bg-primary-600 group-hover:text-white group-hover:rotate-6 shadow-lg shadow-primary-600/5">{icon}</div>
       <h4 className="text-2xl font-black font-display text-[var(--text-main)] mb-4 uppercase italic tracking-tight">{title}</h4>
       <p className="text-[var(--text-muted)] text-sm font-medium leading-relaxed opacity-80">{desc}</p>

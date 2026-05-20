@@ -84,9 +84,26 @@
 }
 
 .btn-secondary {
-  @apply px-8 py-3 bg-white dark:bg-[#1a1a1c] border border-[var(--border-main)] text-[var(--text-main)] font-bold rounded-2xl hover:bg-[var(--bg-hover)] transition-all active:scale-95 shadow-sm text-xs uppercase tracking-widest;
+  @apply px-6 md:px-8 py-3 bg-[#111112] hover:bg-primary-500 text-white font-black rounded-2xl transition-all shadow-[0_10px_30px_rgba(37,99,235,0.2)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.3)] active:scale-95 text-[10px] uppercase tracking-widest italic;
 }
 
 .input-main {
   @apply w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-primary-500 transition-all text-[var(--text-main)];
+}
+
+/* Safe Mobile Fix */
+
+html,
+body{
+  overflow-x:hidden;
+  max-width:100%;
+}
+
+section{
+  max-width:100%;
+}
+
+img{
+  max-width:100%;
+  height:auto;
 }

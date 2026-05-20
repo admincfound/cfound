@@ -76,9 +76,9 @@ export default function Dashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'accepted':
-      case 'enrolled': return 'text-green-500 bg-green-500/10 border-green-500/20';
+      case 'enrolled': return 'text-green-500 bg-green-500/5 border-green-500/20';
       case 'rejected': return 'text-red-500 bg-red-500/10 border-red-500/20';
-      case 'reviewed': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+      case 'reviewed': return 'text-blue-500 bg-blue-500/5 border-blue-500/20';
       default: return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
     }
   };
@@ -97,18 +97,18 @@ export default function Dashboard() {
     : applications.filter(a => a.category === activeTab);
 
   return (
-    <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
+    <div className="pt-24 md:pt-32 pb-20 md:pb-32 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12">
           
           {/* Left Sidebar - Profile Summary */}
           <div className="lg:col-span-4 space-y-8">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[3rem] shadow-2xl relative overflow-hidden group"
+              className="p-5 md:p-5 md:p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[3rem] shadow-2xl relative overflow-hidden group"
             >
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <div className="absolute top-0 right-0 p-5 md:p-5 md:p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                 <ShieldCheck size={120} className="text-primary-600" />
               </div>
               
@@ -117,7 +117,7 @@ export default function Dashboard() {
                   <img 
                     src={user?.photoURL || ''} 
                     alt="" 
-                    className="w-24 h-24 rounded-[2rem] object-cover border-2 border-primary-600/30 p-1 bg-[var(--bg-main)]"
+                    className="w-24 h-24 rounded-[1.5rem] md:rounded-[2rem] object-cover border-2 border-primary-600/30 p-1 bg-[var(--bg-main)]"
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute -bottom-2 -right-2 p-2 bg-primary-600 text-white rounded-xl shadow-lg border-2 border-[var(--bg-main)]">
@@ -125,9 +125,9 @@ export default function Dashboard() {
                   </div>
                 </div>
                 
-                <h1 className="text-3xl font-black font-display text-[var(--text-main)] mb-2 tracking-tight uppercase italic">{profile?.displayName}</h1>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-8 opacity-60 flex items-center gap-2">
-                  <Activity size={12} className="text-primary-600 animate-pulse" /> Signal Active / Identity Verified
+                <h1 className="text-xl md:text-2xl md:text-xl md:text-2xl md:text-3xl font-black font-display text-[var(--text-main)] mb-2 tracking-tight uppercase italic">{profile?.displayName}</h1>
+                <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-8 opacity-60 flex items-center gap-2">
+                  <Activity size={10} className="text-primary-600 animate-pulse" /> Signal Active / Identity Verified
                 </p>
 
                 <div className="space-y-3">
@@ -154,40 +154,40 @@ export default function Dashboard() {
           {/* Right Main Content */}
           <div className="lg:col-span-8 space-y-12">
             {/* Header Stats */}
-            <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
-               <div className="p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-blue-500/30 transition-all">
+            <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
+               <div className="p-4 md:p-4 md:p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-blue-500/30 transition-all">
                   <div className="text-[9px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 opacity-60">Internships</div>
-                  <div className="text-3xl font-black font-display italic text-blue-500">{internsCount}</div>
+                  <div className="text-xl md:text-2xl md:text-xl md:text-2xl md:text-3xl font-black font-display italic text-blue-500">{internsCount}</div>
                </div>
-               <div className="p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-green-500/30 transition-all">
+               <div className="p-4 md:p-4 md:p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-green-500/30 transition-all">
                   <div className="text-[9px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 opacity-60">Jobs</div>
-                  <div className="text-3xl font-black font-display italic text-green-500">{jobsCount}</div>
+                  <div className="text-xl md:text-2xl md:text-xl md:text-2xl md:text-3xl font-black font-display italic text-green-500">{jobsCount}</div>
                </div>
-               <div className="p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-purple-500/30 transition-all">
+               <div className="p-4 md:p-4 md:p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-purple-500/30 transition-all">
                   <div className="text-[9px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 opacity-60">Academy</div>
-                  <div className="text-3xl font-black font-display italic text-purple-500">{academyCount}</div>
+                  <div className="text-xl md:text-2xl md:text-xl md:text-2xl md:text-3xl font-black font-display italic text-purple-500">{academyCount}</div>
                </div>
-               <div className="p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-yellow-500/30 transition-all">
+               <div className="p-4 md:p-4 md:p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-yellow-500/30 transition-all">
                   <div className="text-[9px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 opacity-60">Pending</div>
-                  <div className="text-3xl font-black font-display italic text-yellow-500">{pending}</div>
+                  <div className="text-xl md:text-2xl md:text-xl md:text-2xl md:text-3xl font-black font-display italic text-yellow-500">{pending}</div>
                </div>
-               <div className="p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-green-500/50 transition-all">
+               <div className="p-4 md:p-4 md:p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm text-center group hover:border-green-500/50 transition-all">
                   <div className="text-[9px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 opacity-60">Accepted</div>
-                  <div className="text-3xl font-black font-display italic text-green-600">{accepted}</div>
+                  <div className="text-xl md:text-2xl md:text-xl md:text-2xl md:text-3xl font-black font-display italic text-green-600">{accepted}</div>
                </div>
             </section>
 
             {/* Application Pipeline */}
             <section>
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
-                 <h2 className="text-3xl font-black font-display uppercase italic tracking-tighter text-[var(--text-main)] shrink-0">My <span className="text-primary-600">Pipeline.</span></h2>
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-3 md:p-4 md:p-6">
+                 <h2 className="text-xl md:text-2xl md:text-xl md:text-2xl md:text-3xl font-black font-display uppercase italic tracking-tighter text-[var(--text-main)] shrink-0">My <span className="text-primary-600">Pipeline.</span></h2>
                  
-                 <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-main)] p-1.5 rounded-2xl overflow-x-auto no-scrollbar">
+                 <div className="flex w-full md:w-fit items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-main)] p-1 rounded-2xl overflow-x-auto no-scrollbar">
                    {['All', 'Internship', 'Job', 'Academy'].map((tab) => (
                      <button
                        key={tab}
                        onClick={() => setActiveTab(tab)}
-                       className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                       className={`px-3 md:px-6 py-2 text-[9px] md:text-[10px] rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                          activeTab === tab 
                          ? 'bg-primary-600 text-white shadow-lg' 
                          : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'
@@ -199,13 +199,13 @@ export default function Dashboard() {
                  </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                  {loading ? (
-                    <div className="p-20 text-center animate-pulse text-[var(--text-muted)] font-black text-[10px] uppercase tracking-[0.3em] bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem]">Loading Records...</div>
+                    <div className="p-20 text-center animate-pulse text-[var(--text-muted)] font-black text-[10px] uppercase tracking-[0.3em] bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.5rem] md:rounded-[2rem]">Loading Records...</div>
                  ) : filteredApps.length === 0 ? (
-                    <div className="p-24 text-center bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem]">
+                    <div className="p-10 md:p-24 text-center bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.5rem] md:rounded-[2rem]">
                       <Briefcase size={48} className="mx-auto text-[var(--text-muted)] mb-6 opacity-10" />
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-8 opacity-60">
+                      <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-8 opacity-60">
                         {activeTab === 'All' ? 'No applications found.' : `No ${activeTab.toLowerCase()} applications found.`}
                       </p>
                       <Link 
@@ -216,48 +216,48 @@ export default function Dashboard() {
                       </Link>
                     </div>
                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-3">
                       {filteredApps.map((app) => (
                         <motion.div 
                           layout
                           key={app.id} 
-                          className="group bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] p-6 hover:border-primary-600/30 transition-all flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
+                          className="group bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.25rem] md:rounded-[2rem] px-3 py-3 md:px-6 md:py-5 hover:border-primary-600/20 transition-all flex flex-col md:flex-row items-center justify-between gap-3 relative overflow-hidden"
                         >
                           <div className={`absolute top-0 left-0 w-1 h-full ${
                              app.category === 'Internship' ? 'bg-blue-500' :
                              app.category === 'Job' ? 'bg-green-500' : 'bg-purple-500'
                           }`} />
                           
-                          <div className="flex items-center gap-6 flex-1 w-full">
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
-                               app.category === 'Internship' ? 'bg-blue-500/10' :
-                               app.category === 'Job' ? 'bg-green-500/10' : 'bg-purple-500/10'
+                          <div className="flex items-start gap-3 flex-1 w-full min-w-0">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                               app.category === 'Internship' ? 'bg-blue-500/5' :
+                               app.category === 'Job' ? 'bg-green-500/5' : 'bg-purple-500/5'
                             }`}>
                               {getCategoryIcon(app.category)}
                             </div>
                             
-                            <div className="flex-1 min-w-0">
-                               <div className="flex items-center gap-3 mb-1">
-                                 <h3 className="text-lg font-black uppercase italic tracking-tighter text-[var(--text-main)] truncate">{app.targetTitle || app.jobTitle || 'Opportunity'}</h3>
-                                 <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${getStatusColor(app.status)}`}>
+                            <div className="flex-1 min-w-0 pr-2">
+                               <div className="flex flex-col sm:flex-row sm:items-center items-start gap-2 md:gap-2 mb-1.5 min-w-0">
+                                 <h3 className="text-[15px] md:text-lg font-black uppercase italic tracking-tight text-[var(--text-main)] whitespace-nowrap overflow-hidden text-ellipsis pr-1">{app.targetTitle || app.jobTitle || 'Opportunity'}</h3>
+                                 <span className={`inline-flex items-center w-fit px-2 py-[3px] rounded-md text-[7px] md:text-[8px] leading-none font-black uppercase tracking-widest border ${getStatusColor(app.status)}`}>
                                    {app.status}
                                  </span>
                                </div>
-                               <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-4">
-                                  <span className="flex items-center gap-1.5"><Briefcase size={12} className="opacity-50" /> C FOUND</span>
-                                  <span className="flex items-center gap-1.5"><Clock size={12} className="opacity-50" /> {new Date(app.createdAt || app.appliedAt).toLocaleDateString()}</span>
+                               <p className="text-[9px] md:text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-3">
+                                  <span className="flex items-center gap-1"><Briefcase size={10} className="opacity-50" /> C FOUND</span>
+                                  <span className="flex items-center gap-1"><Clock size={10} className="opacity-50" /> {new Date(app.createdAt || app.appliedAt).toLocaleDateString()}</span>
                                </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-4 shrink-0 w-full md:w-auto">
+                          <div className="flex items-center gap-2 shrink-0 w-full md:w-fit mt-1 md:mt-0">
                              <button 
                                onClick={() => setSelectedApp(app)}
-                               className="flex-1 md:flex-none text-[10px] font-black uppercase tracking-widest text-primary-600 hover:text-white bg-primary-600/10 hover:bg-primary-600 px-6 py-3 rounded-xl transition-all"
+                               className="w-full md:w-fit text-[9px] font-black uppercase tracking-[0.2em] text-primary-600 hover:text-white bg-primary-600/10 hover:bg-primary-600 px-3 py-1 rounded-lg transition-all"
                              >
                                View Details
                              </button>
-                             <div className={`hidden md:block w-10 h-10 rounded-full border border-[var(--border-main)] flex items-center justify-center group-hover:border-primary-600/30 transition-all`}>
+                             <div className={`hidden md:flex w-10 h-10 rounded-full border border-[var(--border-main)] items-center justify-center group-hover:border-primary-600/30 transition-all`}>
                                <ArrowRight size={14} className="text-[var(--text-muted)] group-hover:text-primary-600 transition-colors" />
                              </div>
                           </div>
@@ -277,17 +277,17 @@ export default function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/60 backdrop-blur-sm"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
-              className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh]"
+              className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] p-4 md:p-8 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh]"
             >
               <div className="flex justify-between items-start mb-8 pb-6 border-b border-[var(--border-main)]">
                 <div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-2">{selectedApp.targetTitle || selectedApp.jobTitle || 'Not Available'}</h3>
+                  <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter mb-2">{selectedApp.targetTitle || selectedApp.jobTitle || 'Not Available'}</h3>
                   <p className="text-[var(--text-muted)] font-medium text-sm flex items-center gap-2 uppercase tracking-widest text-[9px]">
                     {getCategoryIcon(selectedApp.category)} C FOUND &bull; {selectedApp.category || 'Opportunity'}
                   </p>
@@ -297,8 +297,8 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 md:p-4 md:p-6">
                   <div>
                     <h4 className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Current Status</h4>
                     <span className={`inline-flex px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${getStatusColor(selectedApp.status)}`}>
@@ -329,14 +329,14 @@ export default function Dashboard() {
                 </div>
 
                 {selectedApp.hrRemarks && (
-                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                  <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                     <h4 className="text-[9px] font-black uppercase tracking-widest text-blue-500 mb-2">HR Remarks</h4>
                     <p className="text-sm font-medium text-blue-100">{selectedApp.hrRemarks}</p>
                   </div>
                 )}
 
                 {selectedApp.interviewDetails && (
-                  <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                  <div className="p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl">
                     <h4 className="text-[9px] font-black uppercase tracking-widest text-purple-500 mb-2">Interview Details</h4>
                     <p className="text-sm font-medium text-purple-100 whitespace-pre-wrap">{selectedApp.interviewDetails}</p>
                   </div>
@@ -351,7 +351,7 @@ export default function Dashboard() {
 
                 <div className="pt-6 border-t border-[var(--border-main)]">
                    <h4 className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-4">Activity Timeline</h4>
-                   <div className="relative border-l-2 border-[var(--border-main)] ml-3 space-y-6">
+                   <div className="relative border-l-2 border-[var(--border-main)] ml-3 space-y-4">
                       <div className="relative pl-6">
                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary-600 border-4 border-[var(--bg-card)]"></div>
                          <h5 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-main)] mb-1">Applied for {selectedApp.category}</h5>
@@ -394,10 +394,12 @@ export default function Dashboard() {
 
                 <div className="pt-6 border-t border-[var(--border-main)]">
                    <h4 className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-4">Applicant Data Submitted</h4>
-                   <div className="grid grid-cols-2 gap-4 text-sm">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-[var(--text-muted)] block text-xs">Email:</span>
-                        <span className="font-medium">{selectedApp.email}</span>
+                        <span className="font-medium break-all">
+                          {selectedApp.email || selectedApp.userEmail || user?.email || 'N/A'}
+                        </span>
                       </div>
                       <div>
                         <span className="text-[var(--text-muted)] block text-xs">Phone:</span>
@@ -405,7 +407,7 @@ export default function Dashboard() {
                       </div>
                       {selectedApp.resume_url && selectedApp.resume_url !== 'N/A' && (
                         <div className="col-span-2">
-                          <a href={selectedApp.resume_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-primary-500 hover:text-primary-400 font-bold text-sm bg-primary-500/10 px-4 py-2 rounded-lg transition-colors">
+                          <a href={selectedApp.resume_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-primary-500 hover:text-primary-400 font-bold text-sm bg-primary-500/10 px-3 py-1 rounded-lg transition-colors">
                             <ExternalLink size={16} /> View Submitted Resume
                           </a>
                         </div>

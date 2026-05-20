@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { uploadFile } from '../lib/storage';
 import { 
   User, Github, Linkedin, Globe, Plus, Trash2, Save, Camera, 
@@ -40,7 +40,7 @@ export default function Profile() {
     if (profile && !formData) {
       setFormData({
         displayName: profile.displayName || '',
-        email: profile.email || '',
+        email: profile.email || auth.currentUser?.email || '',
         phone: profile.phone || '',
         country: profile.country || '',
         state: profile.state || '',
@@ -319,6 +319,16 @@ export default function Profile() {
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                   className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
                   placeholder="e.g. John Doe"
+                />
+              </InputGroup>
+
+              <InputGroup label="Email Address">
+                <input 
+                  type="email" 
+                  value={formData.email || profile?.email || ""}
+                  readOnly
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm opacity-70 cursor-not-allowed"
+                  placeholder="Email Address"
                 />
               </InputGroup>
               <InputGroup label="Phone Number">
