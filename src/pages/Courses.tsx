@@ -10,7 +10,43 @@ import { useNavigate, Link } from 'react-router-dom';
 import { sendApplicationEmail } from '../services/emailService';
 import { getProfileCompletion } from '../lib/profileUtils';
 
-const categories = ['All', 'Game Dev', 'AI & ML', 'Fullstack', 'Cybersecurity', 'Data Science'];
+const categories = [
+  'All',
+
+  // Development
+  'Game Development',
+  'AI & ML',
+  'Full Stack',
+  'Cybersecurity',
+  'Data Science',
+  'Cloud Computing',
+  'Mobile App Development',
+
+  // Design
+  'UI/UX Design',
+  'Graphic Design',
+  '3D Animation',
+  'Video Editing',
+
+  // Software
+  'Blender',
+  'AutoCAD',
+  'Photoshop',
+  'Illustrator',
+  'Premiere Pro',
+  'After Effects',
+  'Figma',
+  'Maya',
+
+  // Engines
+  'Unity',
+  'Unreal Engine',
+
+  // Extra
+  'Digital Marketing',
+  'Ethical Hacking',
+  'Python Development'
+];
 
 export default function Courses() {
   const { isAdmin, user, profile } = useAuth();
@@ -209,13 +245,23 @@ export default function Courses() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-20 border-b border-[var(--border-main)] pb-12">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-8 mb-20 border-b border-[var(--border-main)] pb-12">
+          <div className="relative w-full">
+
+            <div className="category-fade-left"></div>
+            <div className="category-fade-right"></div>
+
+            <div
+              className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 w-full"
+              onWheel={(e) => {
+                e.currentTarget.scrollLeft += e.deltaY;
+              }}
+            >
             {categories.map(c => (
               <button
                 key={c}
                 onClick={() => setFilter(c)}
-                className={`px-5 py-3 md:px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`min-w-[145px] h-[58px] flex items-center justify-center text-center px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.18em] border transition-all shrink-0 whitespace-normal snap-start ${
                   filter === c 
                   ? 'bg-primary-600 text-white shadow-xl shadow-primary-600/30 border-primary-500' 
                   : 'bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border-main)] hover:border-primary-600/30'
@@ -225,8 +271,9 @@ export default function Courses() {
               </button>
             ))}
           </div>
+          </div>
           
-          <div className="relative w-full lg:w-96">
+          <div className="relative w-full md:w-[420px]">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
             <input 
               type="text"
