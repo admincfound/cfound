@@ -37,7 +37,9 @@ export default function Navbar() {
   
   // Custom navigation based on role and section
   const userLinks = [
+    { name: 'About', path: '/about' },
     { name: 'Projects', path: '/projects' },
+    { name: 'Technology', path: '/services' },
     { name: 'Internship', path: '/internship' },
     { name: 'Careers', path: '/careers' },
     { name: 'Academy', path: '/courses' },
