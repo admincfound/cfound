@@ -8,12 +8,12 @@ import logo from '../assets/logo.png';
 import { auth } from '../lib/firebase';
 
 const navLinks = [
-  { name: 'About', path: '/about' },
   { name: 'Projects', path: '/projects' },
   { name: 'Technology', path: '/services' },
   { name: 'Internship', path: '/internship' },
   { name: 'Careers', path: '/careers' },
   { name: 'Courses', path: '/courses' },
+  { name: 'About', path: '/about' },
   { name: 'Contact', path: '/contact' },
 ];
 
@@ -36,14 +36,14 @@ export default function Navbar() {
   const isInAdminSection = location.pathname.startsWith('/admin');
   
   // Custom navigation based on role and section
-  
+
   const userLinks = [
-    { name: 'About', path: '/about' },
     { name: 'Projects', path: '/projects' },
     { name: 'Technology', path: '/services' },
     { name: 'Internship', path: '/internship' },
     { name: 'Careers', path: '/careers' },
     { name: 'Academy', path: '/courses' },
+    { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
 
