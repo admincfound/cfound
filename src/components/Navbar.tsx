@@ -36,6 +36,7 @@ export default function Navbar() {
   const isInAdminSection = location.pathname.startsWith('/admin');
   
   // Custom navigation based on role and section
+  
   const userLinks = [
     { name: 'About', path: '/about' },
     { name: 'Projects', path: '/projects' },
