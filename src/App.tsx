@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import About from './pages/About';
+import Services from './pages/Services';
 
 // Public Pages
 import Home from './pages/Home';
@@ -52,6 +54,8 @@ function AppContent() {
   useEffect(() => {
     const titles: { [key: string]: string } = {
       '/': 'C FOUND | Premier Indian Game & Software Studio',
+      '/about': 'About | C FOUND Technology',
+      '/services': 'Services | C FOUND Solutions',
       '/projects': 'Portfolio | C FOUND Digital Works',
       '/internship': 'Training Labs | Graduate Engineering @ C FOUND',
       '/careers': 'Fleet Careers | Join C FOUND India',
@@ -78,6 +82,8 @@ function AppContent() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/services" element={<Services />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/internship" element={<Internship />} />
           <Route path="/careers" element={<Careers />} />
