@@ -8,10 +8,12 @@ import logo from '../assets/logo.png';
 import { auth } from '../lib/firebase';
 
 const navLinks = [
+  { name: 'About', path: '/about' },
   { name: 'Projects', path: '/projects' },
+  { name: 'Technology', path: '/services' },
   { name: 'Internship', path: '/internship' },
   { name: 'Careers', path: '/careers' },
-  { name: 'Academy', path: '/courses' },
+  { name: 'Courses', path: '/courses' },
   { name: 'Contact', path: '/contact' },
 ];
 
