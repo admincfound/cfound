@@ -55,6 +55,23 @@ export default function Services() {
           C FOUND develops advanced software systems, AI-powered platforms,
           immersive game technologies, scalable infrastructure, and next-generation digital products.
         </p>
+        <div className="flex flex-wrap gap-4 mt-10">
+
+          <a
+            href="/projects"
+            className="px-8 py-4 rounded-2xl bg-primary-600 text-white font-black uppercase tracking-wider hover:scale-105 transition-all"
+          >
+            Explore Projects
+          </a>
+
+          <a
+            href="/contact"
+            className="px-8 py-4 rounded-2xl border border-[var(--border-main)] font-black uppercase tracking-wider hover:bg-[var(--bg-card)] transition-all"
+          >
+            Contact Team
+          </a>
+
+        </div>
       </motion.div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
