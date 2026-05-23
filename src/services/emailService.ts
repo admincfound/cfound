@@ -151,7 +151,8 @@ export const sendApplicationEmail = async (data: {
     const payload = {
 
       to_name: data.user_name,
-      to_email: data.to_email,
+      to_email: 'admin.cfound@gmail.com',
+      candidate_email: data.to_email || 'N/A',
 
       role_title: data.role_title,
       application_type: data.application_type,
