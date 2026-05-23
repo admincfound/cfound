@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, setDoc, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -77,21 +77,30 @@ export default function Careers() {
 
     setApplyingId(opp.id);
     try {
-      await addDoc(collection(db, 'jobApplications'), {
-        userId: user.uid,
-        userEmail: user.email,
-        phone: profile.phone || '',
-        userName: profile.displayName,
-        skills: profile.skills || [],
-        resumeUrl: profile.resumeUrl || '',
-        portfolioUrl: profile.portfolioUrl || profile.githubUrl || profile.linkedinUrl || '',
-        type: 'job',
-        targetId: opp.id,
-        targetTitle: opp.title,
-        status: 'pending',
-        appliedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      });
+      const applicationId = `${user.uid}_${opp.id}`;
+
+      await setDoc(
+        doc(db, 'jobApplications', applicationId),
+        {
+          userId: user.uid,
+          userEmail: user.email,
+          phone: profile.phone || '',
+          userName: profile.displayName,
+          skills: profile.skills || [],
+          resumeUrl: profile.resumeUrl || '',
+          portfolioUrl:
+            profile.portfolioUrl ||
+            profile.githubUrl ||
+            profile.linkedinUrl ||
+            '',
+          type: 'job',
+          targetId: opp.id,
+          targetTitle: opp.title,
+          status: 'pending',
+          appliedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        }
+      );
       
       setUserApplications(prev => new Set(prev).add(opp.id));
 

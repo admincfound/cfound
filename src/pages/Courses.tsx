@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, setDoc, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { BookOpen, Star, Clock, Users, PlayCircle, Plus, X, Search, Filter, ShieldCheck, Zap, Monitor, Cpu, Database, AlertTriangle } from 'lucide-react';
@@ -149,22 +149,45 @@ export default function Courses() {
       const cooldownExpiry = new Date();
       cooldownExpiry.setDate(cooldownExpiry.getDate() + 30); // 30 day cooldown
 
-      await addDoc(collection(db, 'courseEnrollments'), {
-        userId: user.uid,
-        userEmail: user.email,
-        userName: profile?.displayName || user.email,
-        phone: profile?.phone || '',
-        skills: profile?.skills || [],
-        resumeUrl: profile?.resumeUrl || '',
-        portfolioUrl: profile?.portfolioUrl || profile?.githubUrl || profile?.linkedinUrl || '',
-        type: 'course',
-        itemId: c.id,
-        targetTitle: c.title,
-        status: 'enrolled',
-        appliedAt: new Date().toISOString(),
-        cooldownExpiry: cooldownExpiry.toISOString(),
-      });
-      
+      const existingQuery = query(
+        collection(db, 'courseEnrollments'),
+        where('userId', '==', user.uid),
+        where('itemId', '==', c.id)
+      );
+
+      const existingSnap = await getDocs(existingQuery);
+
+      if (!existingSnap.empty) {
+        toast.error("Already enrolled in this course.");
+        setEnrollingId(null);
+        return;
+      }
+
+      const enrollmentId = `${user.uid}_${c.id}`;
+
+      await setDoc(
+        doc(db, 'courseEnrollments', enrollmentId),
+        {
+          userId: user.uid,
+          userEmail: user.email,
+          userName: profile?.displayName || user.email,
+          phone: profile?.phone || '',
+          skills: profile?.skills || [],
+          resumeUrl: profile?.resumeUrl || '',
+          portfolioUrl:
+            profile?.portfolioUrl ||
+            profile?.githubUrl ||
+            profile?.linkedinUrl ||
+            '',
+          type: 'course',
+          itemId: c.id,
+          targetTitle: c.title,
+          status: 'enrolled',
+          appliedAt: new Date().toISOString(),
+          cooldownExpiry: cooldownExpiry.toISOString(),
+        }
+      );
+
       setUserEnrollments(prev => ({
         ...prev,
         [c.id]: cooldownExpiry.getTime()
@@ -180,15 +203,24 @@ export default function Courses() {
           phone: profile?.phone || 'N/A',
           skills: profile?.skills ? profile.skills.join(', ') : 'N/A',
           resume_url: profile?.resumeUrl || 'N/A',
-          portfolio_url: profile?.portfolioUrl || profile?.githubUrl || profile?.linkedinUrl || 'N/A',
+          portfolio_url:
+            profile?.portfolioUrl ||
+            profile?.githubUrl ||
+            profile?.linkedinUrl ||
+            'N/A',
           user_id: user.uid,
           profile: profile,
         });
+
+        toast.success("Enrollment completed successfully.");
       } catch (e) {
         console.error("Confirmation email failed", e);
+
+        toast.error(
+          "Enrollment saved but confirmation email failed."
+        );
       }
 
-      toast.success(`Successfully enrolled in ${c.title}. Protocol initiated.`);
     } catch (err) {
       console.error(err);
       toast.error("Enrollment failed.");
