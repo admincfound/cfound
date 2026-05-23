@@ -107,6 +107,7 @@ export default function Careers() {
           resume_url: profile.resumeUrl || 'N/A',
           portfolio_url: profile.portfolioUrl || profile.githubUrl || profile.linkedinUrl || 'N/A',
           user_id: user.uid,
+          profile: profile,
         });
       } catch (e) {
         console.error("Confirmation email failed", e);
