@@ -240,7 +240,13 @@ export default function Internship() {
                     <div className="flex items-center justify-between gap-4 mb-8">
                       <div className="flex items-center gap-3">
                         <span className="px-3 py-1 bg-primary-600/10 text-primary-600 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                          <MapPin size={12} /> {opp.location}
+                          <MapPin size={12} />
+
+                          {
+                            opp.mode === 'Remote'
+                              ? 'Remote'
+                              : `${opp.mode} • ${opp.location}`
+                          }
                         </span>
                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
                           opp.internshipType === 'paid' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
@@ -277,7 +283,7 @@ export default function Internship() {
                     </div>
                     <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
                     <div className="space-y-4 mb-10">
-                      {(typeof opp.requirements === 'string' ? opp.requirements.split('\n') : opp.requirements)?.slice(0, 3).map((req: string, idx: number) => (
+                      {(typeof opp.requirements === 'string' ? opp.requirements.split('\n') : opp.requirements)?.slice(0, 2).map((req: string, idx: number) => (
                         <div key={idx} className="flex items-start gap-3 text-xs text-[var(--text-muted)]">
                           <CheckCircle2 size={14} className="text-primary-600 mt-0.5 flex-shrink-0" />
                           <span className="font-bold uppercase tracking-tight">{req}</span>
@@ -298,20 +304,37 @@ export default function Internship() {
                     </div>
                     
                     {!isAdmin ? (
-                      <button 
-                        onClick={() => handleApply(opp)}
-                        disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                        className={`btn-primary flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
-                          userApplications.has(opp.id) 
-                            ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
-                            : !completion.isComplete 
-                              ? 'opacity-50 cursor-not-allowed grayscale' 
-                              : 'group'
-                        }`}
-                      >
-                        {applyingId === opp.id ? "Applying..." : userApplications.has(opp.id) ? "Applied" : !completion.isComplete ? "Profile Incomplete" : <>Apply Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" /></>}
-                      </button>
-                    ) : (
+                      <div className="flex items-center gap-3 flex-wrap">
+
+                        <Link
+                          to={`/internship/${opp.id}`}
+                          className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
+                        >
+                          View Details
+                        </Link>
+
+                        <button 
+                          onClick={() => handleApply(opp)}
+                          disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
+                          className={`btn-primary flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
+                            userApplications.has(opp.id) 
+                              ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
+                              : !completion.isComplete 
+                                ? 'opacity-50 cursor-not-allowed grayscale' 
+                                : 'group'
+                          }`}
+                        >
+                          {applyingId === opp.id 
+                            ? "Applying..." 
+                            : userApplications.has(opp.id) 
+                              ? "Applied" 
+                              : !completion.isComplete 
+                                ? "Profile Incomplete" 
+                                : <>Apply Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" /></>}
+                        </button>
+
+                      </div>
+                      ) : (
                       <div className="text-[9px] font-black uppercase tracking-widest text-primary-500 bg-primary-500/5 px-4 py-2 rounded-xl border border-primary-500/10">
                         Admin Mode
                       </div>
@@ -342,6 +365,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
     trainingFee: '',
     internshipType: 'unpaid',
     duration: '',
+    mode: 'Remote',
     requirements: '',
     status: 'active',
     type: 'internship'
@@ -352,6 +376,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
     if (internship) {
       setFormData({
         ...internship,
+        mode: internship.mode || 'Remote',
         requirements: Array.isArray(internship.requirements) ? internship.requirements.join('\n') : internship.requirements,
         internshipType: internship.internshipType || 'unpaid'
       });
@@ -363,6 +388,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
         trainingFee: '',
         internshipType: 'unpaid',
         duration: '',
+        mode: 'Remote',
         requirements: '',
         status: 'active',
         type: 'internship'
@@ -449,15 +475,44 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Deployment Location</label>
-                  <input 
-                    required
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    placeholder="Remote / Hybrid / On-site"
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    Work Mode
+                  </label>
+
+                  <select
+                    value={formData.mode}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      setFormData({
+                        ...formData,
+                        mode: value,
+                        location: value === 'Remote' ? 'Remote' : ''
+                      });
+                    }}
                     className="input-main"
-                  />
+                  >
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Onsite">Onsite</option>
+                  </select>
                 </div>
+
+                {formData.mode !== 'Remote' && (
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Office Location
+                    </label>
+
+                    <input 
+                      required
+                      value={formData.location}
+                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      placeholder="Chennai, India"
+                      className="input-main"
+                    />
+                  </div>
+                )}
               </div>
 
               {formData.internshipType === 'paid' && (
