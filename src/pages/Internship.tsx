@@ -246,11 +246,11 @@ export default function Internship() {
                           opp.internshipType === 'paid' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
                         }`}>
                           {
-                            opp.internshipType === 'free'
+                            opp.internshipType === 'unpaid'
                               ? 'NO FEE'
                               : opp.internshipType === 'paid'
                                 ? 'PAID'
-                                : 'TRAINING FEE'
+                                : 'TRAINING PROGRAM'
                           }
                         </span>
                       </div>
@@ -289,11 +289,11 @@ export default function Internship() {
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-6 border-t border-[var(--border-main)]">
                     <div className="text-xl font-black font-display text-[var(--text-main)] uppercase">
                       {
-                        opp.internshipType === 'free'
-                          ? 'No Fee'
-                          : opp.internshipType === 'paid'
-                            ? (opp.salary.startsWith('₹') ? opp.salary : `₹${opp.salary}`)
-                            : 'Program Fee Applicable'
+                        opp.internshipType === 'paid'
+                          ? `₹${opp.stipend}/month`
+                          : opp.internshipType === 'training'
+                            ? `Fee: ₹${opp.trainingFee}`
+                            : 'Unpaid Internship'
                       }
                     </div>
                     
@@ -338,9 +338,11 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
   const [formData, setFormData] = useState({
     title: '',
     location: 'Remote',
-    salary: '',
+    stipend: '',
+    trainingFee: '',
+    internshipType: 'unpaid',
+    duration: '',
     requirements: '',
-    internshipType: 'free',
     status: 'active',
     type: 'internship'
   });
@@ -351,15 +353,17 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
       setFormData({
         ...internship,
         requirements: Array.isArray(internship.requirements) ? internship.requirements.join('\n') : internship.requirements,
-        internshipType: internship.internshipType || 'free'
+        internshipType: internship.internshipType || 'unpaid'
       });
     } else {
       setFormData({
         title: '',
         location: 'Remote',
-        salary: '',
+        stipend: '',
+        trainingFee: '',
+        internshipType: 'unpaid',
+        duration: '',
         requirements: '',
-        internshipType: 'free',
         status: 'active',
         type: 'internship'
       });
@@ -439,9 +443,9 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
                     onChange={(e) => setFormData({...formData, internshipType: e.target.value})}
                     className="input-main"
                   >
-                    <option value="free">No Fee Internship</option>
                     <option value="paid">Paid Internship</option>
-                    <option value="training-fee">Training Fee Program</option>
+                    <option value="unpaid">Unpaid Internship</option>
+                    <option value="training">Training Program</option>
                   </select>
                 </div>
                 <div>
@@ -456,16 +460,106 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
                 </div>
               </div>
 
-              {(formData.internshipType === 'paid' || formData.internshipType === 'training-fee') && (
+              {formData.internshipType === 'paid' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Monthly Stipend
+                    </label>
+
+                    <input
+                      required
+                      value={formData.stipend}
+                      onChange={(e) => setFormData({...formData, stipend: e.target.value})}
+                      placeholder="5000"
+                      className="input-main"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Duration
+                    </label>
+
+                    <select
+                      value={formData.duration}
+                      onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                      className="input-main"
+                    >
+                      <option value="">Select Duration</option>
+                      <option value="1 Month">1 Month</option>
+                      <option value="2 Months">2 Months</option>
+                      <option value="3 Months">3 Months</option>
+                      <option value="6 Months">6 Months</option>
+                      <option value="12 Months">12 Months</option>
+                    </select>
+
+                  </div>
+
+                </div>
+              )}
+
+              {formData.internshipType === 'unpaid' && (
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Compensation (INR)</label>
-                  <input 
-                    required
-                    value={formData.salary}
-                    onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                    placeholder="₹10,000 / Mo"
+
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    Duration
+                  </label>
+
+                  <select
+                    value={formData.duration}
+                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
                     className="input-main"
-                  />
+                  >
+                    <option value="">Select Duration</option>
+                    <option value="1 Month">1 Month</option>
+                    <option value="2 Months">2 Months</option>
+                    <option value="3 Months">3 Months</option>
+                    <option value="6 Months">6 Months</option>
+                    <option value="12 Months">12 Months</option>
+                  </select>
+
+                </div>
+              )}
+
+              {formData.internshipType === 'training' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Training Fee (₹)
+                    </label>
+
+                    <input
+                      required
+                      value={formData.trainingFee}
+                      onChange={(e) => setFormData({...formData, trainingFee: e.target.value})}
+                      placeholder="2999"
+                      className="input-main"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Duration
+                    </label>
+
+                    <select
+                      value={formData.duration}
+                      onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                      className="input-main"
+                    >
+                      <option value="">Select Duration</option>
+                      <option value="1 Month">1 Month</option>
+                      <option value="2 Months">2 Months</option>
+                      <option value="3 Months">3 Months</option>
+                      <option value="6 Months">6 Months</option>
+                      <option value="12 Months">12 Months</option>
+                    </select>
+
+                  </div>
+
                 </div>
               )}
 
