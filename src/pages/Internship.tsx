@@ -57,12 +57,28 @@ export default function Internship() {
     fetchUserApplications();
   }, [isAdmin, user]);
 
+  const handleShare = async (opp: any) => {
+    const url = `${window.location.origin}/internship/${opp.id}`;
+
+    try {
+      await navigator.share({
+        title: opp.title,
+        text: 'Check out this internship opportunity',
+        url
+      });
+    } catch {
+      navigator.clipboard.writeText(url);
+      toast.success('Link copied');
+    }
+  };
+
   const handleApply = async (opp: any) => {
     if (isAdmin) return;
     if (!user) {
       navigate('/login', { state: { from: { pathname: '/internship' } } });
       return;
     }
+
 
     const completion = getProfileCompletion(profile);
     if (!completion.isComplete) {
@@ -312,6 +328,12 @@ export default function Internship() {
                         >
                           View Details
                         </Link>
+                        <button
+                          onClick={() => handleShare(opp)}
+                          className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
+                        >
+                          Share
+                        </button>
 
                         <button 
                           onClick={() => handleApply(opp)}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
@@ -100,6 +100,22 @@ export default function InternshipDetails() {
               <Share2 size={14} />
               Share Opportunity
             </button>
+            <div className="flex gap-4 flex-wrap mt-4">
+
+              <Link
+                to="/internship"
+                className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[10px] font-black uppercase tracking-widest"
+              >
+                Back
+              </Link>
+
+              <button
+                className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest"
+              >
+                Apply Now
+              </button>
+
+            </div>
 
           </div>
 
