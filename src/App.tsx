@@ -7,10 +7,12 @@ import Footer from './components/Footer';
 import About from './pages/About';
 import Services from './pages/Services';
 
+
 // Public Pages
 import Home from './pages/Home';
 import Projects from './pages/Projects';
 import Internship from './pages/Internship';
+import InternshipDetails from './pages/InternshipDetails';
 import Careers from './pages/Careers';
 import Blog from './pages/Blog';
 import Contact from './pages/Contact';
@@ -86,6 +88,7 @@ function AppContent() {
           <Route path="/services" element={<Services />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/internship" element={<Internship />} />
+          <Route path="/internship/:id" element={<InternshipDetails />} />
           <Route path="/careers" element={<Careers />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/courses" element={<Courses />} />
