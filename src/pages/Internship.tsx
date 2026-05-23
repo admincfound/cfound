@@ -245,7 +245,13 @@ export default function Internship() {
                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
                           opp.internshipType === 'paid' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
                         }`}>
-                          {opp.internshipType || 'Free'}
+                          {
+                            opp.internshipType === 'free'
+                              ? 'NO FEE'
+                              : opp.internshipType === 'paid'
+                                ? 'PAID'
+                                : 'TRAINING FEE'
+                          }
                         </span>
                       </div>
                       {isAdmin && (
@@ -282,7 +288,13 @@ export default function Internship() {
 
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-6 border-t border-[var(--border-main)]">
                     <div className="text-xl font-black font-display text-[var(--text-main)] uppercase">
-                      {opp.internshipType === 'free' ? 'No Fee' : (opp.salary.startsWith('₹') ? opp.salary : `₹${opp.salary}`)}
+                      {
+                        opp.internshipType === 'free'
+                          ? 'No Fee'
+                          : opp.internshipType === 'paid'
+                            ? (opp.salary.startsWith('₹') ? opp.salary : `₹${opp.salary}`)
+                            : 'Program Fee Applicable'
+                      }
                     </div>
                     
                     {!isAdmin ? (
@@ -427,8 +439,9 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
                     onChange={(e) => setFormData({...formData, internshipType: e.target.value})}
                     className="input-main"
                   >
-                    <option value="free">Free Internship</option>
+                    <option value="free">No Fee Internship</option>
                     <option value="paid">Paid Internship</option>
+                    <option value="training-fee">Training Fee Program</option>
                   </select>
                 </div>
                 <div>
@@ -443,7 +456,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
                 </div>
               </div>
 
-              {formData.internshipType === 'paid' && (
+              {(formData.internshipType === 'paid' || formData.internshipType === 'training-fee') && (
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Compensation (INR)</label>
                   <input 
