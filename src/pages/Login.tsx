@@ -22,7 +22,9 @@ export default function Login() {
 
       await setDoc(doc(db, "users", result.user.uid), {
         email: result.user.email,
-        role: "user"
+        role: result.user.email === 'admin.cfound@gmail.com'
+          ? 'admin'
+          : 'user'
       }, { merge: true });
 
       navigate(from, { replace: true });
