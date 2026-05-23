@@ -307,7 +307,7 @@ export default function Internship() {
                       <div className="flex items-center gap-3 flex-wrap">
 
                         <Link
-                          to={`/internship/${opp.slug}`}
+                          to={`/internship/${opp.id}`}
                           className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
                         >
                           View Details
