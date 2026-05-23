@@ -43,7 +43,7 @@ const generateCardsHTML = (
           padding:10px;
           border-bottom:1px solid #e5e7eb;
         ">
-          ${item[field.key] || "-"}
+          ${String(item[field.key] || "-").slice(0, 500)}
         </td>
       </tr>
     `).join("");
@@ -88,8 +88,7 @@ export const sendApplicationEmail = async (data: {
 
   phone?: string;
   skills?: string;
-  resume_url?: string;
-  portfolio_url?: string;
+
   user_id?: string;
 
   profile?: any;
@@ -117,17 +116,6 @@ export const sendApplicationEmail = async (data: {
       ]
     );
 
-    const projectsHTML = generateCardsHTML(
-      "Project",
-      profile.projects || [],
-      [
-        { label: "Title", key: "title" },
-        { label: "Category", key: "category" },
-        { label: "Technologies", key: "technologies" },
-        { label: "Description", key: "description" }
-      ]
-    );
-
     const educationHTML = generateCardsHTML(
       "Education",
       profile.education || [],
@@ -138,60 +126,55 @@ export const sendApplicationEmail = async (data: {
       ]
     );
 
-    const certificationsHTML = generateCardsHTML(
-      "Certification",
-      profile.certifications || [],
-      [
-        { label: "Certification", key: "name" },
-        { label: "Organization", key: "organization" },
-        { label: "Credential URL", key: "credentialUrl" }
-      ]
-    );
-
     const payload = {
 
-      to_name: data.user_name,
       to_email: 'admin.cfound@gmail.com',
+
       candidate_email: data.to_email || 'N/A',
 
+      full_name:
+        profile.fullName ||
+        profile.displayName ||
+        'N/A',
+
       role_title: data.role_title,
+
       application_type: data.application_type,
 
-      reply_to: 'admin.cfound@gmail.com',
-      from_name: 'C Found',
-
       phone: data.phone || 'N/A',
-      skills: data.skills || 'N/A',
 
-      resume_url: data.resume_url || 'N/A',
-      portfolio_url: data.portfolio_url || 'N/A',
+      skills: data.skills || 'N/A',
 
       user_id: data.user_id || 'N/A',
 
-      timestamp: new Date().toLocaleString(),
-
-      admin_email: 'admin.cfound@gmail.com',
-
-      full_name: profile.fullName || profile.displayName || 'N/A',
-      email: data.to_email || 'N/A',
-
       country: profile.country || 'N/A',
+
       state: profile.state || 'N/A',
+
       city: profile.city || 'N/A',
 
-      bio: profile.bio || 'N/A',
+      bio: String(
+        profile.bio || 'N/A'
+      ).slice(0, 1000),
 
-      experience_level: profile.experienceLevel || 'N/A',
+      github:
+        profile.githubUrl || 'N/A',
 
-      github: profile.githubUrl || 'N/A',
-      linkedin: profile.linkedinUrl || 'N/A',
-      portfolio: profile.portfolioUrl || 'N/A',
+      linkedin:
+        profile.linkedinUrl || 'N/A',
+
+      portfolio:
+        profile.portfolioUrl || 'N/A',
+
+      timestamp:
+        new Date().toLocaleString(),
 
       experiences: experiencesHTML,
-      projects: projectsHTML,
-      education: educationHTML,
-      certifications: certificationsHTML
+
+      education: educationHTML
     };
+
+    console.log("EMAIL PAYLOAD:", payload);
 
     const result = await emailjs.send(
       SERVICE_ID,
@@ -200,12 +183,14 @@ export const sendApplicationEmail = async (data: {
       PUBLIC_KEY
     );
 
+    console.log("EMAIL SUCCESS:", result);
+
     return result;
 
   } catch (error) {
 
     console.error("Email error:", error);
-    throw error;
 
+    throw error;
   }
 };
