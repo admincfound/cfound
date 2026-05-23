@@ -403,7 +403,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
       const data = {
         ...formData,
 
-        slug: formData.title
+        slug: (formData.title || 'internship')
           .toLowerCase()
           .replace(/[^a-z0-9\s-]/g, '')
           .replace(/\s+/g, '-'),
@@ -419,6 +419,8 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
           updatedAt: serverTimestamp()
         });
       } else {
+        console.log(data);
+
         await addDoc(collection(db, 'opportunities'), {
           ...data,
           createdAt: serverTimestamp()
