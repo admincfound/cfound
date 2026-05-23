@@ -30,7 +30,10 @@ export default function InternshipDetails() {
       const snap = await getDoc(doc(db, 'opportunities', id));
 
       if (snap.exists()) {
-        setInternship(snap.data());
+        setInternship({
+          id: snap.id,
+          ...snap.data()
+        });
       }
     };
 
