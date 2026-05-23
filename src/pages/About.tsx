@@ -1,7 +1,17 @@
 import { motion } from 'motion/react';
+import { Helmet } from 'react-helmet-async';
 
 export default function About() {
   return (
+    <>
+    <Helmet>
+      <title>About | C FOUND Technologies</title>
+
+      <meta
+        name="description"
+        content="Learn about C FOUND Technologies, an Indian software and game development company focused on AI systems, digital products, and innovation."
+      />
+    </Helmet>
     <div className="min-h-screen px-6 py-32 max-w-7xl mx-auto">
       
       <motion.div
@@ -48,5 +58,6 @@ export default function About() {
 
       </div>
     </div>
+    </>
   );
 }

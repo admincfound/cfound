@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
 import { ArrowRight, Code, Gamepad2, Smartphone, Globe, Cpu, Users, Rocket, Zap, Shield, Target, MapPin } from 'lucide-react';
 
@@ -29,6 +30,15 @@ const features = [
 export default function Home() {
   const { isAdmin } = useAuth();
   return (
+    <>
+      <Helmet>
+        <title>C FOUND Technologies | AI, Software & Game Development Company India</title>
+
+        <meta
+          name="description"
+          content="C FOUND Technologies builds AI systems, software platforms, mobile applications, and immersive digital experiences."
+        />
+      </Helmet>
     <div className="flex flex-col min-h-screen">
       {/* System Ticker */}
       <div className="h-10 bg-primary-600/5 border-b border-[var(--border-main)] flex items-center overflow-hidden whitespace-nowrap">
@@ -173,5 +183,6 @@ export default function Home() {
         </div>
       </section>
     </div>
+    </>
   );
 }

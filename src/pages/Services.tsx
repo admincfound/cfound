@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { Helmet } from 'react-helmet-async';
 import { Cpu, Globe, Smartphone, Gamepad2, Shield, Rocket } from 'lucide-react';
 
 const tech = [
@@ -36,6 +37,15 @@ const tech = [
 
 export default function Services() {
   return (
+    <>
+    <Helmet>
+      <title>Services | C FOUND Technologies</title>
+
+      <meta
+        name="description"
+        content="Explore software engineering, AI systems, mobile app development, and game development services offered by C FOUND Technologies."
+      />
+    </Helmet>
     <div className="min-h-screen px-6 py-32 max-w-7xl mx-auto">
 
       <motion.div
@@ -100,5 +110,6 @@ export default function Services() {
 
       </div>
     </div>
+    </>
   );
 }
