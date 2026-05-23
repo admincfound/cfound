@@ -307,7 +307,7 @@ export default function Internship() {
                       <div className="flex items-center gap-3 flex-wrap">
 
                         <Link
-                          to={`/internship/${opp.id}`}
+                          to={`/internship/${opp.slug}`}
                           className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
                         >
                           View Details
@@ -402,7 +402,15 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
     try {
       const data = {
         ...formData,
-        requirements: formData.requirements.split('\n').filter(r => r.trim())
+
+        slug: formData.title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-'),
+
+        requirements: formData.requirements
+          .split('\n')
+          .filter(r => r.trim())
       };
 
       if (internship?.id) {

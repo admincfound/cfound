@@ -2,11 +2,26 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { MapPin, Clock, CheckCircle2 } from 'lucide-react';
+import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
 
 export default function InternshipDetails() {
   const { id } = useParams();
   const [internship, setInternship] = useState<any>(null);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: internship.title,
+      text: `Check out this internship opportunity at C FOUND`,
+      url: window.location.href,
+    };
+
+    try {
+      await navigator.share(shareData);
+    } catch {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard');
+    }
+  };
 
   useEffect(() => {
     const fetchInternship = async () => {
@@ -63,14 +78,26 @@ export default function InternshipDetails() {
             {internship.title}
           </h1>
 
-          <div className="text-2xl font-black text-primary-500 mb-10">
-            {
-              internship.internshipType === 'paid'
-                ? `₹${internship.stipend}/month`
-                : internship.internshipType === 'training'
-                  ? `Training Fee: ₹${internship.trainingFee}`
-                  : 'Unpaid Internship'
-            }
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+
+            <div className="text-2xl font-black text-primary-500">
+              {
+                internship.internshipType === 'paid'
+                  ? `₹${internship.stipend}/month`
+                  : internship.internshipType === 'training'
+                    ? `Training Fee: ₹${internship.trainingFee}`
+                    : 'Unpaid Internship'
+              }
+            </div>
+
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] hover:border-primary-500 transition-all text-[10px] font-black uppercase tracking-widest"
+            >
+              <Share2 size={14} />
+              Share Opportunity
+            </button>
+
           </div>
 
         </div>
