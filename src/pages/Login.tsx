@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
 import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { auth, googleProvider, db } from '../lib/firebase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
+import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 
 export default function Login() {
@@ -17,7 +18,13 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+
+      await setDoc(doc(db, "users", result.user.uid), {
+        email: result.user.email,
+        role: "user"
+      }, { merge: true });
+
       navigate(from, { replace: true });
     } catch (err: any) {
       console.error(err);
