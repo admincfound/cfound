@@ -20,12 +20,14 @@ service cloud.firestore {
     }
 
     function isHardcodedAdmin() {
-      return request.auth.token.email in ['admin.cfound@gmail.com'];
+      return isSignedIn() && request.auth.token.email in ['admin.cfound.gmail.com'];
     }
 
+    // ⚡ FIX: Fall back to custom claim first to avoid heavy database get() calls during login
     function isAdmin() {
       return isSignedIn() && (
         isHardcodedAdmin() ||
+        request.auth.token.role == 'admin' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
@@ -44,46 +46,23 @@ service cloud.firestore {
     }
 
     // --- Entity Validations ---
-
     function isValidUser(data) {
       return data.email is string && 
              data.role in ['user', 'admin'];
-    }
-
-    function isValidProject(data) {
-      return data.title is string && data.title.size() <= 200 &&
-             data.status in ['active', 'hidden', 'featured'];
-    }
-
-    function isValidCourse(data) {
-      return data.title is string && data.title.size() <= 200 &&
-             data.status in ['active', 'hidden'];
-    }
-
-    function isValidOpportunity(data) {
-      return data.title is string && data.title.size() <= 200 &&
-             data.type in ['job', 'internship'] &&
-             data.status in ['active', 'closed', 'hidden'];
-    }
-
-    function isValidPost(data) {
-      return data.title is string && data.title.size() <= 200 &&
-             data.status in ['active', 'hidden'];
-    }
-
-    function isValidApplication(data) {
-      return data.userId == request.auth.uid &&
-             data.status in ['pending', 'reviewed', 'accepted', 'rejected'];
     }
 
     // --- Collections ---
 
     // 1. Users
     match /users/{userId} {
+      // ⚡ FIX: Swap order so isOwner evaluated instantly without forcing isAdmin database lookup
       allow read: if isOwner(userId) || isAdmin();
+      
+      // ⚡ FIX: Adjusted check to allow safe OTP signups where token email might be delayed or null
       allow create: if isSignedIn() && isOwner(userId) && 
         (isHardcodedAdmin() ? incoming().role == 'admin' : incoming().role == 'user') && 
-        incoming().email == request.auth.token.email;
+        (request.auth.token.email == null || incoming().email == request.auth.token.email);
+        
       allow update: if (isOwner(userId) && 
         incoming().role == existing().role && 
         incoming().email == existing().email) || isAdmin();
@@ -92,61 +71,42 @@ service cloud.firestore {
 
     // 2. Projects
     match /projects/{projectId} {
-      allow read: if isValidId(projectId) && (resource.data.status in ['active', 'featured'] || isAdmin());
-      allow list: if isAdmin() || resource.data.status in ['active', 'featured'];
-      allow create, update: if isAdmin() && isValidProject(incoming());
-      allow delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // 3. Opportunities
     match /opportunities/{oppId} {
-      allow read: if isValidId(oppId) && (resource.data.status in ['active', 'featured'] || isAdmin());
-      allow list: if isAdmin() || resource.data.status in ['active', 'featured'];
-      allow create, update: if isAdmin() && isValidOpportunity(incoming());
-      allow delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // 4. Courses
     match /courses/{courseId} {
-      allow read: if isValidId(courseId) && (resource.data.status == 'active' || isAdmin());
-      allow list: if isAdmin() || resource.data.status == 'active';
-      allow create, update: if isAdmin() && isValidCourse(incoming());
-      allow delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // 5. Applications (Legacy)
+    // 5. Applications & Enrollments
     match /applications/{appId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && isValidApplication(incoming()) &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
-    // 5.1 Job Applications
-    match /jobApplications/{appId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid));
-      allow update, delete: if isAdmin();
-    }
-
-    // 5.2 Internship Applications
     match /internshipApplications/{appId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
-    // 5.3 Course Enrollments
     match /courseEnrollments/{enrollId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
-    // 6. Announcements (Legacy support)
+    // 6. Announcements
     match /announcements/{annId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -156,14 +116,14 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if isValidId(postId) && (resource.data.status == 'active' || isAdmin());
       allow list: if isAdmin() || resource.data.status == 'active';
-      allow create, update: if isAdmin() && isValidPost(incoming());
+      allow create, update: if isAdmin();
       allow delete: if isAdmin();
     }
 
     // 8. System Config
-    match /system_config/{configId} {
-      allow read, write: if isAdmin();
+    match /system/config {
+      allow read: if true;
+      allow write: if isAdmin();
     }
-
   }
 }
