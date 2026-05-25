@@ -445,8 +445,8 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
         ...internship,
         mode: internship.mode || 'Remote',
         skills: Array.isArray(internship.skills)
-          ? internship.skills.join('\n')
-          : internship.skills || '',
+          ? internship.skills
+          : [],
 
         description: internship.description || '',
         internshipType: internship.internshipType || 'unpaid'
@@ -480,9 +480,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
           .replace(/[^a-z0-9\s-]/g, '')
           .replace(/\s+/g, '-'),
 
-        skills: formData.skills
-          .split('\n')
-          .filter(r => r.trim()),
+        skills: formData.skills,
 
         description: formData.description
       };
