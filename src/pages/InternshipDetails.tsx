@@ -156,7 +156,7 @@ export default function InternshipDetails() {
 
           <div className="grid md:grid-cols-2 gap-5">
 
-            {(internship.requirements || []).map((req: string, i: number) => (
+            {(internship.skills || []).map((req: string, i: number) => (
               <div
                 key={i}
                 className="flex items-start gap-3 p-4 rounded-2xl bg-[var(--bg-main)] border border-[var(--border-main)]"
@@ -166,6 +166,17 @@ export default function InternshipDetails() {
               </div>
             ))}
 
+          </div>
+
+        </div>
+        <div className="p-8 rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)] mb-10">
+
+          <h2 className="text-2xl font-black uppercase mb-8">
+            Job Description
+          </h2>
+
+          <div className="text-[var(--text-muted)] leading-relaxed whitespace-pre-line">
+            {internship.description}
           </div>
 
         </div>

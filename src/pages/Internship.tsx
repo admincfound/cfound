@@ -339,7 +339,9 @@ export default function Internship() {
                     </div>
                     <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
                     <div className="space-y-4 mb-10">
-                      {(typeof opp.requirements === 'string' ? opp.requirements.split('\n') : opp.requirements)?.slice(0, 2).map((req: string, idx: number) => (
+                      {(Array.isArray(opp.skills)
+                        ? opp.skills
+                        : [])?.slice(0, 2).map((req: string, idx: number) => (
                         <div key={idx} className="flex items-start gap-3 text-xs text-[var(--text-muted)]">
                           <CheckCircle2 size={14} className="text-primary-600 mt-0.5 flex-shrink-0" />
                           <span className="font-bold uppercase tracking-tight">{req}</span>
@@ -429,7 +431,8 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
     internshipType: 'unpaid',
     duration: '',
     mode: 'Remote',
-    requirements: '',
+    skills: '',
+    description: '',
     status: 'active',
     type: 'internship'
   });
@@ -440,7 +443,11 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
       setFormData({
         ...internship,
         mode: internship.mode || 'Remote',
-        requirements: Array.isArray(internship.requirements) ? internship.requirements.join('\n') : internship.requirements,
+        skills: Array.isArray(internship.skills)
+          ? internship.skills.join('\n')
+          : internship.skills || '',
+
+        description: internship.description || '',
         internshipType: internship.internshipType || 'unpaid'
       });
     } else {
@@ -452,7 +459,8 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
         internshipType: 'unpaid',
         duration: '',
         mode: 'Remote',
-        requirements: '',
+        skills: '',
+        description: '',
         status: 'active',
         type: 'internship'
       });
@@ -471,9 +479,11 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
           .replace(/[^a-z0-9\s-]/g, '')
           .replace(/\s+/g, '-'),
 
-        requirements: formData.requirements
+        skills: formData.skills
           .split('\n')
-          .filter(r => r.trim())
+          .filter(r => r.trim()),
+
+        description: formData.description
       };
 
       if (internship?.id) {
@@ -692,13 +702,40 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
               )}
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Requirements (One per line)</label>
-                <textarea 
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  Skills Required (One per line)
+                </label>
+
+                <textarea
                   required
-                  value={formData.requirements}
-                  onChange={(e) => setFormData({...formData, requirements: e.target.value})}
-                  placeholder="Advanced C++ Knowledge&#10;Git Mastery"
-                  className="input-main min-h-[150px] font-mono"
+                  value={formData.skills}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      skills: e.target.value
+                    })
+                  }
+                  placeholder="Unity&#10;C++&#10;Game Physics"
+                  className="input-main min-h-[120px] font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  Job Description
+                </label>
+
+                <textarea
+                  required
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      description: e.target.value
+                    })
+                  }
+                  placeholder="Describe responsibilities, workflow, expectations, and internship details..."
+                  className="input-main min-h-[180px]"
                 />
               </div>
 
