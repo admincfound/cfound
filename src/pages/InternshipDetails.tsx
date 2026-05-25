@@ -7,6 +7,9 @@ import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
 export default function InternshipDetails() {
   const { id } = useParams();
   const [internship, setInternship] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [profileCompleted, setProfileCompleted] = useState(false);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);  
 
   const handleShare = async () => {
     const shareData = {
@@ -109,11 +112,35 @@ export default function InternshipDetails() {
                 Back
               </Link>
 
-              <button
-                className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest"
-              >
-                Apply Now
-              </button>
+              {!user ? (
+                <Link
+                  to="/login"
+                  className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest"
+                >
+                  Login to Apply
+                </Link>
+              ) : alreadyApplied ? (
+                <button
+                  disabled
+                  className="px-6 py-3 rounded-2xl bg-green-600 text-white text-[10px] font-black uppercase tracking-widest opacity-80 cursor-not-allowed"
+                >
+                  Applied
+                </button>
+              ) : !profileCompleted ? (
+                <Link
+                  to="/profile"
+                  className="px-6 py-3 rounded-2xl bg-yellow-600 text-white text-[10px] font-black uppercase tracking-widest"
+                >
+                  Complete Profile
+                </Link>
+              ) : (
+                <button
+                  onClick={handleApply}
+                  className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest"
+                >
+                  Apply Now
+                </button>
+              )}
 
             </div>
 
