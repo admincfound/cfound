@@ -7,9 +7,11 @@ import { auth } from '../lib/firebase';
 import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
+import { useAuth } from '../context/AuthContext';
 
 export default function InternshipDetails() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
 
   const { slug } = useParams();
 
@@ -18,10 +20,9 @@ export default function InternshipDetails() {
   console.log("Extracted ID:", id);
   const [internship, setInternship] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
-  const [profileCompleted, setProfileCompleted] = useState(false);
   const [applying, setApplying] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);  
-
+  const completion = getProfileCompletion(profile);
   const handleShare = async () => {
     const shareData = {
       title: internship.title,
@@ -63,23 +64,6 @@ export default function InternshipDetails() {
   }, []);
 
   useEffect(() => {
-    const checkProfile = async () => {
-      if (!user) return;
-
-      const profileRef = doc(db, 'profiles', user.uid);
-      const profileSnap = await getDoc(profileRef);
-
-      if (profileSnap.exists()) {
-        const completion = getProfileCompletion(profileSnap.data());
-
-        setProfileCompleted(completion.isComplete);
-      }
-    };
-
-    checkProfile();
-  }, [user]);
-
-  useEffect(() => {
     const checkApplied = async () => {
       if (!user || !internship?.id) return;
 
@@ -106,7 +90,7 @@ export default function InternshipDetails() {
       return;
     }
 
-    if (!profileCompleted) {
+    if (!completion.isComplete) {
       toast.error('Complete your profile before applying.');
       navigate('/profile');
       return;
@@ -239,10 +223,10 @@ export default function InternshipDetails() {
                 >
                   Applied
                 </button>
-              ) : !profileCompleted ? (
+              ) : !completion.isComplete ? (
                 <Link
                   to="/profile"
-                  className="px-6 py-3 rounded-2xl bg-yellow-600 text-white text-[10px] font-black uppercase tracking-widest"
+                  className="btn-primary flex items-center justify-center gap-2 px-6 py-3"
                 >
                   Complete Profile
                 </Link>
