@@ -11,6 +11,35 @@ export default function About() {
         name="description"
         content="Learn about C FOUND Technologies, an Indian software and game development company focused on AI systems, digital products, and innovation."
       />
+      <meta
+        property="og:title"
+        content="About | C FOUND Technologies"
+      />
+
+      <meta
+        property="og:description"
+        content="Learn about C FOUND Technologies, an Indian software and game development company focused on AI systems, digital products, and innovation."
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="twitter:title"
+        content="About | C FOUND Technologies"
+      />
+
+      <meta
+        property="twitter:description"
+        content="Learn about C FOUND Technologies, an Indian software and game development company focused on AI systems, digital products, and innovation."
+      />
+
+      <meta
+        property="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
     </Helmet>
     <div className="min-h-screen px-6 py-32 max-w-7xl mx-auto">
       

@@ -45,6 +45,35 @@ export default function Services() {
         name="description"
         content="Explore software engineering, AI systems, mobile app development, and game development services offered by C FOUND Technologies."
       />
+      <meta
+        property="og:title"
+        content="Services | C FOUND Technologies"
+      />
+
+      <meta
+        property="og:description"
+        content="Explore software engineering, AI systems, mobile app development, and game development services offered by C FOUND Technologies."
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="twitter:title"
+        content="Services | C FOUND Technologies"
+      />
+
+      <meta
+        property="twitter:description"
+        content="Explore software engineering, AI systems, mobile app development, and game development services offered by C FOUND Technologies."
+      />
+
+      <meta
+        property="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
     </Helmet>
     <div className="min-h-screen px-6 py-32 max-w-7xl mx-auto">
 

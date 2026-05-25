@@ -4,7 +4,7 @@ import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, s
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { ExternalLink, Github, Layers, Gamepad2, Smartphone, Cpu, Layout, Edit3, Trash2, Plus, X, Search, Filter } from 'lucide-react';
-
+import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-hot-toast';
 
 const categories = ['All', 'Game', 'Website', 'App', 'AI', 'Software'];
@@ -63,6 +63,45 @@ export default function Projects() {
     .filter(projects => projects.title?.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
+    <>
+    <Helmet>
+      <title>Projects & Portfolio | C FOUND Technologies</title>
+
+      <meta
+        name="description"
+        content="Explore software engineering, AI systems, mobile applications, websites, and game development projects built by C FOUND Technologies."
+      />
+
+      <meta
+        property="og:title"
+        content="Projects & Portfolio | C FOUND Technologies"
+      />
+
+      <meta
+        property="og:description"
+        content="Discover innovative software, AI, web, mobile, and game development projects from C FOUND Technologies."
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="twitter:title"
+        content="Projects & Portfolio | C FOUND Technologies"
+      />
+
+      <meta
+        property="twitter:description"
+        content="Discover innovative software, AI, web, mobile, and game development projects from C FOUND Technologies."
+      />
+
+      <meta
+        property="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+    </Helmet>
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         <div className="mb-20">
@@ -216,6 +255,7 @@ export default function Projects() {
         onSuccess={fetchProjects}
       />
     </div>
+    </>
   );
 }
 

@@ -38,6 +38,35 @@ export default function Home() {
           name="description"
           content="C FOUND Technologies builds AI systems, software platforms, mobile applications, and immersive digital experiences."
         />
+        <meta
+          property="og:title"
+          content="C FOUND Technologies | AI, Software & Game Development Company India"
+        />
+
+        <meta
+          property="og:description"
+          content="C FOUND Technologies builds AI systems, software platforms, mobile applications, and immersive digital experiences."
+        />
+
+        <meta
+          property="og:image"
+          content="https://www.cfound.in/og-image.png"
+        />
+
+        <meta
+          property="twitter:title"
+          content="C FOUND Technologies | AI, Software & Game Development Company India"
+        />
+
+        <meta
+          property="twitter:description"
+          content="C FOUND Technologies builds AI systems, software platforms, mobile applications, and immersive digital experiences."
+        />
+
+        <meta
+          property="twitter:image"
+          content="https://www.cfound.in/og-image.png"
+        />
       </Helmet>
     <div className="flex flex-col min-h-screen">
       {/* System Ticker */}

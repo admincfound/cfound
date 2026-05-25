@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, s
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Briefcase, MapPin, DollarSign, Clock, CheckCircle2, ArrowRight, Edit3, Trash2, Plus, X, Search, Activity, AlertTriangle } from 'lucide-react';
 import { sendApplicationEmail } from '../services/emailService';
 import { getProfileCompletion } from '../lib/profileUtils';
@@ -161,6 +162,45 @@ export default function Internship() {
   const completion = getProfileCompletion(profile);
 
   return (
+    <>
+    <Helmet>
+      <title>Internship Programs | C FOUND Technologies</title>
+
+      <meta
+        name="description"
+        content="Apply for software engineering, AI, game development, cybersecurity, and technology internship programs at C FOUND Technologies."
+      />
+
+      <meta
+        property="og:title"
+        content="Internship Programs | C FOUND Technologies"
+      />
+
+      <meta
+        property="og:description"
+        content="Explore paid internships, engineering labs, and technology training programs at C FOUND Technologies."
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="twitter:title"
+        content="Internship Programs | C FOUND Technologies"
+      />
+
+      <meta
+        property="twitter:description"
+        content="Explore paid internships, engineering labs, and technology training programs at C FOUND Technologies."
+      />
+
+      <meta
+        property="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+    </Helmet>
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         {!isAdmin && user && !completion.isComplete && (
@@ -376,6 +416,7 @@ export default function Internship() {
         onSuccess={fetchInternships}
       />
     </div>
+    </>
   );
 }
 

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { BookOpen, Star, Clock, Users, PlayCircle, Plus, X, Search, Filter, ShieldCheck, Zap, Monitor, Cpu, Database, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 import { sendApplicationEmail } from '../services/emailService';
 import { getProfileCompletion } from '../lib/profileUtils';
@@ -235,6 +236,45 @@ export default function Courses() {
   const completion = getProfileCompletion(profile);
 
   return (
+    <>
+    <Helmet>
+      <title>Courses & Skill Labs | C FOUND Technologies</title>
+
+      <meta
+        name="description"
+        content="Explore AI, game development, cybersecurity, cloud computing, software engineering, and digital skill development courses from C FOUND Technologies."
+      />
+
+      <meta
+        property="og:title"
+        content="Courses & Skill Labs | C FOUND Technologies"
+      />
+
+      <meta
+        property="og:description"
+        content="Industry-grade technology courses, internship programs, and engineering skill labs for future digital professionals."
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="twitter:title"
+        content="Courses & Skill Labs | C FOUND Technologies"
+      />
+
+      <meta
+        property="twitter:description"
+        content="Industry-grade technology courses, internship programs, and engineering skill labs for future digital professionals."
+      />
+
+      <meta
+        property="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+    </Helmet>
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         {!isAdmin && user && !completion.isComplete && (
@@ -432,6 +472,7 @@ export default function Courses() {
         onSuccess={fetchCourses}
       />
     </div>
+    </>
   );
 }
 

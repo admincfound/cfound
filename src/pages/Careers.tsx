@@ -4,9 +4,11 @@ import { collection, query, where, getDocs, setDoc, addDoc, updateDoc, deleteDoc
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Briefcase, MapPin, IndianRupee, Clock, CheckCircle2, ArrowRight, Zap, Target, Rocket, ShieldCheck, Edit3, Trash2, Plus, X, Search, Activity, AlertTriangle } from 'lucide-react';
 import { sendApplicationEmail } from '../services/emailService';
 import { getProfileCompletion } from '../lib/profileUtils';
+
 
 import { toast } from 'react-hot-toast';
 
@@ -154,6 +156,45 @@ export default function Careers() {
   const completion = getProfileCompletion(profile);
 
   return (
+    <>
+    <Helmet>
+      <title>Fleet Careers | Join C FOUND India</title>
+
+      <meta
+        name="description"
+        content="Apply for software engineering, AI, game development, and technology roles at C FOUND Technologies."
+      />
+
+      <meta
+        property="og:title"
+        content="Fleet Careers | Join C FOUND India"
+      />
+
+      <meta
+        property="og:description"
+        content="Explore internships, engineering careers, and digital technology opportunities at C FOUND Technologies."
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="twitter:title"
+        content="Fleet Careers | Join C FOUND India"
+      />
+
+      <meta
+        property="twitter:description"
+        content="Explore internships, engineering careers, and digital technology opportunities at C FOUND Technologies."
+      />
+
+      <meta
+        property="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+    </Helmet>
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         {!isAdmin && user && !completion.isComplete && (
@@ -327,6 +368,7 @@ export default function Careers() {
         onSuccess={fetchJobs}
       />
     </div>
+    </>
   );
 }
 

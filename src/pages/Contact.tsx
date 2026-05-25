@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Send, MessageSquare, ShieldCheck, Globe } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Helmet } from 'react-helmet-async';
 
 export default function Contact() {
   const [status, setStatus] = useState<{ type: 'idle' | 'success' | 'error', message: string }>({ type: 'idle', message: '' });
@@ -25,6 +26,45 @@ export default function Contact() {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>Contact | C FOUND Technologies</title>
+
+      <meta
+        name="description"
+        content="Contact C FOUND Technologies for software development, AI systems, game development, internships, partnerships, and digital innovation."
+      />
+
+      <meta
+        property="og:title"
+        content="Contact | C FOUND Technologies"
+      />
+
+      <meta
+        property="og:description"
+        content="Get in touch with C FOUND Technologies for projects, careers, internships, and technology partnerships."
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="twitter:title"
+        content="Contact | C FOUND Technologies"
+      />
+
+      <meta
+        property="twitter:description"
+        content="Get in touch with C FOUND Technologies for projects, careers, internships, and technology partnerships."
+      />
+
+      <meta
+        property="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+    </Helmet>
     <div className="pt-32 pb-32 px-6 bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-start">
@@ -102,6 +142,7 @@ export default function Contact() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
