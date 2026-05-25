@@ -49,6 +49,7 @@ export default function InternshipDetails() {
 
     fetchInternship();
   }, [id]);
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -56,6 +57,29 @@ export default function InternshipDetails() {
 
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (!user) return;
+
+      const profileRef = doc(db, 'users', user.uid);
+      const profileSnap = await getDoc(profileRef);
+
+      if (profileSnap.exists()) {
+        const data = profileSnap.data();
+
+        if (
+          data.fullName &&
+          data.email &&
+          data.phone
+        ) {
+          setProfileCompleted(true);
+        }
+      }
+    };
+
+    checkProfile();
+  }, [user]);
 
   if (!internship) {
     return (
