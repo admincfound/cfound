@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
 interface UserProfile {
@@ -40,20 +40,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
-      setLoading(true);
+
+      // INSTANT UI LOAD
+      setLoading(false);
 
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
-        
-        // Listen for profile changes
-        const unsubProfile = onSnapshot(userDocRef, async (docSnap) => {
+
+        // Background profile loading
+        onSnapshot(userDocRef, async (docSnap) => {
           if (docSnap.exists()) {
             setProfile(docSnap.data() as UserProfile);
           } else {
-            // Create initial profile
-            const isDefaultAdmin = firebaseUser.email === 'admin.cfound@gmail.com';
+            const isDefaultAdmin =
+              firebaseUser.email === 'admin.cfound@gmail.com';
+
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
               email: firebaseUser.email || '',
@@ -62,19 +65,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               role: isDefaultAdmin ? 'admin' : 'user',
               createdAt: new Date().toISOString(),
             };
-            await setDoc(userDocRef, newProfile);
-            setProfile(newProfile);
-          }
-          setLoading(false);
-        }, (error) => {
-          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
-          setLoading(false);
-        });
 
-        return () => unsubProfile();
+            // DON'T BLOCK UI
+            setProfile(newProfile);
+
+            setDoc(userDocRef, newProfile).catch(console.error);
+          }
+        });
       } else {
         setProfile(null);
-        setLoading(false);
       }
     });
 
