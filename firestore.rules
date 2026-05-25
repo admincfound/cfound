@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 0. Default deny
+    // 0. Default deny everything
     match /{document=**} {
       allow read, write: if false;
     }
@@ -20,10 +20,10 @@ service cloud.firestore {
     }
 
     function isHardcodedAdmin() {
-      return isSignedIn() && request.auth.token.email in ['admin.cfound.gmail.com'];
+      return isSignedIn() && request.auth.token.email in ['admin.cfound@gmail.com', 'admin.cfound.gmail.com'];
     }
 
-    // ⚡ FIX: Fall back to custom claim first to avoid heavy database get() calls during login
+    // ⚡ Fast Evaluation: Checks custom claims first to eliminate login hanging loops
     function isAdmin() {
       return isSignedIn() && (
         isHardcodedAdmin() ||
@@ -45,20 +45,13 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // --- Entity Validations ---
-    function isValidUser(data) {
-      return data.email is string && 
-             data.role in ['user', 'admin'];
-    }
-
     // --- Collections ---
 
-    // 1. Users
+    // 1. Users Profile Collection
     match /users/{userId} {
-      // ⚡ FIX: Swap order so isOwner evaluated instantly without forcing isAdmin database lookup
+      // Short-circuit evaluations: checks ownership first so normal users bypass admin database reads
       allow read: if isOwner(userId) || isAdmin();
       
-      // ⚡ FIX: Adjusted check to allow safe OTP signups where token email might be delayed or null
       allow create: if isSignedIn() && isOwner(userId) && 
         (isHardcodedAdmin() ? incoming().role == 'admin' : incoming().role == 'user') && 
         (request.auth.token.email == null || incoming().email == request.auth.token.email);
@@ -69,25 +62,26 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // 2. Projects
+    // 2. Projects Portfolio
     match /projects/{projectId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 3. Opportunities
+    // 3. Opportunities (Jobs/Internships)
     match /opportunities/{oppId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 4. Courses
+    // 4. Courses Catalog
     match /courses/{courseId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 5. Applications & Enrollments
+    // 5. Unified Applications & Enrollments (Matches Blueprint Model)
+    // Supports matching requests to /applications, /internshipApplications, and /courseEnrollments
     match /applications/{appId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && incoming().userId == request.auth.uid;
@@ -106,13 +100,13 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // 6. Announcements
+    // 6. Corporate Announcements
     match /announcements/{annId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 7. Blog Posts
+    // 7. Research Insights & Blog Posts
     match /posts/{postId} {
       allow read: if isValidId(postId) && (resource.data.status == 'active' || isAdmin());
       allow list: if isAdmin() || resource.data.status == 'active';
@@ -120,7 +114,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // 8. System Config
+    // 8. Global System Configuration Mapping
+    match /system_config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
     match /system/config {
       allow read: if true;
       allow write: if isAdmin();
