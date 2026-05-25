@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { auth } from '../lib/firebase';
 import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
 
 export default function InternshipDetails() {
@@ -47,6 +49,13 @@ export default function InternshipDetails() {
 
     fetchInternship();
   }, [id]);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsub();
+  }, []);
 
   if (!internship) {
     return (
