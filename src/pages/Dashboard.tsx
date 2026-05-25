@@ -25,42 +25,64 @@ export default function Dashboard() {
 
   const fetchUserApplications = async () => {
     setLoading(true);
+
     try {
+      const qApplications = query(
+        collection(db, 'applications'),
+        where('userId', '==', user?.uid),
+        orderBy('createdAt', 'desc')
+      );
+
       const qInternships = query(
         collection(db, 'internshipApplications'),
         where('userId', '==', user?.uid),
         orderBy('createdAt', 'desc')
       );
-      const qJobs = query(
-        collection(db, 'jobApplications'),
-        where('userId', '==', user?.uid),
-        orderBy('createdAt', 'desc')
-      );
+
       const qAcademy = query(
         collection(db, 'courseEnrollments'),
         where('userId', '==', user?.uid),
         orderBy('appliedAt', 'desc')
       );
-      
-      const [internSnap, jobSnap, academySnap] = await Promise.all([
+
+      const [appSnap, internSnap, academySnap] = await Promise.all([
+        getDocs(qApplications),
         getDocs(qInternships),
-        getDocs(qJobs),
         getDocs(qAcademy)
       ]);
 
-      const internApps = internSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), category: 'Internship' }));
-      const jobApps = jobSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), category: 'Job' }));
-      const academyApps = academySnap.docs.map(doc => ({ id: doc.id, ...doc.data(), category: 'Academy' }));
+      const apps = appSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        category: doc.data().type || 'Job'
+      }));
 
-      const allApps = [...internApps, ...jobApps, ...academyApps].sort((a: any, b: any) => {
+      const internApps = internSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        category: 'Internship'
+      }));
+
+      const academyApps = academySnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        category: 'Academy'
+      }));
+
+      const allApps = [
+        ...apps,
+        ...internApps,
+        ...academyApps
+      ].sort((a: any, b: any) => {
         const dateA = new Date(a.createdAt || a.appliedAt).getTime();
         const dateB = new Date(b.createdAt || b.appliedAt).getTime();
         return dateB - dateA;
       });
 
       setApplications(allApps);
+
     } catch (err) {
-      console.error("Dashboard error:", err);
+      console.error('Dashboard error:', err);
     } finally {
       setLoading(false);
     }
