@@ -37,7 +37,7 @@ export default function Profile() {
   const [skillInput, setSkillInput] = useState('');
 
   useEffect(() => {
-    if (profile && !formData) {
+    if (profile) {
       setFormData({
         displayName: profile.displayName || '',
         email: profile.email || auth.currentUser?.email || '',
@@ -57,15 +57,19 @@ export default function Profile() {
         
         // Profiles & Links
         portfolioUrl: profile.portfolioUrl || '',
-        githubUrl: profile.githubUrl || '',
-        linkedinUrl: profile.linkedinUrl || '',
+        githubUrl: profile.githubUrl || profile.github || '',
+        linkedinUrl: profile.linkedinUrl || profile.linkedin || '',
         behanceUrl: profile.behanceUrl || '',
         artstationUrl: profile.artstationUrl || '',
         youtubeUrl: profile.youtubeUrl || '',
         otherUrl: profile.otherUrl || '',
         
         // Arrays for modular sections
-        experiences: Array.isArray(profile.experiences) ? profile.experiences : [],
+        experiences: Array.isArray(profile.experiences)
+          ? profile.experiences
+          : Array.isArray(profile.experience)
+          ? profile.experience
+          : [],
         projects: Array.isArray(profile.projects) ? profile.projects : [],
         education: Array.isArray(profile.education) ? profile.education : [],
         certifications: Array.isArray(profile.certifications) ? profile.certifications : [],

@@ -12,6 +12,7 @@ interface UserProfile {
   bio?: string;
   skills?: string[];
   education?: any[];
+  experiences?: any[];
   experience?: any[];
   portfolioLinks?: string[];
   github?: string;
@@ -40,17 +41,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    let unsubSnapshot: (() => void) | null = null;
 
-      // INSTANT UI LOAD
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       setLoading(false);
+
+      // cleanup old listener
+      if (unsubSnapshot) {
+        unsubSnapshot();
+        unsubSnapshot = null;
+      }
 
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
 
-        // Background profile loading
-        onSnapshot(userDocRef, async (docSnap) => {
+        unsubSnapshot = onSnapshot(userDocRef, async (docSnap) => {
           if (docSnap.exists()) {
             setProfile(docSnap.data() as UserProfile);
           } else {
@@ -66,7 +72,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               createdAt: new Date().toISOString(),
             };
 
-            // DON'T BLOCK UI
             setProfile(newProfile);
 
             setDoc(userDocRef, newProfile).catch(console.error);
@@ -77,7 +82,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+
+      if (unsubSnapshot) {
+        unsubSnapshot();
+      }
+    };
   }, []);
 
   const isAdmin = profile?.role === 'admin';
