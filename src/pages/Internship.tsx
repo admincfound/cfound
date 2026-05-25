@@ -431,12 +431,13 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
     internshipType: 'unpaid',
     duration: '',
     mode: 'Remote',
-    skills: '',
+    skills: [],
     description: '',
     status: 'active',
     type: 'internship'
   });
   const [loading, setLoading] = useState(false);
+  const [skillInput, setSkillInput] = useState('');
 
   useEffect(() => {
     if (internship) {
@@ -459,7 +460,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
         internshipType: 'unpaid',
         duration: '',
         mode: 'Remote',
-        skills: '',
+        skills: [],
         description: '',
         status: 'active',
         type: 'internship'
