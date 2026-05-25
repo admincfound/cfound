@@ -3,8 +3,6 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 import {
   getFirestore,
-  doc,
-  getDocFromServer,
 } from 'firebase/firestore';
 
 import { getStorage } from 'firebase/storage';
@@ -19,13 +17,3 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Test connection
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-testConnection();
