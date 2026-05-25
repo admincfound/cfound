@@ -61,9 +61,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(37,99,235,0.08),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] dark:opacity-[0.05]" />
-        
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(37,99,235,0.08),transparent_70%)]" />        
         <div className="max-w-7xl mx-auto px-6 lg:px-10 relative">
           <div className="absolute top-0 right-10 w-96 h-96 bg-primary-600/5 blur-[120px] rounded-full animate-pulse" />
           <div className="max-w-4xl">
