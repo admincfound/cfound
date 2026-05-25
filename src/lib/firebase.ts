@@ -13,7 +13,9 @@ import firebaseConfig from '../../firebase-applet-config.json';
 const app = initializeApp(firebaseConfig);
 
 // FIXED FIRESTORE
-export const db = initializeFirestore(app, {});
+export const db = initializeFirestore(app, {
+  databaseId: "ai-studio-24810410-2d44-4bca-af7d-11572783e2b5"
+});
 
 export const auth = getAuth(app);
 export const storage = getStorage(app);
