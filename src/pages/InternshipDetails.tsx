@@ -5,9 +5,10 @@ import { db } from '../lib/firebase';
 import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
 
 export default function InternshipDetails() {
+
   const { slug } = useParams();
 
-  const id = slug;
+  const id = slug?.replace(/^.*-/, '');
   console.log("Slug:", slug);
   console.log("Extracted ID:", id);
   const [internship, setInternship] = useState<any>(null);
