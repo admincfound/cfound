@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 import {
-  getFirestore,
+  initializeFirestore,
 } from 'firebase/firestore';
 
 import { getStorage } from 'firebase/storage';
@@ -10,10 +10,11 @@ import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-// NORMAL FIRESTORE
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  databaseId: firebaseConfig.firestoreDatabaseId,
+  experimentalForceLongPolling: true,
+});
 
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
-
