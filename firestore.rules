@@ -49,17 +49,17 @@ service cloud.firestore {
 
     // 1. Users Profile Collection
     match /users/{userId} {
-      // Short-circuit evaluations: checks ownership first so normal users bypass admin database reads
-      allow read: if isOwner(userId) || isAdmin();
-      
-      allow create: if isSignedIn() && isOwner(userId) && 
-        (isHardcodedAdmin() ? incoming().role == 'admin' : incoming().role == 'user') && 
-        (request.auth.token.email == null || incoming().email == request.auth.token.email);
-        
-      allow update: if (isOwner(userId) && 
-        incoming().role == existing().role && 
-        incoming().email == existing().email) || isAdmin();
-      allow delete: if isAdmin();
+
+      allow read: if isSignedIn() &&
+        (request.auth.uid == userId || isHardcodedAdmin());
+
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId;
+
+      allow update: if isSignedIn() &&
+        (request.auth.uid == userId || isHardcodedAdmin());
+
+      allow delete: if isHardcodedAdmin();
     }
 
     // 2. Projects Portfolio
