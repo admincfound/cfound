@@ -703,21 +703,63 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
 
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                  Skills Required (One per line)
+                  Skills Required
                 </label>
 
-                <textarea
-                  required
-                  value={formData.skills}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      skills: e.target.value
-                    })
-                  }
-                  placeholder="Unity&#10;C++&#10;Game Physics"
-                  className="input-main min-h-[120px] font-mono"
-                />
+                <div className="flex gap-3 mb-4">
+
+                  <input
+                    type="text"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    placeholder="Enter skill"
+                    className="input-main flex-1"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!skillInput.trim()) return;
+
+                      setFormData({
+                        ...formData,
+                        skills: [...formData.skills, skillInput.trim()]
+                      });
+
+                      setSkillInput('');
+                    }}
+                    className="w-14 rounded-2xl bg-primary-600 text-white flex items-center justify-center"
+                  >
+                    <Plus size={18} />
+                  </button>
+
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+
+                  {formData.skills.map((skill: string, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-xs font-bold uppercase"
+                    >
+                      {skill}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            skills: formData.skills.filter((_: any, i: number) => i !== index)
+                          });
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
+
+                    </div>
+                  ))}
+
+                </div>
               </div>
 
               <div>
