@@ -7,7 +7,9 @@ import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
 export default function InternshipDetails() {
   const { slug } = useParams();
 
-  const id = slug?.substring(slug.lastIndexOf('-') + 1);
+  const id = slug;
+  console.log("Slug:", slug);
+  console.log("Extracted ID:", id);
   const [internship, setInternship] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [profileCompleted, setProfileCompleted] = useState(false);
