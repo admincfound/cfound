@@ -1,10 +1,10 @@
 import { motion } from 'motion/react';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,28 +14,44 @@ export default function Login() {
 
   const from = (location.state as any)?.from?.pathname || "/dashboard";
 
+  // 1. Listen for the redirect result when the component mounts/reloads
+  useEffect(() => {
+    const checkRedirect = async () => {
+      setLoading(true);
+      try {
+        const result = await getRedirectResult(auth);
+        
+        // If result is present, it means the user just returned from a successful Google Sign-In redirect
+        if (result && result.user) {
+          await setDoc(doc(db, "users", result.user.uid), {
+            email: result.user.email,
+            role: result.user.email === 'admin.cfound@gmail.com'
+              ? 'admin'
+              : 'user'
+          }, { merge: true });
+
+          navigate(from, { replace: true });
+        }
+      } catch (err: any) {
+        console.error("Redirect Auth Error:", err);
+        setError(err.message || "Failed to finalize sign in. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkRedirect();
+  }, [navigate, from]);
+
+  // 2. Trigger the external Google Redirect flow
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-
-      await setDoc(doc(db, "users", result.user.uid), {
-        email: result.user.email,
-        role: result.user.email === 'admin.cfound@gmail.com'
-          ? 'admin'
-          : 'user'
-      }, { merge: true });
-
-      navigate(from, { replace: true });
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: any) {
       console.error(err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError("Sign-in popup was closed before completion. Please try again.");
-      } else {
-        setError(err.message || "Failed to sign in. Please try again.");
-      }
-    } finally {
+      setError(err.message || "Failed to initialize sign in. Please try again.");
       setLoading(false);
     }
   };
