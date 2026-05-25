@@ -62,10 +62,12 @@ export default function InternshipDetails() {
     const checkProfile = async () => {
       if (!user) return;
 
-      const profileRef = doc(db, 'users', user.uid);
+      const profileRef = doc(db, 'profiles', user.uid);
       const profileSnap = await getDoc(profileRef);
 
       if (profileSnap.exists()) {
+        console.log(profileSnap.exists());
+        console.log(profileSnap.data());
         const data = profileSnap.data();
 
         if (
