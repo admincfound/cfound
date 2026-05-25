@@ -5,7 +5,9 @@ import { db } from '../lib/firebase';
 import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
 
 export default function InternshipDetails() {
-  const { id } = useParams();
+  const { slug } = useParams();
+
+  const id = slug?.split('-').pop();
   const [internship, setInternship] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [profileCompleted, setProfileCompleted] = useState(false);
