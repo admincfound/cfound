@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { auth } from '../lib/firebase';
 import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { getProfileCompletion } from '../lib/profileUtils';
 
 export default function InternshipDetails() {
+  const navigate = useNavigate();
 
   const { slug } = useParams();
 
@@ -16,6 +19,7 @@ export default function InternshipDetails() {
   const [internship, setInternship] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [profileCompleted, setProfileCompleted] = useState(false);
+  const [applying, setApplying] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);  
 
   const handleShare = async () => {
@@ -66,22 +70,91 @@ export default function InternshipDetails() {
       const profileSnap = await getDoc(profileRef);
 
       if (profileSnap.exists()) {
-        console.log(profileSnap.exists());
-        console.log(profileSnap.data());
-        const data = profileSnap.data();
+        const completion = getProfileCompletion(profileSnap.data());
 
-        if (
-          data.fullName &&
-          data.email &&
-          data.phone
-        ) {
-          setProfileCompleted(true);
-        }
+        setProfileCompleted(completion.isComplete);
       }
     };
 
     checkProfile();
   }, [user]);
+
+  useEffect(() => {
+    const checkApplied = async () => {
+      if (!user || !internship?.id) return;
+
+      const q = query(
+        collection(db, 'internshipApplications'),
+        where('userId', '==', user.uid),
+        where('targetId', '==', internship.id)
+      );
+
+      const snap = await getDocs(q);
+
+      setAlreadyApplied(!snap.empty);
+    };
+
+    checkApplied();
+  }, [user, internship]);
+
+  const handleApply = async () => {
+    if (!user) {
+      navigate('/login', {
+        state: { from: { pathname: window.location.pathname } }
+      });
+
+      return;
+    }
+
+    if (!profileCompleted) {
+      toast.error('Complete your profile before applying.');
+      navigate('/profile');
+      return;
+    }
+
+    if (alreadyApplied) {
+      toast.error('You already applied.');
+      return;
+    }
+
+    setApplying(true);
+
+    try {
+      const profileRef = doc(db, 'profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
+
+      const profile = profileSnap.data();
+
+      await addDoc(collection(db, 'internshipApplications'), {
+        userId: user.uid,
+        userEmail: user.email,
+        phone: profile?.phone || '',
+        userName: profile?.displayName || '',
+        skills: profile?.skills || [],
+        resumeUrl: profile?.resumeUrl || '',
+        portfolioUrl:
+          profile?.portfolioUrl ||
+          profile?.githubUrl ||
+          profile?.linkedinUrl ||
+          '',
+        type: 'internship',
+        targetId: internship.id,
+        targetTitle: internship.title,
+        status: 'pending',
+        appliedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      });
+
+      setAlreadyApplied(true);
+
+      toast.success('Application submitted successfully.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error submitting application.');
+    } finally {
+      setApplying(false);
+    }
+  };
 
   if (!internship) {
     return (
@@ -176,9 +249,10 @@ export default function InternshipDetails() {
               ) : (
                 <button
                   onClick={handleApply}
-                  className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest"
+                  disabled={applying}
+                  className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                 >
-                  Apply Now
+                  {applying ? 'Applying...' : 'Apply Now'}
                 </button>
               )}
 
