@@ -76,7 +76,7 @@ export default function Profile() {
         publications: Array.isArray(profile.publications) ? profile.publications : [],
       });
     }
-  }, [profile, formData]);
+  }, [profile]);
 
   const handleUpdateProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();

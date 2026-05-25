@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setProfile(newProfile);
 
-            setDoc(userDocRef, newProfile).catch(console.error);
+            setDoc(userDocRef, newProfile, { merge: true }).catch(console.error);
           }
         });
       } else {
