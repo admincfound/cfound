@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { useNavigate, useLocation } from 'react-router-dom';
