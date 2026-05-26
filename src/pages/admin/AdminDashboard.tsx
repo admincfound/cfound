@@ -59,13 +59,13 @@ export default function AdminDashboard() {
           getDocs(collection(db, 'projects')),
           getDocs(query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(3))),
           getDocs(query(collection(db, 'internshipApplications'), orderBy('createdAt', 'desc'), limit(5))),
-          getDocs(query(collection(db, 'jobApplications'), orderBy('createdAt', 'desc'), limit(5))),
+          getDocs(query(collection(db, 'applications'), orderBy('createdAt', 'desc'), limit(5))),
           getDocs(query(collection(db, 'courseEnrollments'), orderBy('appliedAt', 'desc'), limit(5)))
         ]);
 
         const allApps = [
           ...internshipsSnap.docs.map(d => ({ id: d.id, _collection: 'internshipApplications', ...d.data() })),
-          ...jobsSnap.docs.map(d => ({ id: d.id, _collection: 'jobApplications', ...d.data() })),
+          ...jobsSnap.docs.map(d => ({ id: d.id, _collection: 'applications', ...d.data() })),
           ...coursesSnap.docs.map(d => ({ id: d.id, _collection: 'courseEnrollments', ...d.data() }))
         ];
 

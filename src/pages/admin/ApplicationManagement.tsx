@@ -20,14 +20,14 @@ export default function ApplicationManagement() {
     setLoading(true);
     try {
       const internshipsReq = getDocs(query(collection(db, 'internshipApplications'), orderBy('createdAt', 'desc')));
-      const jobsReq = getDocs(query(collection(db, 'jobApplications'), orderBy('createdAt', 'desc')));
+      const jobsReq = getDocs(query(collection(db, 'applications'), orderBy('createdAt', 'desc')));
       const coursesReq = getDocs(query(collection(db, 'courseEnrollments'), orderBy('appliedAt', 'desc')));
 
       const [internshipsSnap, jobsSnap, coursesSnap] = await Promise.all([internshipsReq, jobsReq, coursesReq]);
 
       const data: any[] = [];
       internshipsSnap.docs.forEach(doc => data.push({ id: doc.id, _collection: 'internshipApplications', ...doc.data() }));
-      jobsSnap.docs.forEach(doc => data.push({ id: doc.id, _collection: 'jobApplications', ...doc.data() }));
+      jobsSnap.docs.forEach(doc => data.push({ id: doc.id, _collection: 'applications', ...doc.data() }));
       coursesSnap.docs.forEach(doc => data.push({ id: doc.id, _collection: 'courseEnrollments', ...doc.data() }));
 
       data.sort((a, b) => {
