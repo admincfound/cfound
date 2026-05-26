@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { uploadFile } from '../lib/storage';
 import { 
@@ -80,14 +80,29 @@ export default function Profile() {
 
   const handleUpdateProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!profile) return;
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      toast.error("User not authenticated");
+      return;
+    }
+
     setLoading(true);
+
     try {
-      await updateDoc(doc(db, 'users', profile.uid), {
-        ...formData,
-        updatedAt: new Date().toISOString(),
-      });
+      await setDoc(
+        doc(db, 'users', currentUser.uid),
+        {
+          ...formData,
+          uid: currentUser.uid,
+          email: currentUser.email || '',
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
       toast.success("Profile updated successfully.");
+
     } catch (err) {
       console.error(err);
       toast.error("Failed to update profile.");
