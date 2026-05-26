@@ -51,11 +51,43 @@ export default function UserLookup() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = !selectedRole || user.targetRole === selectedRole;
-    const matchesSkill = !selectedSkill || user.skills?.includes(selectedSkill);
+  const filteredUsers = users.filter((user) => {
+    const normalizedSearch = searchTerm.toLowerCase().trim();
+
+    const userSkills = Array.isArray(user.skills)
+      ? user.skills.map((s: string) => s.toLowerCase().trim())
+      : [];
+
+    const userRole = (user.targetRole || "").toLowerCase().trim();
+
+    const experience = (user.experienceLevel || "")
+      .toLowerCase()
+      .trim();
+
+    const isStudent =
+      experience.includes("fresher") ||
+      experience.includes("student") ||
+      experience.includes("course") ||
+      experience.includes("learning") ||
+      experience.includes("beginner");
+
+    const matchesSearch =
+      (user.displayName || "")
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      (user.email || "")
+        .toLowerCase()
+        .includes(normalizedSearch);
+
+    const matchesRole =
+      !selectedRole ||
+      userRole === selectedRole.toLowerCase() ||
+      (selectedRole.toLowerCase() === "student" && isStudent);
+
+    const matchesSkill =
+      !selectedSkill ||
+      userSkills.includes(selectedSkill.toLowerCase().trim());
+
     return matchesSearch && matchesRole && matchesSkill;
   });
 
@@ -86,6 +118,7 @@ export default function UserLookup() {
               className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary-600 shadow-xl"
             >
               <option value="">All Roles</option>
+              <option value="Student">Student</option>
               {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
             <select 
@@ -94,7 +127,11 @@ export default function UserLookup() {
               className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary-600 shadow-xl"
             >
               <option value="">All Arsenal Protocols</option>
-              {SKILLS.map(s => <option key={s} value={s}>{s}</option>)}
+              {SKILLS.map((s) => (
+                <option key={s} value={s.toLowerCase().trim()}>
+                  {s}
+                </option>
+              ))}
             </select>
           </div>
         </div>
