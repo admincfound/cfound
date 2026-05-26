@@ -103,7 +103,13 @@ export default function Profile() {
     setUploadingImage(true);
     let url = '';
     try {
-      url = await uploadFile(file, `profiles/${profile.uid}/avatar`);
+      const uploadPath = profile?.uid
+        ? `profiles/${profile.uid}/avatar`
+        : `profiles/temp/${Date.now()}`;
+
+      console.log('UPLOAD PATH:', uploadPath);
+
+      url = await uploadFile(file, uploadPath);
     } catch (err) {
       console.error("Storage upload failed, falling back to Base64:", err);
       // Fallback to Base64 (Compressed)
