@@ -19,11 +19,8 @@ const navLinks = [
 
 const adminLinks = [
   { name: 'Console', path: '/admin' },
-  { name: 'Talent', path: '/admin/talent' },
+  { name: 'Users', path: '/admin/users' },
   { name: 'Intake', path: '/admin/applications' },
-  { name: 'Projects', path: '/projects' },
-  { name: 'Journal', path: '/blog' },
-  { name: 'Academy', path: '/courses' },
   { name: 'Security', path: '/admin/api-settings' },
 ];
 

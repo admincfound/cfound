@@ -6,18 +6,13 @@ import { db } from '../../lib/firebase';
 import { 
   Users, 
   Briefcase, 
-  GraduationCap, 
   Layers, 
   TrendingUp, 
   Bell, 
-  ExternalLink,
   Settings,
   ShieldCheck,
-  Cpu,
-  ArrowUpRight,
   Activity,
   ArrowRight,
-  Rocket,
   Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -209,7 +204,7 @@ export default function AdminDashboard() {
                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {[
                     { name: 'Intake', path: '/admin/applications', icon: <Briefcase size={16} /> },
-                    { name: 'Talent', path: '/admin/talent', icon: <Users size={16} /> },
+                    { name: 'Talent', path: '/admin/users', icon: <Users size={16} /> },
                     { name: 'Settings', path: '/admin/api-settings', icon: <ShieldCheck size={16} /> },
                   ].map(link => (
                     <Link key={link.path} to={link.path} className="p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl flex flex-col items-center gap-4 hover:border-primary-500/50 transition-all group shadow-xl">
