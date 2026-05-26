@@ -151,7 +151,18 @@ export default function UserLookup() {
                   <User size={120} />
                 </div>
                 <div className="flex items-center gap-6 mb-8">
-                  <img src={user.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=neutral'} alt="" className="w-14 h-14 rounded-2xl bg-[var(--bg-main)] object-cover border border-primary-600/20" />
+                  <img
+                    src={
+                      user.photoURL ||
+                      user.googlePhotoURL ||
+                      "/default-avatar.png"
+                    }
+                    alt="profile"
+                    className="w-14 h-14 rounded-2xl bg-[var(--bg-main)] object-cover border border-primary-600/20"
+                    onError={(e) => {
+                      e.currentTarget.src = "/default-avatar.png";
+                    }}
+                  />
                   <div>
                     <h3 className="font-black text-sm text-[var(--text-main)] uppercase italic tracking-tight">{user.displayName || 'Anonymous'}</h3>
                     <p className="text-[9px] text-primary-500 font-black uppercase tracking-[0.2em] mb-1">{user.targetRole || 'Civilian'}</p>
@@ -208,7 +219,18 @@ export default function UserLookup() {
               <div className="p-12">
                 <div className="flex items-center justify-between mb-16">
                    <div className="flex items-center gap-8">
-                     <img src={selectedUser.photoURL} alt="" className="w-24 h-24 rounded-[2rem] border-4 border-primary-600/20" />
+                     <img
+                        src={
+                          selectedUser.photoURL ||
+                          selectedUser.googlePhotoURL ||
+                          "/default-avatar.png"
+                        }
+                        alt="profile"
+                        className="w-24 h-24 rounded-[2rem] border-4 border-primary-600/20 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/default-avatar.png";
+                        }}
+                      />
                      <div>
                         <h2 className="text-4xl font-black font-display uppercase italic text-[var(--text-main)] mb-2">{selectedUser.displayName}</h2>
                         <div className="flex gap-4">
