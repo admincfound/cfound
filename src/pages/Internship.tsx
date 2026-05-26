@@ -1,6 +1,19 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  increment,
+  setDoc
+} from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -21,6 +34,16 @@ export default function Internship() {
   const [editingInternship, setEditingInternship] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const getGuestId = () => {
+    let guestId = localStorage.getItem('guest_id');
+
+    if (!guestId) {
+      guestId = crypto.randomUUID();
+      localStorage.setItem('guest_id', guestId);
+    }
+
+    return guestId;
+  };
 
   const [userApplications, setUserApplications] = useState<Set<string>>(new Set());
 
@@ -31,13 +54,56 @@ export default function Internship() {
         ? query(collection(db, 'opportunities'), where('type', '==', 'internship'))
         : query(collection(db, 'opportunities'), where('type', '==', 'internship'), where('status', 'in', ['active', 'featured']));
       const querySnapshot = await getDocs(q);
-      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = querySnapshot.docs.map(doc => {
+        const d: any = doc.data();
+
+        const trendingScore =
+          (d.applications || 0) * 5 +
+          (d.views || 0);
+
+        return {
+          id: doc.id,
+          ...d,
+          trendingScore
+        };
+      });
       setInternships(data);
     } catch (err) {
       console.error("Error fetching internships:", err);
       setInternships([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const trackView = async (oppId: string) => {
+    try {
+      const guestId = getGuestId();
+
+      const viewRef = doc(
+        db,
+        'internshipViews',
+        `${oppId}_${guestId}`
+      );
+
+      const existing = await getDoc(viewRef);
+
+      if (existing.exists()) return;
+
+      await setDoc(viewRef, {
+        internshipId: oppId,
+        guestId,
+        viewedAt: serverTimestamp()
+      });
+
+      await updateDoc(
+        doc(db, 'opportunities', oppId),
+        {
+          views: increment(1)
+        }
+      );
+    } catch (err) {
+      console.error('View tracking failed:', err);
     }
   };
 
@@ -109,6 +175,13 @@ export default function Internship() {
         appliedAt: new Date().toISOString(),
         createdAt: new Date().toISOString()
       });
+
+      await updateDoc(
+        doc(db, 'opportunities', opp.id),
+        {
+          applications: increment(1)
+        }
+      );
       
       setUserApplications(prev => new Set(prev).add(opp.id));
 
@@ -157,7 +230,15 @@ export default function Internship() {
     }
   };
 
-  const filtered = internships.filter(i => i.title.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = internships
+    .filter(i =>
+      i.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort(
+      (a, b) =>
+        (b.trendingScore || 0) -
+        (a.trendingScore || 0)
+    );
 
   const completion = getProfileCompletion(profile);
 
@@ -287,6 +368,8 @@ export default function Internship() {
                 <motion.div 
                   layout
                   key={opp.id}
+                  onViewportEnter={() => trackView(opp.id)}
+                  viewport={{ once: true }}
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -338,6 +421,23 @@ export default function Internship() {
                       )}
                     </div>
                     <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                    <div className="flex flex-wrap items-center gap-3 mb-6 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+
+                      <div className="flex items-center gap-1">
+                        👁 {opp.views || 0} Views
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        📥 {opp.applications || 0} Applied
+                      </div>
+
+                      {opp.trendingScore > 20 && (
+                        <div className="px-2 py-1 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                          🔥 Trending
+                        </div>
+                      )}
+
+                    </div>
                     <div className="space-y-4 mb-10">
                       {(Array.isArray(opp.skills)
                         ? opp.skills
@@ -495,6 +595,10 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
 
         await addDoc(collection(db, 'opportunities'), {
           ...data,
+          views: 0,
+          applications: 0,
+          clicks: 0,
+          trendingScore: 0,
           createdAt: serverTimestamp()
         });
       }
