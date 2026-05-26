@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, addDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  addDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  increment,
+  setDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { auth } from '../lib/firebase';
 import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
@@ -21,6 +33,49 @@ export default function InternshipDetails() {
   const [internship, setInternship] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [applying, setApplying] = useState(false);
+  const getGuestId = () => {
+    let guestId = localStorage.getItem('guest_id');
+
+    if (!guestId) {
+      guestId = crypto.randomUUID();
+      localStorage.setItem('guest_id', guestId);
+    }
+
+    return guestId;
+  };
+
+  const trackView = async () => {
+    try {
+      if (!internship?.id) return;
+
+      const guestId = user?.uid || getGuestId();
+
+      const viewRef = doc(
+        db,
+        'internshipViews',
+        `${internship.id}_${guestId}`
+      );
+
+      const existing = await getDoc(viewRef);
+
+      if (existing.exists()) return;
+
+      await setDoc(viewRef, {
+        internshipId: internship.id,
+        viewerId: guestId,
+        viewedAt: serverTimestamp()
+      });
+
+      await updateDoc(
+        doc(db, 'opportunities', internship.id),
+        {
+          views: increment(1)
+        }
+      );
+    } catch (err) {
+      console.error('View tracking failed:', err);
+    }
+  };
   const [alreadyApplied, setAlreadyApplied] = useState(false);  
   const completion = getProfileCompletion(profile);
   const handleShare = async () => {
@@ -54,6 +109,12 @@ export default function InternshipDetails() {
 
     fetchInternship();
   }, [id]);
+
+  useEffect(() => {
+    if (internship?.id) {
+      trackView();
+    }
+  }, [internship]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
