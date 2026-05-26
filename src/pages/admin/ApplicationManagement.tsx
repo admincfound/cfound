@@ -11,6 +11,9 @@ export default function ApplicationManagement() {
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState('latest');
 
   useEffect(() => {
     fetchApplications();
@@ -84,6 +87,54 @@ export default function ApplicationManagement() {
     }
   };
 
+  const filteredApplications = applications
+    .filter((app) => {
+
+      const status =
+        (app.status || 'pending')
+          .toLowerCase()
+          .trim();
+
+      const category =
+        (
+          app.type ||
+          app.category ||
+          (
+            app._collection === 'internshipApplications'
+              ? 'internship'
+              : app._collection === 'courseEnrollments'
+              ? 'course'
+              : 'job'
+          )
+        )
+          .toLowerCase()
+          .trim();
+
+      const matchesStatus =
+        !statusFilter ||
+        status === statusFilter.toLowerCase();
+
+      const matchesCategory =
+        !categoryFilter ||
+        category.includes(categoryFilter.toLowerCase());
+
+      return matchesStatus && matchesCategory;
+    })
+    .sort((a, b) => {
+
+      const aTime = new Date(
+        a.createdAt || a.appliedAt || 0
+      ).getTime();
+
+      const bTime = new Date(
+        b.createdAt || b.appliedAt || 0
+      ).getTime();
+
+      return sortOrder === 'latest'
+        ? bTime - aTime
+        : aTime - bTime;
+    });
+
   return (
     <div className="pt-16 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
@@ -91,11 +142,47 @@ export default function ApplicationManagement() {
           <div>
             <span className="text-primary-500 font-bold text-[10px] uppercase tracking-[0.3em] mb-4 block">Candidate Review</span>
             <h1 className="text-5xl md:text-7xl font-black font-display tracking-tight text-[var(--text-main)] uppercase italic">Intake <span className="text-primary-600">Queue.</span></h1>
-            <p className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-widest mt-2">{applications.length} Records in pipeline</p>
+            <p className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-widest mt-2">{filteredApplications.length} Records in pipeline</p>
           </div>
           <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] bg-[var(--bg-card)] border border-[var(--border-main)] px-8 py-4 rounded-2xl shadow-xl italic">
             Management Console
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-4 mb-10">
+
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="bg-[var(--bg-card)] border border-[var(--border-main)] px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl"
+          >
+            <option value="latest">Latest</option>
+            <option value="oldest">Oldest</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-[var(--bg-card)] border border-[var(--border-main)] px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl"
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="bg-[var(--bg-card)] border border-[var(--border-main)] px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl"
+          >
+            <option value="">All Category</option>
+            <option value="internship">Intern</option>
+            <option value="course">Course</option>
+            <option value="career">Career</option>
+            <option value="job">Job</option>
+          </select>
+
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
@@ -103,8 +190,8 @@ export default function ApplicationManagement() {
           <div className="lg:col-span-2 space-y-6">
             {loading ? (
               [1, 2, 3, 4].map(n => <div key={n} className="h-32 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2.5rem] animate-pulse" />)
-            ) : applications.length > 0 ? (
-              applications.map((app) => (
+            ) : filteredApplications.length > 0 ? (
+              filteredApplications.map((app) => (
                 <motion.div 
                   layout
                   key={app.id} 
