@@ -134,6 +134,17 @@ export default function Internship() {
   useEffect(() => {
     fetchInternships();
     fetchUserApplications();
+
+    const handleFocus = () => {
+      fetchInternships();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+
   }, [isAdmin, user]);
 
   const handleShare = async (opp: any) => {
