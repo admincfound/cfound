@@ -81,7 +81,7 @@ export default function AdminDashboard() {
         // Let's do a fast count using a normal getDocs for sizing.
         const [size1, size2, size3] = await Promise.all([
           getDocs(collection(db, 'internshipApplications')),
-          getDocs(collection(db, 'jobApplications')),
+          getDocs(collection(db, 'applications')),
           getDocs(collection(db, 'courseEnrollments'))
         ]);
 
