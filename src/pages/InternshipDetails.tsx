@@ -48,12 +48,14 @@ export default function InternshipDetails() {
     try {
       if (!internship?.id) return;
 
-      const guestId = user?.uid || getGuestId();
+      const viewerId = user
+        ? `user_${user.uid}`
+        : `guest_${getGuestId()}`;
 
       const viewRef = doc(
         db,
         'internshipViews',
-        `${internship.id}_${guestId}`
+        `${internship.id}_${viewerId}`
       );
 
       const existing = await getDoc(viewRef);
@@ -62,7 +64,7 @@ export default function InternshipDetails() {
 
       await setDoc(viewRef, {
         internshipId: internship.id,
-        viewerId: guestId,
+        viewerId,
         viewedAt: serverTimestamp()
       });
 
@@ -72,6 +74,12 @@ export default function InternshipDetails() {
           views: increment(1)
         }
       );
+
+      setInternship((prev: any) => ({
+        ...prev,
+        views: (prev?.views || 0) + 1
+      }));
+
     } catch (err) {
       console.error('View tracking failed:', err);
     }
