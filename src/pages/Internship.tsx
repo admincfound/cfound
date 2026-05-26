@@ -54,19 +54,31 @@ export default function Internship() {
         ? query(collection(db, 'opportunities'), where('type', '==', 'internship'))
         : query(collection(db, 'opportunities'), where('type', '==', 'internship'), where('status', 'in', ['active', 'featured']));
       const querySnapshot = await getDocs(q);
-      const data = querySnapshot.docs.map(doc => {
-        const d: any = doc.data();
+      const data = await Promise.all(
+        querySnapshot.docs.map(async (docSnap) => {
+          const d: any = docSnap.data();
 
-        const trendingScore =
-          (d.applications || 0) * 5 +
-          (d.views || 0);
+          const appQuery = query(
+            collection(db, 'internshipApplications'),
+            where('targetId', '==', docSnap.id)
+          );
 
-        return {
-          id: doc.id,
-          ...d,
-          trendingScore
-        };
-      });
+          const appSnap = await getDocs(appQuery);
+
+          const applications = appSnap.size;
+
+          const trendingScore =
+            applications * 5 +
+            (d.views || 0);
+
+          return {
+            id: docSnap.id,
+            ...d,
+            applications,
+            trendingScore
+          };
+        })
+      );
       setInternships(data);
     } catch (err) {
       console.error("Error fetching internships:", err);
