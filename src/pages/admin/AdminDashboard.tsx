@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   Activity,
   ArrowRight,
-  Trash2
+  Trash2,
+  GraduationCap
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
