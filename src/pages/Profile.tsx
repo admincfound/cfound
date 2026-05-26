@@ -165,7 +165,11 @@ export default function Profile() {
       setFormData({ ...formData, photoURL: url });
       // Auto-save the photoURL right away
       try {
-        await updateDoc(doc(db, 'users', profile.uid), { photoURL: url });
+        await setDoc(
+          doc(db, 'users', auth.currentUser!.uid),
+          { photoURL: url },
+          { merge: true }
+        );
         toast.success("Profile image updated and saved.");
       } catch(e) {
          toast.success("Profile image updated locally. Click 'Save Profile' to persist.");
@@ -235,7 +239,12 @@ export default function Profile() {
           <div className="relative group">
             <div className="w-32 h-32 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-card)] shadow-md relative transition-transform duration-300 group-hover:scale-105">
               <img 
-                src={formData.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=neutral'} 
+                src={
+                  formData.photoURL ||
+                  profile?.photoURL ||
+                  auth.currentUser?.photoURL ||
+                  'https://ui-avatars.com/api/?name=User'
+                } 
                 alt="Profile" 
                 className="w-full h-full object-cover bg-[var(--bg-main)]"
                 referrerPolicy="no-referrer"
@@ -700,7 +709,12 @@ function AdminProfileView({ formData, setFormData, handleImageUpload, handleUpda
         <div className="flex flex-col items-center mb-8">
           <div className="relative group mb-6">
             <div className="w-24 h-24 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-main)]">
-              <img src={formData.photoURL || profile?.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <img src={
+                formData.photoURL ||
+                profile?.photoURL ||
+                auth.currentUser?.photoURL ||
+                'https://ui-avatars.com/api/?name=Admin'
+              } alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               {uploadingImage && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Sparkles size={16} className="text-white animate-spin" /></div>}
             </div>
             <label className="absolute bottom-0 right-0 p-2 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-full shadow-md cursor-pointer hover:scale-110 transition-all">
