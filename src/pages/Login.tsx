@@ -20,12 +20,21 @@ export default function Login() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
 
-      await setDoc(doc(db, "users", result.user.uid), {
-        email: result.user.email,
-        role: result.user.email === 'admin.cfound@gmail.com'
-          ? 'admin'
-          : 'user'
-      }, { merge: true });
+      await setDoc(
+        doc(db, "users", result.user.uid),
+        {
+          uid: result.user.uid,
+          displayName: result.user.displayName || "",
+          email: result.user.email || "",
+          photoURL: result.user.photoURL || "",
+          role:
+            result.user.email === "admin.cfound@gmail.com"
+              ? "admin"
+              : "user",
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       navigate(from, { replace: true });
     } catch (err: any) {
