@@ -102,7 +102,7 @@ function AppContent() {
           {/* Admin Dashboard */}
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/applications" element={<ProtectedRoute role="admin"><AdminLayout><ApplicationManagement /></AdminLayout></ProtectedRoute>} />
-          <Route path="/admin/talent" element={<ProtectedRoute role="admin"><AdminLayout><UserLookup /></AdminLayout></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute role="admin"><AdminLayout><UserLookup /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/api-settings" element={<ProtectedRoute role="admin"><AdminLayout><ApiSettings /></AdminLayout></ProtectedRoute>} />
           
           {/* Fallback */}
