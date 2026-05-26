@@ -104,8 +104,27 @@ export default function Navbar() {
               </Link>
               <div className="w-px h-6 bg-[var(--border-main)] mx-1" />
               <Link to="/profile" className="flex items-center gap-2 pr-4 pl-1 py-1 rounded-full hover:bg-[var(--bg-hover)] transition-all">
-                <img src={profile?.photoURL} alt="" className="w-8 h-8 rounded-full border border-[var(--border-main)]" referrerPolicy="no-referrer" />
-                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[80px]">{profile?.displayName?.split(' ')[0]}</span>
+                <img
+                  src={
+                    profile?.photoURL ||
+                    auth.currentUser?.photoURL ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      profile?.displayName ||
+                      auth.currentUser?.displayName ||
+                      'User'
+                    )}`
+                  }
+                  alt=""
+                  className="w-8 h-8 rounded-full border border-[var(--border-main)] object-cover"
+                  referrerPolicy="no-referrer"
+                />
+
+                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[80px]">
+                  {(profile?.displayName ||
+                    auth.currentUser?.displayName ||
+                    'User'
+                  ).split(' ')[0]}
+                </span>
               </Link>
               <button 
                 onClick={() => auth.signOut()}
