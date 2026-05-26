@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { collection, query, getDocs, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, updateDoc, orderBy, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { CheckCircle2, XCircle, Clock, Eye, Mail, Phone, ExternalLink, Github, Linkedin, User, Activity, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -14,6 +14,7 @@ export default function ApplicationManagement() {
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [sortOrder, setSortOrder] = useState('latest');
+  const [profileData, setProfileData] = useState<any>(null);
 
   useEffect(() => {
     fetchApplications();
@@ -84,6 +85,30 @@ export default function ApplicationManagement() {
       toast.error("Access denied: Could not purge record.");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const fetchUserProfile = async (app: any) => {
+    try {
+
+      if (!app.userId) {
+        setProfileData(null);
+        return;
+      }
+
+      const userRef = doc(db, 'users', app.userId);
+
+      const snap = await getDoc(userRef);
+
+      if (snap.exists()) {
+        setProfileData(snap.data());
+      } else {
+        setProfileData(null);
+      }
+
+    } catch (err) {
+      console.error(err);
+      setProfileData(null);
     }
   };
 
@@ -195,7 +220,10 @@ export default function ApplicationManagement() {
                 <motion.div 
                   layout
                   key={app.id} 
-                  onClick={() => setSelectedApp(app)}
+                  onClick={() => {
+                    setSelectedApp(app);
+                    fetchUserProfile(app);
+                  }}
                   className={`p-8 bg-[var(--bg-card)] border rounded-[3rem] flex items-center justify-between cursor-pointer transition-all hover:border-primary-600/30 shadow-xl group ${selectedApp?.id === app.id ? 'border-primary-600 ring-8 ring-primary-600/5' : 'border-[var(--border-main)]'}`}
                 >
                   <div className="flex items-center gap-8">
@@ -311,6 +339,50 @@ export default function ApplicationManagement() {
                          </div>
                        </div>
                      )}
+
+                     {profileData && (
+                      <div className="mb-8">
+
+                        <p className="text-[9px] font-black uppercase text-[var(--text-muted)] tracking-[0.3em] mb-4 opacity-60 italic">
+                          FULL PROFILE
+                        </p>
+
+                        <div className="space-y-4">
+
+                          <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl">
+                            <div className="text-[9px] opacity-50 uppercase mb-1">
+                              Location
+                            </div>
+
+                            <div className="text-[10px] font-black uppercase">
+                              {profileData.city || 'Unknown'}, {profileData.state || ''}
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl">
+                            <div className="text-[9px] opacity-50 uppercase mb-1">
+                              Experience
+                            </div>
+
+                            <div className="text-[10px] font-black uppercase">
+                              {profileData.experienceLevel || 'Not Specified'}
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl">
+                            <div className="text-[9px] opacity-50 uppercase mb-1">
+                              Bio
+                            </div>
+
+                            <div className="text-[10px] leading-relaxed">
+                              {profileData.bio || 'No bio added'}
+                            </div>
+                          </div>
+
+                        </div>
+
+                      </div>
+                    )}
 
                      {/* Links */}
                      <p className="text-[9px] font-black uppercase text-[var(--text-muted)] tracking-[0.3em] opacity-60 italic">PROFESSIONAL FOOTPRINT</p>
