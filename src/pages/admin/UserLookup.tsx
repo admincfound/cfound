@@ -132,7 +132,9 @@ export default function UserLookup() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 opacity-60">
-                   {user.skills?.slice(0, 3).map((s: string) => (
+                   {(Array.isArray(user.skills) ? user.skills : [])
+                      .slice(0, 3)
+                      .map((s: string) => (
                      <span key={s} className="px-2 py-0.5 bg-primary-600/5 text-primary-600 rounded text-[7px] font-black uppercase tracking-tighter border border-primary-600/10">{s}</span>
                    ))}
                    {(user.skills?.length || 0) > 3 && <span className="text-[7px] font-black uppercase tracking-tighter opacity-40">+{user.skills.length - 3}</span>}
@@ -237,7 +239,7 @@ export default function UserLookup() {
                    <div className="space-y-8">
                       <DetailCard title="Arsenal protocols (Skills)" icon={<Layers size={16}/>}>
                          <div className="flex flex-wrap gap-2">
-                           {selectedUser.skills?.map((s: string) => (
+                           {(Array.isArray(selectedUser.skills) ? selectedUser.skills : []).map((s: string) => (
                              <span key={s} className="px-3 py-1 bg-primary-600 text-white rounded-lg text-[8px] font-black uppercase tracking-tighter">{s}</span>
                            ))}
                          </div>
@@ -259,7 +261,7 @@ export default function UserLookup() {
                 <div className="space-y-12 mb-20">
                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-[var(--text-muted)] pl-2 opacity-60 italic border-l-2 border-primary-600">Operational Log (Experience)</h3>
                    <div className="space-y-6">
-                      {selectedUser.experiences?.map((exp: any, i: number) => (
+                      {(Array.isArray(selectedUser.experiences) ? selectedUser.experiences : []).map((exp: any, i: number) => (
                         <div key={i} className="p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[3rem] relative overflow-hidden group/exp">
                            <div className="flex items-center justify-between mb-4">
                               <h4 className="text-lg font-black text-[var(--text-main)] uppercase italic tracking-tight">{exp.role} @ {exp.company}</h4>
@@ -279,7 +281,7 @@ export default function UserLookup() {
                 <div className="space-y-12">
                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-[var(--text-muted)] pl-2 opacity-60 italic border-l-2 border-primary-600">Archive Entries (Projects)</h3>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {selectedUser.projects?.map((proj: any, i: number) => (
+                      {(Array.isArray(selectedUser.projects) ? selectedUser.projects : []).map((proj: any, i: number) => (
                         <div key={i} className="p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2.5rem] group/proj">
                            <h4 className="text-sm font-black text-[var(--text-main)] uppercase italic tracking-tight mb-2">{proj.title} <span className="text-[8px] opacity-40 ml-2">// {proj.status}</span></h4>
                            <p className="text-[9px] font-bold text-[var(--text-muted)] leading-relaxed uppercase tracking-widest mb-6 opacity-60 truncate">{proj.description}</p>
