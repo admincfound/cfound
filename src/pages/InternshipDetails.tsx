@@ -114,7 +114,7 @@ export default function InternshipDetails() {
     if (internship?.id) {
       trackView();
     }
-  }, [internship]);
+  }, [internship, user]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
