@@ -18,6 +18,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin');
+    }
+  }, [isAdmin, navigate]);
+
+  useEffect(() => {
     if (user) {
       fetchUserApplications();
     }
