@@ -208,10 +208,7 @@ export default function AdminDashboard() {
                </h3>
                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {[
-                    { name: 'Portfolio', path: '/projects', icon: <Layers size={16} /> },
                     { name: 'Intake', path: '/admin/applications', icon: <Briefcase size={16} /> },
-                    { name: 'Internship', path: '/internship', icon: <Cpu size={16} /> },
-                    { name: 'Journal', path: '/blog', icon: <GraduationCap size={16} /> },
                     { name: 'Talent', path: '/admin/talent', icon: <Users size={16} /> },
                     { name: 'Settings', path: '/admin/api-settings', icon: <ShieldCheck size={16} /> },
                   ].map(link => (
