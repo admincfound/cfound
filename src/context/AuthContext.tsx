@@ -58,7 +58,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         unsubSnapshot = onSnapshot(userDocRef, async (docSnap) => {
           if (docSnap.exists()) {
-            setProfile(docSnap.data() as UserProfile);
+            const existingProfile = docSnap.data() as UserProfile;
+
+            // AUTO RECOVER MISSING GOOGLE PROFILE DATA
+            if (
+              (!existingProfile.photoURL || existingProfile.photoURL === '') &&
+              firebaseUser.photoURL
+            ) {
+              const updatedProfile = {
+                ...existingProfile,
+                photoURL: firebaseUser.photoURL,
+                displayName:
+                  existingProfile.displayName || firebaseUser.displayName || '',
+                email: existingProfile.email || firebaseUser.email || '',
+                updatedAt: new Date().toISOString(),
+              };
+
+              setProfile(updatedProfile);
+
+              await setDoc(userDocRef, updatedProfile, { merge: true });
+            } else {
+              setProfile(existingProfile);
+            }
           } else {
             const isDefaultAdmin =
               firebaseUser.email === 'admin.cfound@gmail.com';
