@@ -1,39 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
   <url>
     <loc>https://www.cfound.in/</loc>
-    <lastmod>2026-05-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
   </url>
-
   <url>
-    <loc>https://www.cfound.in/about</loc>
+    <loc>https://www.cfound.in/internships</loc>
   </url>
-
   <url>
-    <loc>https://www.cfound.in/services</loc>
+    <loc>https://www.cfound.in/jobs</loc>
   </url>
-
-  <url>
-    <loc>https://www.cfound.in/projects</loc>
-  </url>
-
   <url>
     <loc>https://www.cfound.in/contact</loc>
   </url>
-
-  <url>
-    <loc>https://www.cfound.in/careers</loc>
-  </url>
-
-  <url>
-    <loc>https://www.cfound.in/courses</loc>
-  </url>
-
-  <url>
-    <loc>https://www.cfound.in/internship</loc>
-  </url>
-
 </urlset>
