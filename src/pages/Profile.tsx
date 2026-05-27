@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
-import { uploadFile } from '../lib/storage';
 import { 
-  User, Github, Linkedin, Globe, Plus, Trash2, Save, Camera, 
+  User, Github, Linkedin, Globe, Plus, Trash2, Save, 
   ChevronDown, ChevronUp, Briefcase, BookOpen, Award, Layers,
   Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X
 } from 'lucide-react';
@@ -22,7 +21,6 @@ export default function Profile() {
   const { profile, isAdmin, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   
   const [collapsed, setCollapsed] = useState({
     personal: false,
@@ -111,106 +109,6 @@ export default function Profile() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !profile) return;
-    
-    setUploadingImage(true);
-    let url = '';
-    try {
-      const uploadPath = profile?.uid
-        ? `profiles/${profile.uid}/avatar`
-        : `profiles/temp/${Date.now()}`;
-
-      console.log('UPLOAD PATH:', uploadPath);
-
-      url = await uploadFile(file, uploadPath);
-    } catch (err) {
-      console.error("Storage upload failed, falling back to Base64:", err);
-      // Fallback to Base64 (Compressed)
-      const reader = new FileReader();
-      url = await new Promise((resolve) => {
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 400;
-            const MAX_HEIGHT = 400;
-            let width = img.width;
-            let height = img.height;
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height = Math.round((height *= MAX_WIDTH / width));
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width = Math.round((width *= MAX_HEIGHT / height));
-                height = MAX_HEIGHT;
-              }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.6));
-          };
-          img.src = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    if (url) {
-      setFormData((prev: any) => ({
-        ...prev,
-        photoURL: url
-      }));
-      // Auto-save the photoURL right away
-      try {
-        await setDoc(
-          doc(db, 'users', auth.currentUser!.uid),
-          { photoURL: url },
-          { merge: true }
-        );
-        toast.success("Logo uploaded successfully.");
-      } catch(e) {
-         toast.success("Profile image updated locally. Click 'Save Profile' to persist.");
-      }
-    } else {
-      toast.error("Image upload failed.");
-    }
-    
-    setUploadingImage(false);
-  };
-
-  const handleRemoveCustomImage = async () => {
-    try {
-      const googlePhoto =
-        auth.currentUser?.photoURL || '';
-
-      setFormData((prev: any) => ({
-        ...prev,
-        photoURL: googlePhoto
-      }));
-
-      await setDoc(
-        doc(db, 'users', auth.currentUser!.uid),
-        {
-          photoURL: googlePhoto,
-          updatedAt: new Date().toISOString()
-        },
-        { merge: true }
-      );
-
-      toast.success('Profile image removed');
-
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to remove image');
-    }
-  };
-
   const addItem = (section: string, defaultObj: any) => {
     setFormData({
       ...formData,
@@ -252,10 +150,8 @@ export default function Profile() {
     return <AdminProfileView 
       formData={formData} 
       setFormData={setFormData} 
-      handleImageUpload={handleImageUpload}
       handleUpdateProfile={handleUpdateProfile}
       loading={loading}
-      uploadingImage={uploadingImage}
       profile={profile}
     />;
   }
@@ -266,49 +162,23 @@ export default function Profile() {
         
         {/* Profile Header */}
         <div className="flex flex-col md:flex-row items-center gap-10 mb-10">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-card)] shadow-md relative transition-transform duration-300 group-hover:scale-105">
-              <img 
-                src={
-                  formData.photoURL ||
-                  profile?.photoURL ||
-                  auth.currentUser?.photoURL ||
-                  'https://ui-avatars.com/api/?name=User'
-                } 
-                alt="Profile" 
-                onError={(e) => {
-                  e.currentTarget.src =
-                    'https://ui-avatars.com/api/?name=User';
-                }}
-                className="w-full h-full object-cover bg-[var(--bg-main)]"
-                referrerPolicy="no-referrer"
-              />
-              {uploadingImage && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm">
-                  <Sparkles size={20} className="text-white animate-spin" />
-                </div>
-              )}
-            </div>
-            <label className="absolute bottom-0 right-0 p-3 bg-white text-black rounded-full shadow-lg border border-gray-200 cursor-pointer hover:scale-110 transition-all">
-              <Camera size={16} />
-              <input 
-                type="file"
-                className="hidden"
-                accept="image/*"
-                capture="user"
-                onChange={handleImageUpload}
-                disabled={uploadingImage}
-              />
-            </label>
-            <button
-              type="button"
-              onClick={handleRemoveCustomImage}
-              className="absolute top-0 right-0 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all z-20"
-            >
-              <Trash2 size={14} />
-            </button>
+          <div className="w-32 h-32 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-card)] shadow-md">
+            <img 
+              src={
+                profile?.photoURL ||
+                auth.currentUser?.photoURL ||
+                'https://ui-avatars.com/api/?name=User'
+              } 
+              alt="Profile"
+              onError={(e) => {
+                e.currentTarget.src =
+                  'https://ui-avatars.com/api/?name=User';
+              }}
+              className="w-full h-full object-cover bg-[var(--bg-main)]"
+              referrerPolicy="no-referrer"
+            />
           </div>
-          
+                    
           <div className="text-center md:text-left flex-1">
             <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] mb-2">
               {formData.displayName || 'Your Name'}
@@ -755,67 +625,20 @@ function AdminProfileView({ formData, setFormData, handleImageUpload, handleUpda
       <div className="max-w-xl mx-auto p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm">
         
         <div className="flex flex-col items-center mb-8">
-          <div className="relative group mb-6">
-            <div className="w-24 h-24 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-main)]">
-              <img 
-                src={
-                  formData.photoURL ||
-                  profile?.photoURL ||
-                  auth.currentUser?.photoURL ||
-                  'https://ui-avatars.com/api/?name=Admin'
-                }
-                alt=""
-                onError={(e) => {
-                  e.currentTarget.src =
-                    'https://ui-avatars.com/api/?name=Admin';
-                }}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              {uploadingImage && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Sparkles size={16} className="text-white animate-spin" /></div>}
-            </div>
-            <label className="absolute bottom-0 right-0 p-2 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-full shadow-md cursor-pointer hover:scale-110 transition-all">
-              <Camera size={14} />
-              <input 
-                type="file"
-                className="hidden"
-                accept="image/*"
-                capture="user"
-                onChange={handleImageUpload}
-              />
-            </label>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  const googlePhoto =
-                    auth.currentUser?.photoURL || '';
-
-                  setFormData((prev: any) => ({
-                    ...prev,
-                    photoURL: googlePhoto
-                  }));
-
-                  await setDoc(
-                    doc(db, 'users', auth.currentUser!.uid),
-                    {
-                      photoURL: googlePhoto,
-                      updatedAt: new Date().toISOString()
-                    },
-                    { merge: true }
-                  );
-
-                  toast.success('Profile image removed');
-
-                } catch (err) {
-                  console.error(err);
-                  toast.error('Failed to remove image');
-                }
+          <div className="w-24 h-24 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-main)] mb-6">
+            <img 
+              src={
+                auth.currentUser?.photoURL ||
+                'https://ui-avatars.com/api/?name=Admin'
+              }
+              alt=""
+              onError={(e) => {
+                e.currentTarget.src =
+                  'https://ui-avatars.com/api/?name=Admin';
               }}
-              className="absolute top-0 right-0 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all z-20"
-            >
-              <Trash2 size={14} />
-            </button>
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <h2 className="text-2xl font-bold text-[var(--text-main)]">{formData.displayName}</h2>
           <div className="px-3 py-1 mt-2 bg-primary-600/10 text-primary-600 rounded-md text-xs font-semibold">Administrator</div>
