@@ -162,7 +162,10 @@ export default function Profile() {
     }
 
     if (url) {
-      setFormData({ ...formData, photoURL: url });
+      setFormData((prev: any) => ({
+        ...prev,
+        photoURL: url
+      }));
       // Auto-save the photoURL right away
       try {
         await setDoc(
@@ -170,7 +173,7 @@ export default function Profile() {
           { photoURL: url },
           { merge: true }
         );
-        toast.success("Profile image updated and saved.");
+        toast.success("Logo uploaded successfully.");
       } catch(e) {
          toast.success("Profile image updated locally. Click 'Save Profile' to persist.");
       }
@@ -181,10 +184,37 @@ export default function Profile() {
     setUploadingImage(false);
   };
 
+  const handleRemoveCustomImage = async () => {
+    try {
+      const googlePhoto =
+        auth.currentUser?.photoURL || '';
+
+      setFormData((prev: any) => ({
+        ...prev,
+        photoURL: googlePhoto
+      }));
+
+      await setDoc(
+        doc(db, 'users', auth.currentUser!.uid),
+        {
+          photoURL: googlePhoto,
+          updatedAt: new Date().toISOString()
+        },
+        { merge: true }
+      );
+
+      toast.success('Profile image removed');
+
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to remove image');
+    }
+  };
+
   const addItem = (section: string, defaultObj: any) => {
     setFormData({
       ...formData,
-      [section]: [...formData[section], { ...defaultObj, id: Math.random().toString(36).substr(2, 9) }]
+      [section]: [...formData[section], { ...defaultObj, id: crypto.randomUUID() }]
     });
   };
 
@@ -246,6 +276,10 @@ export default function Profile() {
                   'https://ui-avatars.com/api/?name=User'
                 } 
                 alt="Profile" 
+                onError={(e) => {
+                  e.currentTarget.src =
+                    'https://ui-avatars.com/api/?name=User';
+                }}
                 className="w-full h-full object-cover bg-[var(--bg-main)]"
                 referrerPolicy="no-referrer"
               />
@@ -257,8 +291,22 @@ export default function Profile() {
             </div>
             <label className="absolute bottom-0 right-0 p-3 bg-white text-black rounded-full shadow-lg border border-gray-200 cursor-pointer hover:scale-110 transition-all">
               <Camera size={16} />
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} />
+              <input 
+                type="file"
+                className="hidden"
+                accept="image/*"
+                capture="user"
+                onChange={handleImageUpload}
+                disabled={uploadingImage}
+              />
             </label>
+            <button
+              type="button"
+              onClick={handleRemoveCustomImage}
+              className="absolute top-0 right-0 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all z-20"
+            >
+              <Trash2 size={14} />
+            </button>
           </div>
           
           <div className="text-center md:text-left flex-1">
@@ -709,18 +757,65 @@ function AdminProfileView({ formData, setFormData, handleImageUpload, handleUpda
         <div className="flex flex-col items-center mb-8">
           <div className="relative group mb-6">
             <div className="w-24 h-24 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-main)]">
-              <img src={
-                formData.photoURL ||
-                profile?.photoURL ||
-                auth.currentUser?.photoURL ||
-                'https://ui-avatars.com/api/?name=Admin'
-              } alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <img 
+                src={
+                  formData.photoURL ||
+                  profile?.photoURL ||
+                  auth.currentUser?.photoURL ||
+                  'https://ui-avatars.com/api/?name=Admin'
+                }
+                alt=""
+                onError={(e) => {
+                  e.currentTarget.src =
+                    'https://ui-avatars.com/api/?name=Admin';
+                }}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
               {uploadingImage && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Sparkles size={16} className="text-white animate-spin" /></div>}
             </div>
             <label className="absolute bottom-0 right-0 p-2 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-full shadow-md cursor-pointer hover:scale-110 transition-all">
               <Camera size={14} />
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+              <input 
+                type="file"
+                className="hidden"
+                accept="image/*"
+                capture="user"
+                onChange={handleImageUpload}
+              />
             </label>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const googlePhoto =
+                    auth.currentUser?.photoURL || '';
+
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    photoURL: googlePhoto
+                  }));
+
+                  await setDoc(
+                    doc(db, 'users', auth.currentUser!.uid),
+                    {
+                      photoURL: googlePhoto,
+                      updatedAt: new Date().toISOString()
+                    },
+                    { merge: true }
+                  );
+
+                  toast.success('Profile image removed');
+
+                } catch (err) {
+                  console.error(err);
+                  toast.error('Failed to remove image');
+                }
+              }}
+              className="absolute top-0 right-0 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all z-20"
+            >
+              <Trash2 size={14} />
+            </button>
           </div>
           <h2 className="text-2xl font-bold text-[var(--text-main)]">{formData.displayName}</h2>
           <div className="px-3 py-1 mt-2 bg-primary-600/10 text-primary-600 rounded-md text-xs font-semibold">Administrator</div>
