@@ -665,7 +665,9 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.reload();
+                  setFormData(JSON.parse(initialData));
+                  setHasChanges(false);
+                  setIsEditing(false);
                 }}
                 className="px-8 py-4 border border-[var(--border-main)] text-[var(--text-main)] rounded-full text-sm font-semibold"
               >
