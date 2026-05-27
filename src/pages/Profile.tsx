@@ -33,6 +33,9 @@ export default function Profile() {
   });
 
   const [skillInput, setSkillInput] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [initialData, setInitialData] = useState<any>(null);
 
   useEffect(() => {
     if (profile) {
@@ -76,6 +79,35 @@ export default function Profile() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (formData && !initialData) {
+      setInitialData(JSON.stringify(formData));
+    }
+  }, [formData, initialData]);
+
+  useEffect(() => {
+    if (!formData || !initialData) return;
+
+    setHasChanges(
+      JSON.stringify(formData) !== initialData
+    );
+  }, [formData, initialData]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasChanges]);
+
   const handleUpdateProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const currentUser = auth.currentUser;
@@ -100,6 +132,9 @@ export default function Profile() {
       );
 
       toast.success("Profile updated successfully.");
+      setIsEditing(false);
+      setHasChanges(false);
+      setInitialData(JSON.stringify(formData));
 
     } catch (err) {
       console.error(err);
@@ -265,7 +300,8 @@ export default function Profile() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputGroup label="Full Name">
-                <input 
+                <input
+                  disabled={!isEditing}
                   type="text" 
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
@@ -276,6 +312,7 @@ export default function Profile() {
 
               <InputGroup label="Email Address">
                 <input 
+                  disabled={!isEditing}
                   type="email" 
                   value={formData.email || profile?.email || ""}
                   readOnly
@@ -285,6 +322,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="Phone Number">
                 <input 
+                  disabled={!isEditing}
                   type="text" 
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -294,6 +332,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="Country">
                 <input 
+                  disabled={!isEditing}
                   type="text" 
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
@@ -303,6 +342,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="State / Province">
                 <input 
+                  disabled={!isEditing}
                   type="text" 
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
@@ -312,6 +352,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="City">
                 <input 
+                  disabled={!isEditing}
                   type="text" 
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -323,6 +364,7 @@ export default function Profile() {
             <div className="mt-6">
                <InputGroup label="About / Bio">
                   <textarea 
+
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[120px]"
@@ -334,6 +376,7 @@ export default function Profile() {
             <div className="mt-8 pt-8 border-t border-[var(--border-main)] grid grid-cols-1 md:grid-cols-2 gap-6">
                <InputGroup label="Primary Role / Interest">
                   <input 
+                    disabled={!isEditing}
                     type="text" 
                     value={formData.primaryRole}
                     onChange={(e) => setFormData({ ...formData, primaryRole: e.target.value })}
@@ -342,7 +385,7 @@ export default function Profile() {
                   />
                </InputGroup>
                <InputGroup label="Experience Level">
-                  <select 
+                   <select 
                     value={formData.experienceLevel}
                     onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
                     className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all font-medium"
@@ -371,7 +414,8 @@ export default function Profile() {
                       ))}
                     </div>
                     <div className="flex gap-2">
-                      <input 
+                      <input
+                        disabled={!isEditing}
                         type="text" 
                         value={skillInput}
                         onChange={(e) => setSkillInput(e.target.value)}
@@ -462,6 +506,7 @@ export default function Profile() {
             })}
             itemRenderer={(proj: any) => (
               <ProjectItem 
+                isEditing={isEditing}
                 key={proj.id} 
                 proj={proj}
                 onUpdate={(f: any, v: any) => updateItem('projects', proj.id, f, v)}
@@ -479,12 +524,18 @@ export default function Profile() {
             onToggle={() => toggleCollapse('links')}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SocialInput icon={<Globe size={16}/>} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v:any) => setFormData({...formData, portfolioUrl: v})} />
-              <SocialInput icon={<Github size={16}/>} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v:any) => setFormData({...formData, githubUrl: v})} />
-              <SocialInput icon={<Linkedin size={16}/>} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v:any) => setFormData({...formData, linkedinUrl: v})} />
-              <SocialInput icon={<Layers size={16}/>} placeholder="Behance" value={formData.behanceUrl} onChange={(v:any) => setFormData({...formData, behanceUrl: v})} />
-              <SocialInput icon={<BookOpen size={16}/>} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v:any) => setFormData({...formData, artstationUrl: v})} />
-              <SocialInput icon={<LinkIcon size={16}/>} placeholder="Other Link" value={formData.otherUrl} onChange={(v:any) => setFormData({...formData, otherUrl: v})} />
+              <SocialInput
+                isEditing={isEditing} icon={<Globe size={16}/>} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v:any) => setFormData({...formData, portfolioUrl: v})} />
+              <SocialInput
+                isEditing={isEditing} icon={<Github size={16}/>} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v:any) => setFormData({...formData, githubUrl: v})} />
+              <SocialInput
+                isEditing={isEditing} icon={<Linkedin size={16}/>} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v:any) => setFormData({...formData, linkedinUrl: v})} />
+              <SocialInput
+                isEditing={isEditing} icon={<Layers size={16}/>} placeholder="Behance" value={formData.behanceUrl} onChange={(v:any) => setFormData({...formData, behanceUrl: v})} />
+              <SocialInput
+                isEditing={isEditing} icon={<BookOpen size={16}/>} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v:any) => setFormData({...formData, artstationUrl: v})} />
+              <SocialInput
+                isEditing={isEditing} icon={<LinkIcon size={16}/>} placeholder="Other Link" value={formData.otherUrl} onChange={(v:any) => setFormData({...formData, otherUrl: v})} />
             </div>
           </ProfileSection>
 
@@ -570,13 +621,14 @@ export default function Profile() {
               <CheckCircle2 size={20} className="text-primary-500" /> Declaration & Consent
             </h2>
             <div className="space-y-6">
-               <label className="flex items-start gap-3 cursor-pointer">
-                 <input 
-                   type="checkbox" 
-                   checked={formData.declarationAccepted} 
-                   onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })} 
-                   className="mt-1 w-5 h-5 rounded border-[var(--border-main)] text-primary-600 focus:ring-primary-600 bg-[var(--bg-main)]" 
-                 />
+              <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    disabled={!isEditing}
+                    type="checkbox" 
+                    checked={formData.declarationAccepted} 
+                    onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })} 
+                    className="mt-1 w-5 h-5 rounded border-[var(--border-main)] text-primary-600 focus:ring-primary-600 bg-[var(--bg-main)]" 
+                  />
                  <span className="text-sm font-medium text-[var(--text-main)] leading-relaxed">
                    I confirm that the information provided in my profile is accurate and can be used for internship applications, job hiring evaluation, course enrollments, and professional communication purposes.
                  </span>
@@ -585,6 +637,7 @@ export default function Profile() {
                <div className="pt-4 border-t border-[var(--border-main)]">
                  <InputGroup label="Digital Signature (Type Full Name)">
                     <input 
+                      disabled={!isEditing}
                       type="text" 
                       value={formData.signature}
                       onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
@@ -596,20 +649,44 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <div className="sticky bottom-0 z-50 flex justify-center pb-6 pt-8 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)] to-transparent mt-4">
-            <button 
-              type="submit"
-              disabled={loading}
-              className="px-8 py-4 bg-primary-600 text-white rounded-full text-sm font-semibold flex items-center gap-3 shadow-xl hover:bg-primary-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:scale-105"
+  
+          {!isEditing ? (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="px-8 py-4 bg-primary-600 text-white rounded-full text-sm font-semibold shadow-xl hover:bg-primary-700 transition-all"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              ) : (
-                <><Save size={18} /> Save Profile</>
-              )}
+              Edit Profile
             </button>
-          </div>
+          ) : (
+            <div className="flex gap-4">
+              
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="px-8 py-4 border border-[var(--border-main)] text-[var(--text-main)] rounded-full text-sm font-semibold"
+              >
+                Cancel
+              </button>
+
+              <button 
+                type="submit"
+                disabled={loading}
+                className="px-8 py-4 bg-primary-600 text-white rounded-full text-sm font-semibold flex items-center gap-3 shadow-xl hover:bg-primary-700 transition-all disabled:opacity-70"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <><Save size={18} /> Save Changes</>
+                )}
+              </button>
+
+            </div>
+          )}
+        </div>
 
         </form>
       </div>
@@ -646,7 +723,7 @@ function AdminProfileView({ formData, setFormData, handleImageUpload, handleUpda
 
         <form onSubmit={handleUpdateProfile} className="space-y-5">
           <InputGroup label="Full Name">
-            <input value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" />
+            <input  value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" />
           </InputGroup>
           <InputGroup label="Bio">
             <textarea value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[80px]" placeholder="Brief overview..." />
@@ -750,11 +827,11 @@ function ExperienceItem({ exp, onUpdate, onDelete }: any) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Start Date">
           <div className="flex gap-2">
-            <select value={exp.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={exp.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-            <select value={exp.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={exp.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -762,11 +839,11 @@ function ExperienceItem({ exp, onUpdate, onDelete }: any) {
         </InputGroup>
         <InputGroup label="End Date">
           <div className="flex gap-2">
-            <select value={exp.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={exp.current}>
+             <select value={exp.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={exp.current}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-            <select value={exp.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={exp.current}>
+             <select value={exp.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={exp.current}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -793,7 +870,7 @@ function ExperienceItem({ exp, onUpdate, onDelete }: any) {
   );
 }
 
-function ProjectItem({ proj, onUpdate, onDelete }: any) {
+function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div 
       layout
@@ -816,11 +893,11 @@ function ProjectItem({ proj, onUpdate, onDelete }: any) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Start Date">
           <div className="flex gap-2">
-            <select value={proj.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={proj.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-            <select value={proj.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={proj.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -828,11 +905,11 @@ function ProjectItem({ proj, onUpdate, onDelete }: any) {
         </InputGroup>
         <InputGroup label="End Date">
           <div className="flex gap-2">
-            <select value={proj.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={proj.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-            <select value={proj.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={proj.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -856,8 +933,10 @@ function ProjectItem({ proj, onUpdate, onDelete }: any) {
       </InputGroup>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-        <SocialInput icon={<Github size={14}/>} placeholder="Repository Link" value={proj.githubUrl} onChange={(v:any) => onUpdate('githubUrl', v)} />
-        <SocialInput icon={<Globe size={14}/>} placeholder="Demo URL" value={proj.demoUrl} onChange={(v:any) => onUpdate('demoUrl', v)} />
+        <SocialInput
+                isEditing={isEditing} icon={<Github size={14}/>} placeholder="Repository Link" value={proj.githubUrl} onChange={(v:any) => onUpdate('githubUrl', v)} />
+        <SocialInput
+                isEditing={isEditing} icon={<Globe size={14}/>} placeholder="Demo URL" value={proj.demoUrl} onChange={(v:any) => onUpdate('demoUrl', v)} />
       </div>
     </motion.div>
   );
@@ -880,13 +959,13 @@ function EducationItem({ edu, onUpdate, onDelete }: any) {
            <input value={edu.department} onChange={(e) => onUpdate('department', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Computer Science" />
         </InputGroup>
         <InputGroup label="Start Year">
-           <select value={edu.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+            <select value={edu.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
            </select>
         </InputGroup>
         <InputGroup label="End Year">
-           <select value={edu.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={edu.current}>
+            <select value={edu.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={edu.current}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
            </select>
@@ -917,11 +996,11 @@ function CertificationItem({ cert, onUpdate, onDelete }: any) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Issue Date">
           <div className="flex gap-2">
-            <select value={cert.issueMonth || ''} onChange={(e) => onUpdate('issueMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={cert.issueMonth || ''} onChange={(e) => onUpdate('issueMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-            <select value={cert.issueYear || ''} onChange={(e) => onUpdate('issueYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={cert.issueYear || ''} onChange={(e) => onUpdate('issueYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -950,11 +1029,11 @@ function PublicationItem({ pub, onUpdate, onDelete }: any) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Date">
           <div className="flex gap-2">
-            <select value={pub.dateMonth || ''} onChange={(e) => onUpdate('dateMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={pub.dateMonth || ''} onChange={(e) => onUpdate('dateMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-            <select value={pub.dateYear || ''} onChange={(e) => onUpdate('dateYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select value={pub.dateYear || ''} onChange={(e) => onUpdate('dateYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -977,19 +1056,20 @@ function InputGroup({ label, children }: any) {
   );
 }
 
-function SocialInput({ icon, value, onChange, placeholder }: any) {
+function SocialInput({ icon, value, onChange, placeholder, isEditing }: any) {
   return (
     <div className="relative group flex items-center">
-       <div className="absolute left-4 text-[var(--text-muted)]">
-          {icon}
-       </div>
-       <input 
-         type="text"
-         value={value}
-         onChange={(e) => onChange(e.target.value)}
-         placeholder={placeholder}
-         className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
-       />
+      <div className="absolute left-4 text-[var(--text-muted)]">
+        {icon}
+      </div>
+        <input
+          disabled={!isEditing}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
+        />
     </div>
   );
 }
