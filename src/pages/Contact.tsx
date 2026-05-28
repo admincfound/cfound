@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, Phone, MapPin, Send, MessageSquare, ShieldCheck, Globe } from 'lucide-react';
+import { Mail, MapPin, Send, ShieldCheck, Globe } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Helmet } from 'react-helmet-async';
 
 export default function Contact() {
-  const [status, setStatus] = useState<{ type: 'idle' | 'success' | 'error', message: string }>({ type: 'idle', message: '' });
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
     const form = e.currentTarget;
@@ -29,23 +29,76 @@ export default function Contact() {
       form.elements.namedItem('message') as HTMLTextAreaElement
     ).value;
 
-    const whatsappMessage = `
-  *NEW CONTACT FORM SUBMISSION*
+    const whatsappMessage = `C FOUND TECHNOLOGIES
 
-  👤 Name: ${name}
+      New Contact Submission
 
-  📧 Email: ${email}
+      ━━━━━━━━━━━━━━━━━━
 
-  📌 Inquiry: ${inquiry}
+      FULL NAME
+      ${name}
 
-  💬 Message:
-  ${message}
-    `;
+      EMAIL ADDRESS
+      ${email}
+
+      INQUIRY TYPE
+      ${inquiry}
+
+      MESSAGE
+      ${message}
+
+      ━━━━━━━━━━━━━━━━━━
+
+      Submitted via:
+      www.cfound.in`;
 
     const whatsappUrl =
-      `https://wa.me/919361194545?text=${encodeURIComponent(whatsappMessage)}`;
+      `https://wa.me/919361194545?text=${encodeURIComponent(
+        whatsappMessage
+      )}`;
 
-    window.open(whatsappUrl, '_blank');
+    try {
+      const win = window.open(
+        whatsappUrl,
+        '_blank'
+      );
+
+      if (!win) {
+        toast.error(
+          'Popup blocked. Please allow popups and try again.'
+        );
+        return;
+      }
+
+      form.reset();
+
+      toast.success(
+        'WhatsApp opened successfully.'
+      );
+
+      setTimeout(() => {
+        const confirmed = window.confirm(
+          'Did you send the WhatsApp message successfully?'
+        );
+
+        if (confirmed) {
+          toast.success(
+            'Message sent successfully. Our team will reply soon.'
+          );
+        } else {
+          toast(
+            'Message was not sent. Please try again.'
+          );
+        }
+      }, 4000);
+
+    } catch (err) {
+      console.error(err);
+
+      toast.error(
+        'Failed to open WhatsApp. Please try again.'
+      );
+    }
   };
 
   return (
@@ -122,15 +175,6 @@ export default function Contact() {
           >
             <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-primary-600 font-display font-black text-[12rem] pointer-events-none">C</div>
             <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-               {status.type === 'success' && (
-                 <motion.div 
-                   initial={{ opacity: 0, height: 0 }}
-                   animate={{ opacity: 1, height: 'auto' }}
-                   className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-500 text-xs font-black uppercase tracking-widest text-center"
-                 >
-                   {status.message}
-                 </motion.div>
-               )}
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <label className="text-[10px] font-bold tracking-widest uppercase text-[var(--text-muted)] mb-3 block">Full Name</label>
@@ -155,11 +199,12 @@ export default function Contact() {
                   <textarea name="message" required rows={5} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold resize-none" placeholder="How can we help you?" />
                </div>
                <button 
-                 disabled={loading}
-                 className="btn-primary w-full py-5 flex items-center justify-center gap-3"
-               >
-                 {loading ? "Processing..." : <><Send size={18} /> Send Message</>}
-               </button>
+                type="submit"
+                className="btn-primary w-full py-5 flex items-center justify-center gap-3"
+              >
+                <Send size={18} />
+                Send Message
+              </button>
             </form>
           </motion.div>
         </div>
