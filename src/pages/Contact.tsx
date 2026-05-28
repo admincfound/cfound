@@ -156,7 +156,7 @@ export default function Contact() {
               </p>
 
               <div className="space-y-10">
-                <ContactInfo icon={<Mail className="text-primary-600" />} label="Digital Communication" value="admin.cfound@gmail.com" />
+                <ContactInfo icon={<Mail className="text-primary-600" />} label="Digital Communication" value="contact@cfound.in" />
                 <ContactInfo icon={<Globe className="text-primary-600" />} label="Social Operations" value="@cfound.in" />
                 <ContactInfo icon={<MapPin className="text-primary-600" />} label="Primary Studio" value=" Nagercoil, India" />
               </div>
