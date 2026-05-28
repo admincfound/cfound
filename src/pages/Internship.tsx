@@ -511,7 +511,9 @@ export default function Internship() {
                             ? `₹${opp.minAmount} - ₹${opp.maxAmount}/month`
                             : `₹${opp.amount}/month`
                           : opp.internshipType === 'training'
-                            ? `Training Program • ₹${opp.trainingFee}`
+                            ? opp.paymentType === 'range'
+                            ? `Training Program • ₹${opp.minAmount} - ₹${opp.maxAmount}/month`
+                            : `Training Program • ₹${opp.amount}/month`
                             : 'Unpaid Internship'
                       }
                     </div>
@@ -917,16 +919,22 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
 
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                      Training Program Fee
+                      Fee Type
                     </label>
 
-                    <input
-                      required
-                      value={formData.trainingFee}
-                      onChange={(e) => setFormData({...formData, trainingFee: e.target.value})}
-                      placeholder="2999"
+                    <select
+                      value={formData.paymentType}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          paymentType: e.target.value
+                        })
+                      }
                       className="input-main"
-                    />
+                    >
+                      <option value="fixed">Fixed Fee</option>
+                      <option value="range">Fee Range</option>
+                    </select>
                   </div>
 
                   <div>
@@ -946,8 +954,72 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
                       <option value="6 Months">6 Months</option>
                       <option value="12 Months">12 Months</option>
                     </select>
-
                   </div>
+
+                  {formData.paymentType === 'fixed' && (
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                        Training Fee
+                      </label>
+
+                      <input
+                        required
+                        value={formData.amount}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            amount: e.target.value
+                          })
+                        }
+                        placeholder="3000"
+                        className="input-main"
+                      />
+                    </div>
+                  )}
+
+                  {formData.paymentType === 'range' && (
+                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
+
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                          Minimum Fee
+                        </label>
+
+                        <input
+                          required
+                          value={formData.minAmount}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              minAmount: e.target.value
+                            })
+                          }
+                          placeholder="1500"
+                          className="input-main"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                          Maximum Fee
+                        </label>
+
+                        <input
+                          required
+                          value={formData.maxAmount}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              maxAmount: e.target.value
+                            })
+                          }
+                          placeholder="3000"
+                          className="input-main"
+                        />
+                      </div>
+
+                    </div>
+                  )}
 
                 </div>
               )}
