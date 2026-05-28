@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { 
@@ -36,6 +37,8 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [initialData, setInitialData] = useState<any>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (profile) {
@@ -82,6 +85,11 @@ export default function Profile() {
   useEffect(() => {
     if (formData && !initialData) {
       setInitialData(JSON.stringify(formData));
+      const returnTo = location.state?.returnTo;
+
+      if (returnTo) {
+        navigate(returnTo);
+      }
     }
   }, [formData, initialData]);
 
