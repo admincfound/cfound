@@ -165,7 +165,12 @@ export default function Internship() {
   }, [isAdmin, user]);
 
   const handleShare = async (opp: any) => {
-    const url = `${window.location.origin}/internship/${opp.id}`;
+    const url = `${window.location.origin}/internship/${
+      opp.slug || opp.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+    }-${opp.id}`;
 
     try {
       await navigator.share({
