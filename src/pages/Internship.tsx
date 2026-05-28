@@ -394,7 +394,7 @@ export default function Internship() {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`group p-5 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                  className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-4 mb-8">
@@ -442,37 +442,50 @@ export default function Internship() {
                       )}
                     </div>
                     <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
-                    <div className="flex flex-wrap items-center gap-3 mb-6 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                    <div className="flex flex-wrap gap-3 mb-6">
+                      {(Array.isArray(opp.skills) ? opp.skills : [])
+                        .slice(0, 3)
+                        .map((skill: string, idx: number) => (
 
-                      <div className="flex items-center gap-1">
+                        <div
+                          key={idx}
+                          className="px-3 py-1.5 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-bold uppercase tracking-wide"
+                        >
+                          {skill}
+                        </div>
+
+                      ))}
+
+                      {opp.skills?.length > 3 && (
+                        <div className="px-3 py-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border-main)] text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                          +{opp.skills.length - 3} More
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-semibold text-[var(--text-muted)]">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={12} />
+                        {opp.mode}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Clock size={12} />
+                        {opp.duration}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        📥 {opp.applications || 0} Applicants
+                      </div>
+
+                      <div className="flex items-center gap-2">
                         👁 {opp.views || 0} Views
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        📥 {opp.applications || 0} Applied
-                      </div>
-
-                      {opp.trendingScore > 20 && (
-                        <div className="px-2 py-1 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                          🔥 Trending
-                        </div>
-                      )}
-
-                    </div>
-                    <div className="space-y-4 mb-10">
-                      {(Array.isArray(opp.skills)
-                        ? opp.skills
-                        : [])?.slice(0, 2).map((req: string, idx: number) => (
-                        <div key={idx} className="flex items-start gap-3 text-xs text-[var(--text-muted)]">
-                          <CheckCircle2 size={14} className="text-primary-600 mt-0.5 flex-shrink-0" />
-                          <span className="font-bold uppercase tracking-tight">{req}</span>
-                        </div>
-                      ))}
                     </div>
                   </div>
 
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-6 border-t border-[var(--border-main)]">
-                    <div className="text-xl font-black font-display text-[var(--text-main)] uppercase">
+                    <div className="text-lg font-bold font-display text-[var(--text-main)] uppercase">
                       {
                         opp.internshipType === 'paid'
                           ? `₹${opp.stipend}/month`
@@ -487,15 +500,16 @@ export default function Internship() {
 
                         <Link
                           to={`/internship/${opp.slug}-${opp.id}`}
+                          onClick={() => trackView(opp.id)}
                           className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
                         >
                           View Details
                         </Link>
                         <button
                           onClick={() => handleShare(opp)}
-                          className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
+                          className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] hover:border-primary-500 transition-all"
                         >
-                          Share
+                          ↗
                         </button>
 
                         <button 
