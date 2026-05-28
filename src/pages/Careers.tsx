@@ -5,7 +5,28 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Briefcase, MapPin, IndianRupee, Clock, CheckCircle2, ArrowRight, Zap, Target, Rocket, ShieldCheck, Edit3, Trash2, Plus, X, Search, Activity, AlertTriangle } from 'lucide-react';
+import {
+  Briefcase,
+  MapPin,
+  IndianRupee,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
+  Zap,
+  Target,
+  Rocket,
+  ShieldCheck,
+  Edit3,
+  Trash2,
+  Plus,
+  X,
+  Search,
+  Activity,
+  AlertTriangle,
+  Eye,
+  Users,
+  Share2
+} from 'lucide-react';
 import { sendApplicationEmail } from '../services/emailService';
 import { getProfileCompletion } from '../lib/profileUtils';
 
@@ -58,6 +79,26 @@ export default function Careers() {
     fetchJobs();
     fetchUserApplications();
   }, [isAdmin, user]);
+
+  const handleShare = async (opp: any) => {
+  const url = `${window.location.origin}/careers/${
+    opp.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+  }-${opp.id}`;
+
+  try {
+    await navigator.share({
+      title: opp.title,
+      text: 'Check out this career opportunity',
+      url
+    });
+  } catch {
+    navigator.clipboard.writeText(url);
+    toast.success('Link copied');
+  }
+};
 
   const handleApply = async (opp: any) => {
     if (isAdmin) return;
@@ -277,7 +318,7 @@ export default function Careers() {
                {[1, 2].map(n => <div key={n} className="h-32 bg-[var(--bg-card)] rounded-[2.5rem] animate-pulse border border-[var(--border-main)]" />)}
              </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AnimatePresence mode="popLayout">
                 {filtered.map((opp, i) => (
                   <motion.div 
@@ -294,18 +335,57 @@ export default function Careers() {
                       </div>
                       <div>
                         <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
-                        <div className="flex flex-wrap items-center gap-4 md:gap-8 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-6">
-                          <span className="flex items-center gap-2"><MapPin size={16} className="text-primary-600"/> {opp.location}</span>
-                          <span className="flex items-center gap-2"><IndianRupee size={16} className="text-primary-600"/> {opp.compModel === 'revenue' ? 'Revenue Share' : (opp.salary?.startsWith('₹') ? opp.salary : `₹${opp.salary}`)}</span>
-                          <span className="flex items-center gap-2 transition-colors group-hover:text-primary-600"><Clock size={16} className="text-primary-600"/> {opp.timing || opp.type}</span>
-                        </div>
                         {opp.description && (
-                          <p className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-widest max-w-xl line-clamp-2 opacity-50">{opp.description}</p>
+                          <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-2 mt-3 max-w-xl">
+                            {opp.description}
+                          </p>
                         )}
+                        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-[var(--text-muted)] mt-5">
+
+                          <div className="flex items-center gap-2">
+                            <MapPin size={14} />
+                            {opp.location}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <IndianRupee size={14} />
+                            {opp.compModel === 'revenue'
+                              ? 'Revenue Share'
+                              : (opp.salary?.startsWith('₹')
+                                  ? opp.salary
+                                  : `₹${opp.salary}`)}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Clock size={14} />
+                            {opp.timing || opp.type}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Users size={14} />
+                            {opp.applications || 0} Applicants
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Eye size={14} />
+                            {opp.views || 0} Views
+                          </div>
+
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-5">
+                          {(opp.skills || []).slice(0, 4).map((skill: string, idx: number) => (
+                            <div
+                              key={idx}
+                              className="px-3 py-1 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-bold uppercase tracking-wide"
+                            >
+                              {skill}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 flex-wrap">
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
@@ -329,19 +409,34 @@ export default function Careers() {
                       )}
                       
                       {!isAdmin ? (
-                        <button 
-                          onClick={() => handleApply(opp)}
-                          disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                          className={`btn-primary w-full md:w-auto px-6 py-3 md:px-12 md:py-5 flex items-center justify-center gap-3 transition-all ${
-                            userApplications.has(opp.id) 
-                              ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
-                              : !completion.isComplete 
-                                ? 'opacity-50 cursor-not-allowed grayscale' 
-                                : 'active:scale-95 group'
-                          }`}
-                        >
-                          {applyingId === opp.id ? "Applying..." : userApplications.has(opp.id) ? "Applied" : !completion.isComplete ? "Profile Incomplete" : <>Apply Now <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>}
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleShare(opp)}
+                            className="p-4 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
+                          >
+                            <Share2 size={18} />
+                          </button>
+
+                          <button 
+                            onClick={() => handleApply(opp)}
+                            disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
+                            className={`btn-primary px-8 py-4 text-sm font-bold min-w-[180px] flex items-center justify-center gap-3 transition-all ${
+                              userApplications.has(opp.id) 
+                                ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
+                                : !completion.isComplete 
+                                  ? 'opacity-50 cursor-not-allowed grayscale' 
+                                  : 'active:scale-95 group'
+                            }`}
+                          >
+                            {applyingId === opp.id
+                              ? "Applying..."
+                              : userApplications.has(opp.id)
+                                ? "Applied"
+                                : !completion.isComplete
+                                  ? "Profile Incomplete"
+                                  : <>Apply Now <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>}
+                          </button>
+                        </>
                       ) : (
                         <div className="hidden md:block text-[9px] font-black uppercase tracking-widest text-primary-500 bg-primary-500/5 px-6 py-3 rounded-2xl border border-primary-500/10">
                           Administrative Access
@@ -355,7 +450,7 @@ export default function Careers() {
           ) : (
             <div className="p-24 text-center bg-[var(--bg-card)] border border-[var(--border-main)] border-dashed rounded-[4rem]">
                <Rocket size={48} className="mx-auto text-[var(--text-muted)] mb-8 opacity-20" />
-               <p className="text-[var(--text-muted)] font-black uppercase tracking-widest text-sm opacity-40 italic">System Idle / No Active Roles Detected</p>
+               <p className="text-[var(--text-muted)] font-black uppercase tracking-widest text-sm opacity-40 italic">No openings available currently.</p>
             </div>
           )}
         </div>
@@ -380,6 +475,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
     type: 'full-time',
     timing: 'Morning Shift',
     compModel: 'fixed',
+    skills: [],
     description: '',
     requirements: '',
     status: 'active',
@@ -404,6 +500,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         type: 'full-time',
         timing: 'Morning Shift',
         compModel: 'fixed',
+        skills: [],
         description: '',
         requirements: '',
         status: 'active',
@@ -544,6 +641,23 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     <option value="contract">Contract</option>
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  Skills
+                </label>
+
+                <input
+                  value={(formData.skills || []).join(', ')}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      skills: e.target.value.split(',').map(s => s.trim())
+                    })
+                  }
+                  placeholder="React, Firebase, UI/UX"
+                  className="input-main"
+                />
               </div>
 
               <div>
