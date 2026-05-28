@@ -503,8 +503,8 @@ export default function Internship() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-6 border-t border-[var(--border-main)]">
-                    <div className="text-lg font-bold font-display text-primary-600 uppercase whitespace-nowrap">
+                  <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
+                    <div className="text-lg font-bold font-display text-primary-600 uppercase whitespace-nowrap min-h-[40px] flex items-center">
                       {
                         opp.internshipType === 'paid'
                           ? opp.paymentType === 'range'
@@ -517,7 +517,7 @@ export default function Internship() {
                     </div>
                     
                     {!isAdmin ? (
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center justify-end gap-3 flex-wrap">
 
                         <Link
                           to={`/internship/${opp.slug}-${opp.id}`}
