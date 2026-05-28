@@ -90,12 +90,7 @@ export default function Navbar() {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
-          <button 
-            onClick={toggleTheme}
-            className="p-2.5 text-[var(--text-muted)] hover:text-primary-600 hover:bg-[var(--bg-hover)] rounded-xl transition-all"
-          >
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          </button>
+
 
           {user ? (
             <div className="flex items-center gap-3">
