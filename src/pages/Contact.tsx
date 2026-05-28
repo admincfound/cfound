@@ -8,21 +8,44 @@ export default function Contact() {
   const [status, setStatus] = useState<{ type: 'idle' | 'success' | 'error', message: string }>({ type: 'idle', message: '' });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-    setStatus({ type: 'idle', message: '' });
-    
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      const msg = "Message received. Our team will contact you shortly via the secure protocol.";
-      setStatus({ 
-        type: 'success', 
-        message: msg
-      });
-      toast.success(msg);
-    }, 1500);
+
+    const form = e.currentTarget;
+
+    const name = (
+      form.elements.namedItem('name') as HTMLInputElement
+    ).value;
+
+    const email = (
+      form.elements.namedItem('email') as HTMLInputElement
+    ).value;
+
+    const inquiry = (
+      form.elements.namedItem('inquiry') as HTMLSelectElement
+    ).value;
+
+    const message = (
+      form.elements.namedItem('message') as HTMLTextAreaElement
+    ).value;
+
+    const whatsappMessage = `
+  *NEW CONTACT FORM SUBMISSION*
+
+  👤 Name: ${name}
+
+  📧 Email: ${email}
+
+  📌 Inquiry: ${inquiry}
+
+  💬 Message:
+  ${message}
+    `;
+
+    const whatsappUrl =
+      `https://wa.me/919361194545?text=${encodeURIComponent(whatsappMessage)}`;
+
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -111,16 +134,16 @@ export default function Contact() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <label className="text-[10px] font-bold tracking-widest uppercase text-[var(--text-muted)] mb-3 block">Full Name</label>
-                    <input required type="text" className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold" placeholder="John Doe" />
+                    <input name="name" required type="text" className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold" placeholder="John Doe" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold tracking-widest uppercase text-[var(--text-muted)] mb-3 block">Email Address</label>
-                    <input required type="email" className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold" placeholder="john@example.com" />
+                    <input name="email" required type="email" className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold" placeholder="john@example.com" />
                   </div>
                </div>
                <div>
                   <label className="text-[10px] font-bold tracking-widest uppercase text-[var(--text-muted)] mb-3 block">Inquiry Type</label>
-                  <select className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold appearance-none">
+                  <select name="inquiry" className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold appearance-none">
                     <option>General Partnership</option>
                     <option>Product Development</option>
                     <option>Careers & Internships</option>
@@ -129,7 +152,7 @@ export default function Contact() {
                </div>
                <div>
                   <label className="text-[10px] font-bold tracking-widest uppercase text-[var(--text-muted)] mb-3 block">Message</label>
-                  <textarea required rows={5} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold resize-none" placeholder="How can we help you?" />
+                  <textarea name="message" required rows={5} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl px-6 py-4 text-sm focus:border-primary-600 outline-none transition-all text-[var(--text-main)] font-semibold resize-none" placeholder="How can we help you?" />
                </div>
                <button 
                  disabled={loading}
