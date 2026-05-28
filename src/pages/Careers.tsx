@@ -239,7 +239,7 @@ export default function Careers() {
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         {!isAdmin && user && !completion.isComplete && (
-          <div className="mb-10 bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mb-10 bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex flex-col items-center justify-between gap-6">
             <div className="flex items-center gap-4 text-red-500">
               <AlertTriangle size={24} />
               <div>
@@ -327,13 +327,18 @@ export default function Careers() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`group p-5 md:p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6 card-hover shadow-2xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                    className={`group p-5 md:p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col items-start justify-between gap-6 card-hover shadow-2xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
-                    <div className="flex items-center gap-5 md:gap-6 md:p-10 flex-1">
+                    <div className="flex items-center gap-5 md:gap-6 flex-1">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-[2rem] bg-primary-600/10 flex items-center justify-center text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-all shadow-xl group-hover:rotate-6">
                          <Briefcase size={32} />
                       </div>
                       <div>
+                        {opp.featured && (
+                          <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] font-black uppercase tracking-widest">
+                            Featured
+                          </div>
+                        )}
                         <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
                         {opp.description && (
                           <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-2 mt-3 max-w-xl">
@@ -371,6 +376,15 @@ export default function Careers() {
                             {opp.views || 0} Views
                           </div>
 
+                          <div className="flex items-center gap-2">
+                            <Briefcase size={14} />
+                            {opp.experience || 'Fresher'}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Users size={14} />
+                            {opp.openings || 1} Openings
+                          </div>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-5">
                           {(opp.skills || []).slice(0, 4).map((skill: string, idx: number) => (
@@ -476,6 +490,10 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
     timing: 'Morning Shift',
     compModel: 'fixed',
     skills: [],
+    mode: 'Remote',
+    experience: '',
+    openings: '',
+    featured: false,
     description: '',
     requirements: '',
     status: 'active',
@@ -501,6 +519,10 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         timing: 'Morning Shift',
         compModel: 'fixed',
         skills: [],
+        mode: 'Remote',
+        experience: '',
+        openings: '',
+        featured: false,
         description: '',
         requirements: '',
         status: 'active',
@@ -630,6 +652,23 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   />
                 </div>
                 <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    Experience Required
+                  </label>
+
+                  <input
+                    value={formData.experience}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        experience: e.target.value
+                      })
+                    }
+                    placeholder="0-2 Years"
+                    className="input-main"
+                  />
+                </div>
+                <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Contract Type</label>
                   <select 
                     value={formData.type}
@@ -640,6 +679,24 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     <option value="part-time">Part-time</option>
                     <option value="contract">Contract</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    Number of Openings
+                  </label>
+
+                  <input
+                    type="number"
+                    value={formData.openings}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        openings: e.target.value
+                      })
+                    }
+                    placeholder="5"
+                    className="input-main"
+                  />
                 </div>
               </div>
               <div>
@@ -657,6 +714,26 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   }
                   placeholder="React, Firebase, UI/UX"
                   className="input-main"
+                />
+              </div>
+              <div className="flex items-center justify-between border border-[var(--border-main)] rounded-2xl px-5 py-4">
+                <div>
+                  <h4 className="font-bold text-sm">Featured Position</h4>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Highlight this job on top
+                  </p>
+                </div>
+
+                <input
+                  type="checkbox"
+                  checked={formData.featured}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      featured: e.target.checked
+                    })
+                  }
+                  className="w-5 h-5"
                 />
               </div>
 
