@@ -372,7 +372,7 @@ export default function Profile() {
             <div className="mt-6">
                <InputGroup label="About / Bio">
                   <textarea 
-
+                    disabled={!isEditing}
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[120px]"
@@ -482,6 +482,7 @@ export default function Profile() {
             })}
             itemRenderer={(exp: any) => (
               <ExperienceItem 
+                isEditing={isEditing}
                 key={exp.id} 
                 exp={exp} 
                 onUpdate={(f: any, v: any) => updateItem('experiences', exp.id, f, v)}
@@ -564,6 +565,7 @@ export default function Profile() {
             })}
             itemRenderer={(edu: any) => (
               <EducationItem 
+                isEditing={isEditing}
                 key={edu.id}
                 edu={edu}
                 onUpdate={(f:any, v:any) => updateItem('education', edu.id, f, v)}
@@ -589,6 +591,7 @@ export default function Profile() {
             })}
             itemRenderer={(cert: any) => (
               <CertificationItem 
+                isEditing={isEditing}
                 key={cert.id}
                 cert={cert}
                 onUpdate={(f:any, v:any) => updateItem('certifications', cert.id, f, v)}
@@ -614,6 +617,7 @@ export default function Profile() {
             })}
             itemRenderer={(pub: any) => (
               <PublicationItem 
+                isEditing={isEditing}
                 key={pub.id}
                 pub={pub}
                 onUpdate={(f:any, v:any) => updateItem('publications', pub.id, f, v)}
@@ -736,7 +740,7 @@ function AdminProfileView({ formData, setFormData, handleImageUpload, handleUpda
             <input  value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" />
           </InputGroup>
           <InputGroup label="Bio">
-            <textarea value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[80px]" placeholder="Brief overview..." />
+            <textarea disabled={!isEditing} value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[80px]" placeholder="Brief overview..." />
           </InputGroup>
           <button disabled={loading} className="w-full bg-primary-600 text-white rounded-xl py-4 text-sm font-semibold mt-4 flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors">
             {loading ? "Saving..." : <><Save size={16} /> Save Changes</>}
@@ -798,7 +802,7 @@ function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd,
   );
 }
 
-function ExperienceItem({ exp, onUpdate, onDelete }: any) {
+function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div 
       layout
@@ -807,8 +811,9 @@ function ExperienceItem({ exp, onUpdate, onDelete }: any) {
       exit={{ opacity: 0, scale: 0.95 }}
       className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm"
     >
-      <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2"><Trash2 size={16} /></button>
-      
+      {isEditing && (
+        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2"><Trash2 size={16} /></button>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Role / Position">
           <input value={exp.role} onChange={(e) => onUpdate('role', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Software Engineer" />
@@ -889,8 +894,9 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
       exit={{ opacity: 0, scale: 0.95 }}
       className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm"
     >
-      <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2"><Trash2 size={16} /></button>
-      
+      {isEditing && (
+        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2"><Trash2 size={16} /></button>
+      )}  
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Project Title">
           <input value={proj.title} onChange={(e) => onUpdate('title', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Project Name" />
@@ -952,10 +958,12 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
   );
 }
 
-function EducationItem({ edu, onUpdate, onDelete }: any) {
+function EducationItem({ edu, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div layout className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm">
-      <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+      {isEditing && (
+        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Institution Name">
           <input value={edu.institution} onChange={(e) => onUpdate('institution', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="University of Technology" />
@@ -991,10 +999,12 @@ function EducationItem({ edu, onUpdate, onDelete }: any) {
   );
 }
 
-function CertificationItem({ cert, onUpdate, onDelete }: any) {
+function CertificationItem({ cert, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div layout className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm">
-      <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+      {isEditing && (
+        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Certification Name">
           <input value={cert.name} onChange={(e) => onUpdate('name', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="AWS Certified Architect" />
@@ -1024,10 +1034,12 @@ function CertificationItem({ cert, onUpdate, onDelete }: any) {
   );
 }
 
-function PublicationItem({ pub, onUpdate, onDelete }: any) {
+function PublicationItem({ pub, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div layout className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm">
-      <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+      {isEditing && (
+        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Title">
           <input value={pub.title} onChange={(e) => onUpdate('title', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Research paper or article title" />
