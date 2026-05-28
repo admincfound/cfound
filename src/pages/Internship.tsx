@@ -18,7 +18,24 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Briefcase, MapPin, DollarSign, Clock, CheckCircle2, ArrowRight, Edit3, Trash2, Plus, X, Search, Activity, AlertTriangle } from 'lucide-react';
+import {
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
+  Edit3,
+  Trash2,
+  Plus,
+  X,
+  Search,
+  Activity,
+  AlertTriangle,
+  Share2,
+  Eye,
+  Users
+} from 'lucide-react';
 import { sendApplicationEmail } from '../services/emailService';
 import { getProfileCompletion } from '../lib/profileUtils';
 
@@ -334,7 +351,7 @@ export default function Internship() {
             <motion.h1 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-8xl font-black font-display tracking-tight text-[var(--text-main)] mb-8 uppercase italic"
+              className="text-4xl md:text-8xl font-black font-display tracking-tight text-primary-600 mb-8 uppercase italic"
             >
               Junior <span className="text-primary-600">Internships.</span>
             </motion.h1>
@@ -366,7 +383,7 @@ export default function Internship() {
               placeholder="Query laboratory database..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-[var(--text-main)]"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-primary-600"
             />
           </div>
           <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
@@ -394,7 +411,7 @@ export default function Internship() {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                  className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-4 mb-8">
@@ -413,7 +430,7 @@ export default function Internship() {
                         }`}>
                           {
                             opp.internshipType === 'unpaid'
-                              ? 'NO FEE'
+                              ? 'UNPAID'
                               : opp.internshipType === 'paid'
                                 ? 'PAID'
                                 : 'TRAINING PROGRAM'
@@ -441,7 +458,7 @@ export default function Internship() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                    <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
                     <div className="flex flex-wrap gap-3 mb-6">
                       {(Array.isArray(opp.skills) ? opp.skills : [])
                         .slice(0, 3)
@@ -457,7 +474,7 @@ export default function Internship() {
                       ))}
 
                       {opp.skills?.length > 3 && (
-                        <div className="px-3 py-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border-main)] text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                        <div className="px-3 py-1.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-main)] text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                           +{opp.skills.length - 3} More
                         </div>
                       )}
@@ -474,23 +491,27 @@ export default function Internship() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        📥 {opp.applications || 0} Applicants
+                        <Users size={13} />
+                          {opp.applications || 0} Applicants
                       </div>
 
                       <div className="flex items-center gap-2">
-                        👁 {opp.views || 0} Views
+                        <Eye size={13} />
+                          {opp.views || 0} Views
                       </div>
 
                     </div>
                   </div>
 
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-6 border-t border-[var(--border-main)]">
-                    <div className="text-lg font-bold font-display text-[var(--text-main)] uppercase">
+                    <div className="text-lg font-bold font-display text-primary-600 uppercase whitespace-nowrap">
                       {
                         opp.internshipType === 'paid'
-                          ? `₹${opp.stipend}/month`
+                          ? opp.paymentType === 'range'
+                            ? `₹${opp.minAmount} - ₹${opp.maxAmount}/month`
+                            : `₹${opp.amount}/month`
                           : opp.internshipType === 'training'
-                            ? `Fee: ₹${opp.trainingFee}`
+                            ? `Training Program • ₹${opp.trainingFee}`
                             : 'Unpaid Internship'
                       }
                     </div>
@@ -507,15 +528,15 @@ export default function Internship() {
                         </Link>
                         <button
                           onClick={() => handleShare(opp)}
-                          className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] hover:border-primary-500 transition-all"
+                          className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
                         >
-                          ↗
+                          <Share2 size={16} />
                         </button>
 
                         <button 
                           onClick={() => handleApply(opp)}
                           disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                          className={`btn-primary flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
+                          className={`btn-primary min-w-[170px] justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
                             userApplications.has(opp.id) 
                               ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                               : !completion.isComplete 
@@ -561,7 +582,11 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
   const [formData, setFormData] = useState({
     title: '',
     location: 'Remote',
-    stipend: '',
+    paymentType: 'fixed',
+    amount: '',
+    minAmount: '',
+    maxAmount: '',
+    paymentFrequency: 'month',
     trainingFee: '',
     internshipType: 'unpaid',
     duration: '',
@@ -590,7 +615,11 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
       setFormData({
         title: '',
         location: 'Remote',
-        stipend: '',
+        paymentType: 'fixed',
+        amount: '',
+        minAmount: '',
+        maxAmount: '',
+        paymentFrequency: 'month',
         trainingFee: '',
         internshipType: 'unpaid',
         duration: '',
@@ -658,14 +687,14 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
           >
             <div className="p-5 md:p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
               <div>
-                <h2 className="text-xl md:text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
+                <h2 className="text-xl md:text-2xl font-black font-display text-primary-600 uppercase italic tracking-tight">
                   {internship ? 'Edit' : 'Create'} <span className="text-primary-600">Internship.</span>
                 </h2>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">Recruitment Management Mode</p>
               </div>
               <button 
                 onClick={onClose}
-                className="p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+                className="p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl text-[var(--text-muted)] hover:text-primary-600 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -683,41 +712,76 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
                     className="input-main"
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Program Type</label>
-                  <select 
-                    value={formData.internshipType}
-                    onChange={(e) => setFormData({...formData, internshipType: e.target.value})}
-                    className="input-main"
-                  >
-                    <option value="paid">Paid Internship</option>
-                    <option value="unpaid">Unpaid Internship</option>
-                    <option value="training">Training Program</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                    Work Mode
-                  </label>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Program Type
+                    </label>
 
-                  <select
-                    value={formData.mode}
-                    onChange={(e) => {
-                      const value = e.target.value;
+                    <select 
+                      value={formData.internshipType}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          internshipType: e.target.value
+                        })
+                      }
+                      className="input-main"
+                    >
+                      <option value="paid">Paid Internship</option>
+                      <option value="unpaid">Unpaid Internship</option>
+                      <option value="training">Training Program</option>
+                    </select>
+                  </div>
 
-                      setFormData({
-                        ...formData,
-                        mode: value,
-                        location: value === 'Remote' ? 'Remote' : ''
-                      });
-                    }}
-                    className="input-main"
-                  >
-                    <option value="Remote">Remote</option>
-                    <option value="Hybrid">Hybrid</option>
-                    <option value="Onsite">Onsite</option>
-                  </select>
+                  {formData.internshipType === 'paid' && (
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                        Payment Type
+                      </label>
+
+                      <select
+                        value={formData.paymentType}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            paymentType: e.target.value
+                          })
+                        }
+                        className="input-main"
+                      >
+                        <option value="fixed">Fixed Amount</option>
+                        <option value="range">Salary Range</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Work Mode
+                    </label>
+
+                    <select
+                      value={formData.mode}
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        setFormData({
+                          ...formData,
+                          mode: value,
+                          location: value === 'Remote' ? 'Remote' : ''
+                        });
+                      }}
+                      className="input-main"
+                    >
+                      <option value="Remote">Remote</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Onsite">Onsite</option>
+                    </select>
+                  </div>
+
                 </div>
+
 
                 {formData.mode !== 'Remote' && (
                   <div>
@@ -738,21 +802,70 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
 
               {formData.internshipType === 'paid' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {formData.paymentType === 'fixed' && (
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                          Monthly Stipend
+                        </label>
 
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                      Monthly Stipend
-                    </label>
+                        <input
+                          required
+                          value={formData.amount}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              amount: e.target.value
+                            })
+                          }
+                          placeholder="5000"
+                          className="input-main"
+                        />
+                      </div>
+                    )}
 
-                    <input
-                      required
-                      value={formData.stipend}
-                      onChange={(e) => setFormData({...formData, stipend: e.target.value})}
-                      placeholder="5000"
-                      className="input-main"
-                    />
-                  </div>
+                    {formData.paymentType === 'range' && (
+                      <div className="md:col-span-2 grid grid-cols-2 gap-4">
 
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                            Minimum Amount
+                          </label>
+
+                          <input
+                            required
+                            value={formData.minAmount}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                minAmount: e.target.value
+                              })
+                            }
+                            placeholder="2000"
+                            className="input-main"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                            Maximum Amount
+                          </label>
+
+                          <input
+                            required
+                            value={formData.maxAmount}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                maxAmount: e.target.value
+                              })
+                            }
+                            placeholder="5000"
+                            className="input-main"
+                          />
+                        </div>
+
+                      </div>
+                    )}
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
                       Duration
@@ -804,7 +917,7 @@ function InternshipModal({ isOpen, onClose, internship, onSuccess }: any) {
 
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                      Training Fee (₹)
+                      Training Program Fee
                     </label>
 
                     <input
