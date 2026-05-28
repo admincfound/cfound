@@ -9,7 +9,7 @@ import { auth } from '../lib/firebase';
 
 const navLinks = [
   { name: 'Projects', path: '/projects' },
-  { name: 'Technology', path: '/services' },
+  { name: 'Services', path: '/services' },
   { name: 'Internship', path: '/internship' },
   { name: 'Careers', path: '/careers' },
   { name: 'Courses', path: '/courses' },
@@ -36,7 +36,7 @@ export default function Navbar() {
 
   const userLinks = [
     { name: 'Projects', path: '/projects' },
-    { name: 'Technology', path: '/services' },
+    { name: 'Services', path: '/services' },
     { name: 'Internship', path: '/internship' },
     { name: 'Careers', path: '/careers' },
     { name: 'Academy', path: '/courses' },
