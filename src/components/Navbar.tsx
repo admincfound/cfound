@@ -138,9 +138,6 @@ export default function Navbar() {
 
         {/* Mobile Menu Toggle */}
         <div className="flex md:hidden items-center gap-4">
-          <button onClick={toggleTheme} className="p-2 text-[var(--text-muted)]">
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          </button>
           <button className="text-[var(--text-main)]" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X /> : <Menu />}
           </button>
