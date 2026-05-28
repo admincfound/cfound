@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
+import { Helmet } from 'react-helmet-async';
 import {
   doc,
   getDoc,
@@ -218,6 +219,77 @@ export default function InternshipDetails() {
   }
 
   return (
+  <>
+    <Helmet>
+      <title>
+        {internship.title} | CFound
+      </title>
+
+      <meta
+        name="description"
+        content={
+          internship.description?.slice(0, 160) ||
+          'Explore internship opportunities at CFound'
+        }
+      />
+
+      <meta
+        property="og:title"
+        content={`${internship.title} | CFound`}
+      />
+
+      <meta
+        property="og:description"
+        content={
+          internship.description?.slice(0, 200) ||
+          'Explore internship opportunities at CFound'
+        }
+      />
+
+      <meta
+        property="og:type"
+        content="website"
+      />
+
+      <meta
+        property="og:url"
+        content={`https://www.cfound.in/internship/${slug}`}
+      />
+
+      <meta
+        property="og:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+
+      <meta
+        property="og:site_name"
+        content="CFound"
+      />
+
+      <meta
+        name="twitter:card"
+        content="summary_large_image"
+      />
+
+      <meta
+        name="twitter:title"
+        content={`${internship.title} | CFound`}
+      />
+
+      <meta
+        name="twitter:description"
+        content={
+          internship.description?.slice(0, 200) ||
+          'Explore internship opportunities at CFound'
+        }
+      />
+
+      <meta
+        name="twitter:image"
+        content="https://www.cfound.in/og-image.png"
+      />
+    </Helmet>
+
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-5xl mx-auto">
 
@@ -269,6 +341,7 @@ export default function InternshipDetails() {
               <Share2 size={14} />
               Share Opportunity
             </button>
+
             <div className="flex gap-4 flex-wrap mt-4">
 
               <Link
@@ -315,69 +388,8 @@ export default function InternshipDetails() {
 
         </div>
 
-        <div className="p-8 rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)] mb-10">
-
-          <h2 className="text-2xl font-black uppercase mb-8">
-            Skills & Requirements
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-5">
-
-            {(internship.skills || []).map((req: string, i: number) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 p-4 rounded-2xl bg-[var(--bg-main)] border border-[var(--border-main)]"
-              >
-                <CheckCircle2 size={18} className="text-primary-500 mt-1" />
-                <span>{req}</span>
-              </div>
-            ))}
-
-          </div>
-
-        </div>
-        <div className="p-8 rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)] mb-10">
-
-          <h2 className="text-2xl font-black uppercase mb-8">
-            Job Description
-          </h2>
-
-          <div className="text-[var(--text-muted)] leading-relaxed whitespace-pre-line">
-            {internship.description}
-          </div>
-
-        </div>
-
-        <div className="p-8 rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)]">
-
-          <h2 className="text-2xl font-black uppercase mb-8">
-            What You Will Get
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-5">
-
-            {[
-              'Live Project Experience',
-              'Industry Workflow Exposure',
-              'Team Collaboration',
-              'Mentorship',
-              'Certificate on Completion',
-              'Work Experience Certificate after 6 Months'
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 p-4 rounded-2xl bg-[var(--bg-main)] border border-[var(--border-main)]"
-              >
-                <CheckCircle2 size={18} className="text-primary-500 mt-1" />
-                <span>{item}</span>
-              </div>
-            ))}
-
-          </div>
-
-        </div>
-
       </div>
     </div>
-  );
+  </>
+);
 }
