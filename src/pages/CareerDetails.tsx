@@ -321,11 +321,7 @@ export default function CareerDetails() {
             {job.title}
           </h1>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-
-            <div className="text-2xl font-black text-primary-500">
-                {job.salary}
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
 
             <button
               onClick={handleShare}
@@ -378,7 +374,7 @@ export default function CareerDetails() {
             </div>
 
           </div>
-          <div className="grid md:grid-cols-3 gap-6 mt-16">
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
 
             <div className="md:col-span-2 space-y-8">
 
@@ -424,6 +420,12 @@ export default function CareerDetails() {
                 </h3>
 
                 <div className="space-y-3 text-sm">
+                  <div>
+                    <strong>Compensation:</strong>{' '}
+                    {job.compModel === 'revenue'
+                      ? `${job.salary} Revenue Share`
+                      : job.salary || 'Not disclosed'}
+                  </div>
 
                   <div>
                     <strong>Experience:</strong>{' '}
