@@ -350,7 +350,7 @@ export default function Careers() {
                   >
                     <div className="flex flex-col flex-1">
                       <div>
-                        {opp.featured && (
+                        {opp.featured && !isAdmin && (
                           <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] font-black uppercase tracking-widest">
                             Featured
                           </div>
@@ -361,83 +361,52 @@ export default function Careers() {
                             {opp.department}
                           </div>
                         )}
-                        <div className="mt-5">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                          Compensation
-                        </div>
-
-                        <div className="flex items-center gap-2 text-base font-black text-primary-600">
-                          {opp.compType === 'salary' ? (
-                            opp.compFormat === 'range' ? (
-                              <span>₹{opp.minAmount} - ₹{opp.maxAmount}</span>
-                            ) : (
-                              <span>₹{opp.minAmount}</span>
-                            )
-                          ) : (
-                            opp.compFormat === 'range' ? (
-                              <span>{opp.minAmount}% - {opp.maxAmount}% Revenue Share</span>
-                            ) : (
-                              <span>{opp.minAmount}% Revenue Share</span>
-                            )
-                          )}
-                          </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-4">
-                          <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                            Employment Type
+                        <div className="mt-4 flex flex-col gap-3">
+  
+                          <div className="text-xl font-black text-primary-600">
+                            ₹{Number(opp.minAmount).toLocaleString('en-IN')}
+                            {opp.maxAmount &&
+                              ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
                           </div>
 
-                          <div className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wide">
-                            {opp.type}
+                          <div className="flex flex-wrap gap-2">
+                            {(opp.skills || []).slice(0, 3).map((skill, idx) => (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-bold uppercase"
+                              >
+                                {skill}
+                              </span>
+                            ))}
                           </div>
-                        </div>
-                        <div className="mt-4">
-                          <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                            Required Skills
+
+                          <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
+                            <span className="flex items-center gap-1">
+                              <MapPin size={14} />
+                              {opp.location}
+                            </span>
+
+                            <span className="flex items-center gap-1">
+                              <Briefcase size={14} />
+                              {opp.experience || 'Fresher'}
+                            </span>
                           </div>
-                        {/* Skills */}
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {(opp.skills || []).slice(0, 4).map((skill: string, idx: number) => (
-                            <div
-                              key={idx}
-                              className="px-3 py-1 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-bold uppercase tracking-wide"
-                            >
-                              {skill}
+
+                          {isAdmin && (
+                            <div className="mt-2 flex items-center gap-6 text-xs font-bold text-primary-600">
+                              <span className="flex items-center gap-2">
+                                <Eye size={16} />
+                                {opp.views || 0}
+                              </span>
+
+                              <span className="flex items-center gap-2">
+                                <Users size={16} />
+                                {opp.applications || 0}
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                        </div>
-                        {/* Details */}
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs font-semibold text-[var(--text-muted)] mt-5">
-                          <div className="flex items-center gap-2">
-                            <MapPin size={14} />
-                            {opp.location}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Briefcase size={14} />
-                            {opp.experience ? `${opp.experience} Years Exp.` : 'Fresher'}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Clock size={14} />
-                            {opp.timing}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Users size={14} />
-                            {opp.openings || 1} Openings
-                          </div>
+                          )}
                         </div>
 
-                        {opp.deadline && (
-                          <div className="mt-4 flex items-center gap-2 text-red-500 text-sm font-semibold">
-                            <Clock size={14} />
-                            Apply Before {new Date(opp.deadline).toLocaleDateString()}
-                          </div>
-                        )}
                       </div>
 
                     <div className="flex items-center gap-3 flex-wrap">
@@ -504,10 +473,24 @@ export default function Careers() {
                           </button>
                         </>
                       ) : (
+                      <>
+                        <Link
+                          to={`/careers/${
+                            opp.title
+                              .toLowerCase()
+                              .replace(/[^a-z0-9\s-]/g, '')
+                              .replace(/\s+/g, '-')
+                          }-${opp.id}`}
+                          className="btn-secondary px-6 py-4 text-sm font-bold"
+                        >
+                          View Details
+                        </Link>
+
                         <div className="hidden md:block text-[9px] font-black uppercase tracking-widest text-primary-500 bg-primary-500/5 px-6 py-3 rounded-2xl border border-primary-500/10">
                           Administrative Access
                         </div>
-                      )}
+                      </>
+                    )}
                     </div>
                   </motion.div>
                 ))}
