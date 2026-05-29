@@ -348,10 +348,7 @@ export default function Careers() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className={`group p-5 md:p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col items-start justify-between gap-6 card-hover shadow-2xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
-                    <div className="flex items-center gap-5 md:gap-6 flex-1">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-[2rem] bg-primary-600/10 flex items-center justify-center text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-all shadow-xl group-hover:rotate-6">
-                         <Briefcase size={32} />
-                      </div>
+                    <div className="flex flex-col flex-1">
                       <div>
                         {opp.featured && (
                           <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] font-black uppercase tracking-widest">
@@ -364,72 +361,23 @@ export default function Careers() {
                             {opp.department}
                           </div>
                         )}
-                        {opp.description && (
-                          <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-2 mt-3 max-w-xl">
-                            {opp.description}
-                          </p>
-                        )}
-                        {opp.responsibilities && (
-                          <p className="text-xs text-[var(--text-muted)] mt-2 line-clamp-2">
-                            {opp.responsibilities}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-[var(--text-muted)] mt-5">
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck size={14} />
-                            {opp.type}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin size={14} />
-                            {opp.location}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <IndianRupee size={14} />
-                            {opp.compModel === 'revenue'
-                              ? `${opp.salary}% Revenue Share`
-                              : (opp.salary?.startsWith('₹')
-                                  ? opp.salary
-                                  : `₹${opp.salary}`)}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Clock size={14} />
-                            {opp.timing || opp.type}
-                          </div>
-
-                          {isAdmin && (
-                            <div className="flex items-center gap-2">
-                              <Users size={14} />
-                              {opp.applications || 0} Applicants
-                            </div>
-                          )}
-
-                          {isAdmin && (
-                            <div className="flex items-center gap-2">
-                              <Eye size={14} />
-                              {opp.views || 0} Views
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-2">
-                            <Briefcase size={14} />
-                            {opp.experience ? `${opp.experience} Years Exp.` : 'Fresher'}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Users size={14} />
-                            {opp.openings || 1} Openings
-                          </div>
-
-                          {opp.deadline && (
-                            <div className="flex items-center gap-2 text-red-500">
-                              <Clock size={14} />
-                              Apply Before {new Date(opp.deadline).toLocaleDateString()}
-                            </div>
-                          )}
+                        {/* Compensation */}
+                        <div className="mt-5 flex items-center gap-2 text-base font-black text-primary-600">
+                          <IndianRupee size={16} />
+                          {opp.compModel === 'revenue'
+                            ? `${opp.salary}% Revenue Share`
+                            : (opp.salary?.startsWith('₹')
+                                ? opp.salary
+                                : `₹${opp.salary}`)}
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-5">
+
+                        {/* Employment Type */}
+                        <div className="mt-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
+                          {opp.type}
+                        </div>
+
+                        {/* Skills */}
+                        <div className="flex flex-wrap gap-2 mt-4">
                           {(opp.skills || []).slice(0, 4).map((skill: string, idx: number) => (
                             <div
                               key={idx}
@@ -439,6 +387,36 @@ export default function Careers() {
                             </div>
                           ))}
                         </div>
+
+                        {/* Details */}
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs font-semibold text-[var(--text-muted)] mt-5">
+                          <div className="flex items-center gap-2">
+                            <MapPin size={14} />
+                            {opp.location}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Briefcase size={14} />
+                            {opp.experience ? `${opp.experience} Years Exp.` : 'Fresher'}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Clock size={14} />
+                            {opp.timing}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Users size={14} />
+                            {opp.openings || 1} Openings
+                          </div>
+                        </div>
+
+                        {opp.deadline && (
+                          <div className="mt-4 flex items-center gap-2 text-red-500 text-sm font-semibold">
+                            <Clock size={14} />
+                            Apply Before {new Date(opp.deadline).toLocaleDateString()}
+                          </div>
+                        )}
                       </div>
                     </div>
 
