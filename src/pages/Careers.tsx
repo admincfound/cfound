@@ -291,10 +291,6 @@ export default function Careers() {
               className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-[var(--text-main)]"
             />
           </div>
-          <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-            <Briefcase size={14} />
-            {jobs.length} Open Positions
-          </div>
         </div>
 
         <div className="space-y-12">
@@ -302,8 +298,8 @@ export default function Careers() {
             <h2 className="text-3xl font-black font-display text-[var(--text-main)] flex items-center gap-4 uppercase italic">
               Open Positions
             </h2>
-            <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] px-6 py-2 border border-[var(--border-main)] rounded-full bg-[var(--bg-card)] shadow-sm">
-              {jobs.length} Active Modules
+            <div className="text-[10px] font-black text-[var(--text-muted)] tracking-[0.2em] px-6 py-2 border border-[var(--border-main)] rounded-full bg-[var(--bg-card)] shadow-sm">
+              {jobs.length} Open Positions
             </div>
           </div>
           
