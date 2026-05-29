@@ -561,6 +561,8 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
       } else {
         await addDoc(collection(db, 'opportunities'), {
           ...finalData,
+          views: 0,
+          applications: 0,
           createdAt: serverTimestamp()
         });
       }

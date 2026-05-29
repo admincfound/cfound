@@ -202,6 +202,13 @@ export default function CareerDetails() {
         createdAt: new Date().toISOString()
       });
 
+      await updateDoc(
+        doc(db, 'opportunities', job.id),
+        {
+          applications: increment(1)
+        }
+      );
+
       setAlreadyApplied(true);
 
       toast.success('Application submitted successfully.');
