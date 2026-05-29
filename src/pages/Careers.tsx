@@ -157,12 +157,20 @@ export default function Careers() {
         }
       );
 
-      await updateDoc(
-        doc(db, 'opportunities', opp.id),
-        {
-          applications: increment(1)
-        }
-      );
+      console.log("Updating:", opp.id);
+
+      try {
+        await updateDoc(
+          doc(db, 'opportunities', opp.id),
+          {
+            applications: increment(1)
+          }
+        );
+
+        console.log("SUCCESS");
+      } catch (error) {
+        console.error("FAILED", error);
+      }
 
       console.log("APPLICATION UPDATED", opp.id);
       
