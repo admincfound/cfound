@@ -338,7 +338,7 @@ export default function Internship() {
                 <p className="text-sm opacity-80">Complete your profile before applying or enrolling. Missing: {completion.missing.length} section(s).</p>
               </div>
             </div>
-            <Link to="/profile" className="w-full flex items-center justify-center px-6 py-3 bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-red-600 transition-colors whitespace-nowrap">
+            <Link to="/profile" className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-red-600 transition-colors whitespace-nowrap">
               Complete Profile
             </Link>
           </div>
@@ -420,7 +420,7 @@ export default function Internship() {
                 >
                   <div>
                     <div className="flex items-center justify-between gap-4 mb-8">
-                      <div className="flex items-center gap-3">
+                      <div className="grid grid-cols-[auto_auto_1fr] gap-3 items-center">
                         <span className="px-3 py-1 bg-primary-600/10 text-primary-600 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                           <MapPin size={12} />
 
@@ -539,7 +539,7 @@ export default function Internship() {
                     </div>
                                       
                     {!isAdmin ? (
-                      <div className="flex items-center gap-3">
+                      <div className="grid grid-cols-[auto_auto_1fr] gap-3 items-center">
 
                         <Link
                           to={`/internship/${opp.slug}-${opp.id}`}
@@ -558,7 +558,7 @@ export default function Internship() {
                         <button 
                           onClick={() => handleApply(opp)}
                           disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                          className={`btn-primary flex-1 justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
+                          className={`btn-primary min-w-[180px] justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
                             userApplications.has(opp.id) 
                               ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                               : !completion.isComplete 
