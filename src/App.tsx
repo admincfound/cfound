@@ -14,6 +14,7 @@ import Projects from './pages/Projects';
 import Internship from './pages/Internship';
 import InternshipDetails from './pages/InternshipDetails';
 import Careers from './pages/Careers';
+import CareerDetails from './pages/CareerDetails';
 import Blog from './pages/Blog';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
@@ -90,6 +91,7 @@ function AppContent() {
           <Route path="/internship" element={<Internship />} />
           <Route path="/internship/:slug" element={<InternshipDetails />} />
           <Route path="/careers" element={<Careers />} />
+          <Route path="/careers/:slug" element={<CareerDetails />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/contact" element={<Contact />} />
