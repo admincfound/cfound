@@ -509,7 +509,7 @@ export default function Internship() {
                   </div>
 
                   <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
-                    <div className="text-lg font-bold font-display text-primary-600 uppercase whitespace-nowrap min-h-[40px] flex items-center">
+                    <div className="text-base md:text-lg font-bold font-display text-primary-600 uppercase min-h-[40px] break-words leading-tight">
                       {
                         opp.internshipType === 'paid'
                           ? opp.paymentType === 'range'
