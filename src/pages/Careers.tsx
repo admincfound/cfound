@@ -1,6 +1,18 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, query, where, getDocs, setDoc, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  setDoc,
+  addDoc,
+  updateDoc,
+  increment,
+  deleteDoc,
+  doc,
+  serverTimestamp
+} from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -142,6 +154,13 @@ export default function Careers() {
           status: 'pending',
           appliedAt: new Date().toISOString(),
           createdAt: new Date().toISOString()
+        }
+      );
+
+      await updateDoc(
+        doc(db, 'opportunities', opp.id),
+        {
+          applications: increment(1)
         }
       );
       
