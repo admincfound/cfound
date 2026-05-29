@@ -28,7 +28,7 @@ export default function CareerDetails() {
 
   const { slug } = useParams();
 
-  const id = slug?.replace(/^.*-/, '');
+  const id = slug?.split('-').slice(-1)[0];
   console.log("Slug:", slug);
   console.log("Extracted ID:", id);
   const [job, setJob] = useState<any>(null);
@@ -107,6 +107,9 @@ export default function CareerDetails() {
       if (!id) return;
 
       const snap = await getDoc(doc(db, 'opportunities', id));
+      console.log('Job ID:', id);
+      console.log('Document exists:', snap.exists());
+      console.log('Data:', snap.data());
 
       if (snap.exists()) {
         setJob({
@@ -304,11 +307,7 @@ export default function CareerDetails() {
             <span className="px-4 py-2 rounded-xl border border-[var(--border-main)] text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
               <MapPin size={14} />
 
-              {
-                job.mode === 'Remote'
-                  ? 'Remote'
-                  : `${job.mode} • ${job.location}`
-              }
+              {job.location || 'Remote'}
             </span>
 
             <span className="px-4 py-2 rounded-xl border border-[var(--border-main)] text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
@@ -374,6 +373,98 @@ export default function CareerDetails() {
                 >
                   {applying ? 'Applying...' : 'Apply Now'}
                 </button>
+              )}
+
+            </div>
+
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 mt-16">
+
+            <div className="md:col-span-2 space-y-8">
+
+              <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
+                <h2 className="text-2xl font-black mb-4">
+                  Job Description
+                </h2>
+
+                <p className="text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap">
+                  {job.description || 'No description available.'}
+                </p>
+              </div>
+
+              <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
+                <h2 className="text-2xl font-black mb-6">
+                  Requirements
+                </h2>
+
+                <div className="space-y-4">
+                  {(job.requirements || []).map((req: string, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-3"
+                    >
+                      <CheckCircle2
+                        size={18}
+                        className="text-primary-500 mt-1"
+                      />
+
+                      <span>{req}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            <div className="space-y-6">
+
+              <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-6">
+                <h3 className="font-black mb-4">
+                  Details
+                </h3>
+
+                <div className="space-y-3 text-sm">
+
+                  <div>
+                    <strong>Experience:</strong>{' '}
+                    {job.experience || 'Fresher'}
+                  </div>
+
+                  <div>
+                    <strong>Openings:</strong>{' '}
+                    {job.openings || 1}
+                  </div>
+
+                  <div>
+                    <strong>Views:</strong>{' '}
+                    {job.views || 0}
+                  </div>
+
+                  <div>
+                    <strong>Applicants:</strong>{' '}
+                    {job.applications || 0}
+                  </div>
+
+                </div>
+              </div>
+
+              {(job.skills?.length ?? 0) > 0 && (
+                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-6">
+                  <h3 className="font-black mb-4">
+                    Skills
+                  </h3>
+
+                  <div className="flex flex-wrap gap-2">
+                    {job.skills.map((skill: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-3 py-2 rounded-xl bg-primary-600/10 text-primary-600 text-xs font-bold"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
 
             </div>
