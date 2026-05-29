@@ -676,9 +676,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     className="input-main"
                   >
                     <option value="fixed">Fixed Salary</option>
-                    <option value="range">Salary Range</option>
-                    <option value="revenue">Revenue Share %</option>
-                    <option value="revenue-range">Revenue Share Range</option>
+                    <option value="revenue">Revenue Share</option>
                   </select>
                 </div>
                 <div>
@@ -696,8 +694,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                    {formData.compModel === 'revenue' ||
-                     formData.compModel === 'revenue-range'
+                    {formData.compModel === 'revenue'
                       ? 'Revenue Share'
                       : 'Salary'}
                   </label>
@@ -706,13 +703,9 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     value={formData.salary}
                     onChange={(e) => setFormData({...formData, salary: e.target.value})}
                     placeholder={
-                      formData.compModel === 'fixed'
-                        ? '₹25000'
-                        : formData.compModel === 'range'
-                        ? '₹15000 - ₹25000'
-                        : formData.compModel === 'revenue'
-                        ? '8'
-                        : '5 - 10'
+                      formData.compModel === 'revenue'
+                        ? '5 or 5-10'
+                        : '25000 or 15000-25000'
                     }
                     className="input-main"
                   />
