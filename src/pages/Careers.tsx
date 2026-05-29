@@ -65,8 +65,29 @@ export default function Careers() {
         ? query(collection(db, 'opportunities'), where('type', '==', 'job'))
         : query(collection(db, 'opportunities'), where('type', '==', 'job'), where('status', 'in', ['active', 'featured']));
       const snap = await getDocs(q);
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setJobs(data);
+
+      const data = snap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      const jobsWithCounts = await Promise.all(
+        data.map(async (job) => {
+          const appSnap = await getDocs(
+            query(
+              collection(db, 'jobApplications'),
+              where('targetId', '==', job.id)
+            )
+          );
+
+          return {
+            ...job,
+            applications: appSnap.size
+          };
+        })
+      );
+
+      setJobs(jobsWithCounts);
     } catch (err) {
       console.error("Error fetching jobs:", err);
       setJobs([]);
