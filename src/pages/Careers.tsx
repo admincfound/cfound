@@ -408,7 +408,7 @@ export default function Careers() {
                         </div>
 
                       </div>
-
+                    </div>
                     <div className="flex items-center gap-3 flex-wrap">
                       {isAdmin && (
                         <div className="flex gap-3">
