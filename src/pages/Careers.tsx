@@ -380,31 +380,27 @@ export default function Careers() {
                             ))}
                           </div>
 
-                          <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
                             <span className="flex items-center gap-1">
                               <MapPin size={14} />
-                              {opp.location}
+                              {opp.location || 'Remote'}
                             </span>
 
                             <span className="flex items-center gap-1">
                               <Briefcase size={14} />
                               {opp.experience || 'Fresher'}
                             </span>
+
+                            <span className="flex items-center gap-1">
+                              <Users size={14} />
+                              {opp.applications || 0} Applicants
+                            </span>
+
+                            <span className="flex items-center gap-1">
+                              <Eye size={14} />
+                              {opp.views || 0} Views
+                            </span>
                           </div>
-
-                          {isAdmin && (
-                            <div className="mt-2 flex items-center gap-6 text-xs font-bold text-primary-600">
-                              <span className="flex items-center gap-2">
-                                <Eye size={16} />
-                                {opp.views || 0}
-                              </span>
-
-                              <span className="flex items-center gap-2">
-                                <Users size={16} />
-                                {opp.applications || 0}
-                              </span>
-                            </div>
-                          )}
                         </div>
 
                       </div>
