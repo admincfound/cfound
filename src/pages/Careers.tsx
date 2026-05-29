@@ -528,7 +528,8 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
     salary: '',
     type: 'full-time',
     timing: 'Morning Shift',
-    compModel: 'fixed',
+    compModel: 'salary',
+    compFormat: 'fixed',
     skills: [],
     mode: 'Remote',
     experience: '',
@@ -551,7 +552,8 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         ...job,
         requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : job.requirements,
         opportunity_type: 'job',
-        compModel: job.compModel || 'fixed',
+        compModel: job.compModel || 'salary',
+        compFormat: job.compFormat || 'fixed',
         timing: job.timing || 'Morning Shift',
       });
     } else {
@@ -561,7 +563,8 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         salary: '',
         type: 'full-time',
         timing: 'Morning Shift',
-        compModel: 'fixed',
+        compModel: 'salary',
+        compFormat: 'fixed',
         skills: [],
         mode: 'Remote',
         experience: '',
@@ -675,9 +678,29 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     onChange={(e) => setFormData({...formData, compModel: e.target.value})}
                     className="input-main"
                   >
-                    <option value="fixed">Fixed Salary</option>
+                    <option value="salary">Salary</option>
                     <option value="revenue">Revenue Share</option>
+
                   </select>
+                  <div className="mt-4">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Compensation Format
+                    </label>
+
+                    <select
+                      value={formData.compFormat || 'fixed'}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          compFormat: e.target.value
+                        })
+                      }
+                      className="input-main"
+                    >
+                      <option value="fixed">Fixed</option>
+                      <option value="range">Range</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Timing / Shift</label>
@@ -693,22 +716,27 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                    {formData.compModel === 'revenue'
-                      ? 'Revenue Share'
-                      : 'Salary'}
-                  </label>
-                  <input 
-                    required
-                    value={formData.salary}
-                    onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                    placeholder={
-                      formData.compModel === 'revenue'
-                        ? '5 or 5-10'
-                        : '25000 or 15000-25000'
-                    }
-                    className="input-main"
-                  />
+                  <div className="relative">
+                    {formData.compModel !== 'revenue' && (
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-bold">
+                        ₹
+                      </span>
+                    )}
+
+                    <input
+                      required
+                      value={formData.salary}
+                      onChange={(e) => setFormData({...formData, salary: e.target.value})}
+                      placeholder={
+                        formData.compModel === 'revenue'
+                          ? '5 or 5-10'
+                          : '25000 or 15000-25000'
+                      }
+                      className={`input-main ${
+                        formData.compModel !== 'revenue' ? 'pl-10' : ''
+                      }`}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
