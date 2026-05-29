@@ -359,13 +359,26 @@ export default function Careers() {
                           </div>
                         )}
                         <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
+                        {opp.department && (
+                          <div className="mb-3 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
+                            {opp.department}
+                          </div>
+                        )}
                         {opp.description && (
                           <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-2 mt-3 max-w-xl">
                             {opp.description}
                           </p>
                         )}
+                        {opp.responsibilities && (
+                          <p className="text-xs text-[var(--text-muted)] mt-2 line-clamp-2">
+                            {opp.responsibilities}
+                          </p>
+                        )}
                         <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-[var(--text-muted)] mt-5">
-
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck size={14} />
+                            {opp.type}
+                          </div>
                           <div className="flex items-center gap-2">
                             <MapPin size={14} />
                             {opp.location}
@@ -374,7 +387,7 @@ export default function Careers() {
                           <div className="flex items-center gap-2">
                             <IndianRupee size={14} />
                             {opp.compModel === 'revenue'
-                              ? 'Revenue Share'
+                              ? `${opp.salary}% Revenue Share`
                               : (opp.salary?.startsWith('₹')
                                   ? opp.salary
                                   : `₹${opp.salary}`)}
@@ -385,25 +398,36 @@ export default function Careers() {
                             {opp.timing || opp.type}
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <Users size={14} />
-                            {opp.applications || 0} Applicants
-                          </div>
+                          {isAdmin && (
+                            <div className="flex items-center gap-2">
+                              <Users size={14} />
+                              {opp.applications || 0} Applicants
+                            </div>
+                          )}
 
-                          <div className="flex items-center gap-2">
-                            <Eye size={14} />
-                            {opp.views || 0} Views
-                          </div>
+                          {isAdmin && (
+                            <div className="flex items-center gap-2">
+                              <Eye size={14} />
+                              {opp.views || 0} Views
+                            </div>
+                          )}
 
                           <div className="flex items-center gap-2">
                             <Briefcase size={14} />
-                            {opp.experience || 'Fresher'}
+                            {opp.experience ? `${opp.experience} Years Exp.` : 'Fresher'}
                           </div>
 
                           <div className="flex items-center gap-2">
                             <Users size={14} />
                             {opp.openings || 1} Openings
                           </div>
+
+                          {opp.deadline && (
+                            <div className="flex items-center gap-2 text-red-500">
+                              <Clock size={14} />
+                              Apply Before {new Date(opp.deadline).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-2 mt-5">
                           {(opp.skills || []).slice(0, 4).map((skill: string, idx: number) => (
