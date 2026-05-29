@@ -420,7 +420,7 @@ export default function Internship() {
                 >
                   <div>
                     <div className="flex items-center justify-between gap-4 mb-8">
-                      <div className="grid grid-cols-[auto_auto_1fr] gap-3 items-center">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <span className="px-3 py-1 bg-primary-600/10 text-primary-600 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                           <MapPin size={12} />
 
@@ -539,7 +539,7 @@ export default function Internship() {
                     </div>
                                       
                     {!isAdmin ? (
-                      <div className="grid grid-cols-[auto_auto_1fr] gap-3 items-center">
+                      <div className="flex items-center gap-3 flex-wrap">
 
                         <Link
                           to={`/internship/${opp.slug}-${opp.id}`}
@@ -558,7 +558,7 @@ export default function Internship() {
                         <button 
                           onClick={() => handleApply(opp)}
                           disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                          className={`btn-primary min-w-[180px] justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
+                          className={`btn-primary justify-center flex items-center gap-2 px-5 py-3 transition-all ${
                             userApplications.has(opp.id) 
                               ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                               : !completion.isComplete 
