@@ -338,7 +338,7 @@ export default function Internship() {
                 <p className="text-sm opacity-80">Complete your profile before applying or enrolling. Missing: {completion.missing.length} section(s).</p>
               </div>
             </div>
-            <Link to="/profile" className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-red-600 transition-colors whitespace-nowrap">
+            <Link to="/profile" className="w-full flex items-center justify-center px-6 py-3 bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-red-600 transition-colors whitespace-nowrap">
               Complete Profile
             </Link>
           </div>
@@ -539,7 +539,7 @@ export default function Internship() {
                     </div>
                                       
                     {!isAdmin ? (
-                      <div className="flex items-center justify-end gap-3 flex-wrap">
+                      <div className="grid grid-cols-[1fr_auto] gap-3">
 
                         <Link
                           to={`/internship/${opp.slug}-${opp.id}`}
@@ -550,7 +550,7 @@ export default function Internship() {
                         </Link>
                         <button
                           onClick={() => handleShare(opp)}
-                          className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
+                          className="w-full flex items-center justify-center p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
                         >
                           <Share2 size={16} />
                         </button>
@@ -558,7 +558,7 @@ export default function Internship() {
                         <button 
                           onClick={() => handleApply(opp)}
                           disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                          className={`btn-primary min-w-[170px] justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
+                          className={`btn-primary w-full justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
                             userApplications.has(opp.id) 
                               ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                               : !completion.isComplete 
