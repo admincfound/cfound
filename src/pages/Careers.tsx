@@ -524,17 +524,18 @@ export default function Careers() {
 function JobModal({ isOpen, onClose, job, onSuccess }: any) {
   const [formData, setFormData] = useState({
     title: '',
-    location: 'Remote',
-    salary: '',
+    location: 'Remote', 
     type: 'full-time',
     timing: 'Morning Shift',
-    compModel: 'salary',
-    compFormat: 'fixed',
     skills: [],
     mode: 'Remote',
     experience: '',
     openings: '',
     featured: false,
+    paymentType: 'fixed',
+    minAmount: '',
+    maxAmount: '',
+    revenuePercent: '',
     description: '',
     requirements: '',
     status: 'active',
@@ -552,19 +553,18 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         ...job,
         requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : job.requirements,
         opportunity_type: 'job',
-        compModel: job.compModel || 'salary',
-        compFormat: job.compFormat || 'fixed',
         timing: job.timing || 'Morning Shift',
       });
     } else {
       setFormData({
         title: '',
         location: 'Remote',
-        salary: '',
         type: 'full-time',
         timing: 'Morning Shift',
-        compModel: 'salary',
-        compFormat: 'fixed',
+        paymentType: 'fixed',
+        minAmount: '',
+        maxAmount: '',
+        revenuePercent: '',
         skills: [],
         mode: 'Remote',
         experience: '',
@@ -645,65 +645,12 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
 
             <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Position Title</label>
-                  <input 
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    placeholder="e.g., Lead Neural Architect"
-                    className="input-main"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Deployment Location</label>
-                  <input 
-                    required
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    placeholder="Remote / Hybrid / On-site"
-                    className="input-main"
-                  />
-                </div>
-              </div>
+                <div></div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                    Compensation Type
+                    Timing / Shift
                   </label>
-
-                  <select
-                    value={formData.compModel}
-                    onChange={(e) => setFormData({...formData, compModel: e.target.value})}
-                    className="input-main"
-                  >
-                    <option value="salary">Salary</option>
-                    <option value="revenue">Revenue Share</option>
-
-                  </select>
-                  <div className="mt-4">
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                      Compensation Format
-                    </label>
-
-                    <select
-                      value={formData.compFormat || 'fixed'}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          compFormat: e.target.value
-                        })
-                      }
-                      className="input-main"
-                    >
-                      <option value="fixed">Fixed</option>
-                      <option value="range">Range</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Timing / Shift</label>
                   <input 
                     required
                     value={formData.timing}
@@ -716,28 +663,81 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <div className="relative">
-                    {formData.compModel !== 'revenue' && (
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-bold">
-                        ₹
-                      </span>
-                    )}
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    Payment Type
+                  </label>
 
+                  <select
+                    value={formData.paymentType || 'fixed'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        paymentType: e.target.value
+                      })
+                    }
+                    className="input-main"
+                  >
+                    <option value="fixed">Fixed Salary</option>
+                    <option value="range">Salary Range</option>
+                    <option value="revenue">Revenue Share</option>
+                  </select>
+
+                  {formData.paymentType === 'fixed' && (
                     <input
-                      required
-                      value={formData.salary}
-                      onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                      placeholder={
-                        formData.compModel === 'revenue'
-                          ? '5 or 5-10'
-                          : '25000 or 15000-25000'
+                      value={formData.minAmount || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          minAmount: e.target.value
+                        })
                       }
-                      className={`input-main ${
-                        formData.compModel !== 'revenue' ? 'pl-10' : ''
-                      }`}
+                      placeholder="15000"
+                      className="input-main mt-4"
                     />
+                  )}
+
+                  {formData.paymentType === 'range' && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <input
+                        value={formData.minAmount || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            minAmount: e.target.value
+                          })
+                        }
+                        placeholder="Minimum Salary"
+                        className="input-main"
+                      />
+
+                      <input
+                        value={formData.maxAmount || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            maxAmount: e.target.value
+                          })
+                        }
+                        placeholder="Maximum Salary"
+                        className="input-main"
+                      />
+                    </div>
+                  )}
+
+                  {formData.paymentType === 'revenue' && (
+                    <input
+                      value={formData.revenuePercent || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          revenuePercent: e.target.value
+                        })
+                      }
+                      placeholder="Revenue %"
+                      className="input-main mt-4"
+                    />
+                  )}
                   </div>
-                </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
                     Experience Required
