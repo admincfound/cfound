@@ -463,7 +463,7 @@ export default function Internship() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-xl md:text-2xl font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                    <h3 className="text-lg md:text-2xl leading-tight font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
                     <div className="flex flex-wrap gap-3 mb-6">
                       {(Array.isArray(opp.skills) ? opp.skills : [])
                         .slice(0, 3)
@@ -509,20 +509,35 @@ export default function Internship() {
                   </div>
 
                   <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
-                    <div className="text-base md:text-lg font-bold font-display text-primary-600 uppercase min-h-[40px] break-words leading-tight">
-                      {
-                        opp.internshipType === 'paid'
-                          ? opp.paymentType === 'range'
-                            ? `₹${opp.minAmount} - ₹${opp.maxAmount}/month`
-                            : `₹${opp.amount}/month`
-                          : opp.internshipType === 'training'
-                            ? opp.paymentType === 'range'
-                            ? `Training Program • ₹${opp.minAmount} - ₹${opp.maxAmount}/month`
-                            : `Training Program • ₹${opp.amount}/month`
-                            : 'Unpaid Internship'
-                      }
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                          {
+                            opp.internshipType === "training"
+                              ? "Training Fee"
+                              : opp.internshipType === "paid"
+                              ? "Monthly Stipend"
+                              : "Compensation"
+                          }
+                        </p>
+
+                        <p className="text-xl md:text-2xl font-black text-primary-600">
+                          {
+                            opp.internshipType === "training"
+                              ? opp.paymentType === "range"
+                                ? `₹${opp.minAmount} - ₹${opp.maxAmount}`
+                                : `₹${opp.amount}`
+                              : opp.internshipType === "paid"
+                              ? opp.paymentType === "range"
+                                ? `₹${opp.minAmount} - ₹${opp.maxAmount}`
+                                : `₹${opp.amount}`
+                              : "Unpaid"
+                          }
+                        </p>
+                      </div>
                     </div>
-                    
+                                      
                     {!isAdmin ? (
                       <div className="flex items-center justify-end gap-3 flex-wrap">
 
