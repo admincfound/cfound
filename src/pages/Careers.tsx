@@ -363,12 +363,13 @@ export default function Careers() {
                         )}
                         {/* Compensation */}
                         <div className="mt-5 flex items-center gap-2 text-base font-black text-primary-600">
-                          <IndianRupee size={16} />
-                          {opp.compModel === 'revenue'
-                            ? `${opp.salary}% Revenue Share`
-                            : (opp.salary?.startsWith('₹')
-                                ? opp.salary
-                                : `₹${opp.salary}`)}
+                          {opp.compModel === 'revenue' ? (
+                            <span>{opp.salary}% Revenue Share</span>
+                          ) : opp.compModel === 'revenue-range' ? (
+                            <span>{opp.salary}% Revenue Share</span>
+                          ) : (
+                            <span>{opp.salary}</span>
+                          )}
                         </div>
 
                         {/* Employment Type */}
@@ -665,14 +666,19 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Compensation Basis</label>
-                  <select 
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    Compensation Type
+                  </label>
+
+                  <select
                     value={formData.compModel}
                     onChange={(e) => setFormData({...formData, compModel: e.target.value})}
                     className="input-main"
                   >
                     <option value="fixed">Fixed Salary</option>
-                    <option value="revenue">Revenue Basis</option>
+                    <option value="range">Salary Range</option>
+                    <option value="revenue">Revenue Share %</option>
+                    <option value="revenue-range">Revenue Share Range</option>
                   </select>
                 </div>
                 <div>
@@ -690,13 +696,24 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                    {formData.compModel === 'revenue' ? 'Projected Share' : 'Salary Range (INR)'}
+                    {formData.compModel === 'revenue' ||
+                     formData.compModel === 'revenue-range'
+                      ? 'Revenue Share'
+                      : 'Salary'}
                   </label>
                   <input 
                     required
                     value={formData.salary}
                     onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                    placeholder={formData.compModel === 'revenue' ? "5-10% of Revenue" : "₹50k - ₹80k / Mo"}
+                    placeholder={
+                      formData.compModel === 'fixed'
+                        ? '₹25000'
+                        : formData.compModel === 'range'
+                        ? '₹15000 - ₹25000'
+                        : formData.compModel === 'revenue'
+                        ? '8'
+                        : '5 - 10'
+                    }
                     className="input-main"
                   />
                 </div>
