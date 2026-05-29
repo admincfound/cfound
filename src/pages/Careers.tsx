@@ -420,6 +420,17 @@ export default function Careers() {
                           >
                             <Share2 size={18} />
                           </button>
+                          <Link
+                            to={`/careers/${
+                              opp.title
+                                .toLowerCase()
+                                .replace(/[^a-z0-9\s-]/g, '')
+                                .replace(/\s+/g, '-')
+                            }-${opp.id}`}
+                            className="btn-secondary px-6 py-4 text-sm font-bold"
+                          >
+                            View Details
+                          </Link>
 
                           <button 
                             onClick={() => handleApply(opp)}
