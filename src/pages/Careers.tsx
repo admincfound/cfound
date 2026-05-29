@@ -350,11 +350,19 @@ export default function Careers() {
                   >
                     <div className="flex flex-col flex-1">
                       <div>
-                        {opp.featured && !isAdmin && (
-                          <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] font-black uppercase tracking-widest">
-                            Featured
-                          </div>
-                        )}
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          {opp.featured && (
+                            <div className="inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-[10px] font-black uppercase tracking-widest">
+                              Featured
+                            </div>
+                          )}
+
+                          {(opp.applications || 0) >= 1 && (
+                            <div className="inline-flex px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 text-[10px] font-black uppercase tracking-widest">
+                              High Demand
+                            </div>
+                          )}
+                        </div>
                         <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
                         {opp.department && (
                           <div className="mb-3 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
@@ -388,7 +396,7 @@ export default function Careers() {
 
                             <span className="flex items-center gap-1">
                               <Briefcase size={14} />
-                              {opp.experience || 'Fresher'}
+                              {opp.experience ? `${opp.experience} Yrs` : 'Fresher'}
                             </span>
 
                             <span className="flex items-center gap-1">
