@@ -164,7 +164,10 @@ export default function Careers() {
         }
       );
 
-      console.log("APPLICATION COUNT UPDATED", opp.id);
+        console.log("APPLICATION UPDATED", opp.id);
+      } catch (err) {
+        console.error("APPLICATION UPDATE FAILED", err);
+      }
       
       setUserApplications(prev => new Set(prev).add(opp.id));
 
