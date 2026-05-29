@@ -163,6 +163,8 @@ export default function Careers() {
           applications: increment(1)
         }
       );
+
+      console.log("APPLICATION COUNT UPDATED", opp.id);
       
       setUserApplications(prev => new Set(prev).add(opp.id));
 
