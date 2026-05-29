@@ -363,12 +363,18 @@ export default function Careers() {
                         )}
                         {/* Compensation */}
                         <div className="mt-5 flex items-center gap-2 text-base font-black text-primary-600">
-                          {opp.compModel === 'revenue' ? (
-                            <span>{opp.salary}% Revenue Share</span>
-                          ) : opp.compModel === 'revenue-range' ? (
-                            <span>{opp.salary}% Revenue Share</span>
+                          {opp.compType === 'salary' ? (
+                            opp.compFormat === 'range' ? (
+                              <span>₹{opp.minAmount} - ₹{opp.maxAmount}</span>
+                            ) : (
+                              <span>₹{opp.minAmount}</span>
+                            )
                           ) : (
-                            <span>{opp.salary}</span>
+                            opp.compFormat === 'range' ? (
+                              <span>{opp.minAmount}% - {opp.maxAmount}% Revenue Share</span>
+                            ) : (
+                              <span>{opp.minAmount}% Revenue Share</span>
+                            )
                           )}
                         </div>
 
@@ -532,10 +538,10 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
     experience: '',
     openings: '',
     featured: false,
-    paymentType: 'fixed',
+    compType: 'salary',
+    compFormat: 'fixed',
     minAmount: '',
     maxAmount: '',
-    revenuePercent: '',
     description: '',
     requirements: '',
     status: 'active',
@@ -561,10 +567,10 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         location: 'Remote',
         type: 'full-time',
         timing: 'Morning Shift',
-        paymentType: 'fixed',
+        compType: 'salary',
+        compFormat: 'fixed',
         minAmount: '',
         maxAmount: '',
-        revenuePercent: '',
         skills: [],
         mode: 'Remote',
         experience: '',
@@ -644,9 +650,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div></div>
-
+              <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
                     Timing / Shift
@@ -661,112 +665,119 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                    Payment Type
+                    Compensation Type
                   </label>
 
                   <select
-                    value={formData.paymentType || 'fixed'}
+                    value={formData.compType}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        paymentType: e.target.value
+                        compType: e.target.value
                       })
                     }
                     className="input-main"
                   >
-                    <option value="fixed">Fixed Salary</option>
-                    <option value="range">Salary Range</option>
+                    <option value="salary">Salary</option>
                     <option value="revenue">Revenue Share</option>
                   </select>
 
-                  {formData.paymentType === 'fixed' && (
+                  <div className="mt-4">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Format
+                    </label>
+
+                    <select
+                      value={formData.compFormat}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          compFormat: e.target.value
+                        })
+                      }
+                      className="input-main"
+                    >
+                      <option value="fixed">Fixed</option>
+                      <option value="range">Range</option>
+                    </select>
+                  </div>
+
+                  {formData.compFormat === 'fixed' && (
                     <input
-                      value={formData.minAmount || ''}
+                      value={formData.minAmount}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           minAmount: e.target.value
                         })
                       }
-                      placeholder="15000"
+                      placeholder={formData.compType === 'salary' ? 'Salary Amount' : 'Revenue %'}
                       className="input-main mt-4"
                     />
                   )}
 
-                  {formData.paymentType === 'range' && (
+                  {formData.compFormat === 'range' && (
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <input
-                        value={formData.minAmount || ''}
+                        value={formData.minAmount}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
                             minAmount: e.target.value
                           })
                         }
-                        placeholder="Minimum Salary"
+                        placeholder={formData.compType === 'salary' ? 'Min Salary' : 'Min %'}
                         className="input-main"
                       />
 
                       <input
-                        value={formData.maxAmount || ''}
+                        value={formData.maxAmount}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
                             maxAmount: e.target.value
                           })
                         }
-                        placeholder="Maximum Salary"
+                        placeholder={formData.compType === 'salary' ? 'Max Salary' : 'Max %'}
                         className="input-main"
                       />
                     </div>
                   )}
-
-                  {formData.paymentType === 'revenue' && (
-                    <input
-                      value={formData.revenuePercent || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          revenuePercent: e.target.value
-                        })
-                      }
-                      placeholder="Revenue %"
-                      className="input-main mt-4"
-                    />
-                  )}
                   </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
-                    Experience Required
-                  </label>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                        Experience Required
+                      </label>
 
-                  <input
-                    value={formData.experience}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        experience: e.target.value
-                      })
-                    }
-                    placeholder="0-2 Years"
-                    className="input-main"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Contract Type</label>
-                  <select 
-                    value={formData.type}
-                    onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="input-main"
-                  >
-                    <option value="full-time">Full-time</option>
-                    <option value="part-time">Part-time</option>
-                    <option value="contract">Contract</option>
-                  </select>
-                </div>
+                      <input
+                        value={formData.experience}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            experience: e.target.value
+                          })
+                        }
+                        placeholder="0-2 Years"
+                        className="input-main"
+                      />
+                  </div>    
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      Contract Type
+                    </label>
+                    <select 
+                      value={formData.type}
+                      onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      className="input-main"
+                    >
+                      <option value="full-time">Full-time</option>
+                      <option value="part-time">Part-time</option>
+                      <option value="contract">Contract</option>
+                    </select>
+                  </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
                     Number of Openings
