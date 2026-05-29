@@ -361,8 +361,12 @@ export default function Careers() {
                             {opp.department}
                           </div>
                         )}
-                        {/* Compensation */}
-                        <div className="mt-5 flex items-center gap-2 text-base font-black text-primary-600">
+                        <div className="mt-5">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                          Compensation
+                        </div>
+
+                        <div className="flex items-center gap-2 text-base font-black text-primary-600">
                           {opp.compType === 'salary' ? (
                             opp.compFormat === 'range' ? (
                               <span>₹{opp.minAmount} - ₹{opp.maxAmount}</span>
@@ -376,13 +380,23 @@ export default function Careers() {
                               <span>{opp.minAmount}% Revenue Share</span>
                             )
                           )}
+                          </div>
+                          </div>
                         </div>
 
-                        {/* Employment Type */}
-                        <div className="mt-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
-                          {opp.type}
-                        </div>
+                        <div className="mt-4">
+                          <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                            Employment Type
+                          </div>
 
+                          <div className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wide">
+                            {opp.type}
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                            Required Skills
+                          </div>
                         {/* Skills */}
                         <div className="flex flex-wrap gap-2 mt-4">
                           {(opp.skills || []).slice(0, 4).map((skill: string, idx: number) => (
@@ -394,7 +408,7 @@ export default function Careers() {
                             </div>
                           ))}
                         </div>
-
+                        </div>
                         {/* Details */}
                         <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs font-semibold text-[var(--text-muted)] mt-5">
                           <div className="flex items-center gap-2">
@@ -650,7 +664,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
                     Timing / Shift
@@ -665,7 +679,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
                     Compensation Type
