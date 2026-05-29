@@ -292,15 +292,9 @@ export default function Careers() {
             />
           </div>
           <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-            <Activity size={14} className="text-emerald-500" /> System Online / {jobs.length} Active Positions
+            <Briefcase size={14} />
+            {jobs.length} Open Positions
           </div>
-        </div>
-
-        {/* Benefits Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-32">
-           <BenefitCard icon={<Zap size={24} />} title="Growth Mindset" desc="Structured career paths and mentorship from industry veterans." />
-           <BenefitCard icon={<Target size={24} />} title="Global Impact" desc="Contribute to high-performance systems used at planetary scale." />
-           <BenefitCard icon={<ShieldCheck size={24} />} title="Premium Benefits" desc="Competitive compensation, health coverage, and flexible work environments." />
         </div>
 
         <div className="space-y-12">
@@ -467,6 +461,12 @@ export default function Careers() {
                <p className="text-[var(--text-muted)] font-black uppercase tracking-widest text-sm opacity-40 italic">No openings available currently.</p>
             </div>
           )}
+        </div>
+        {/* Benefits Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-32">
+           <BenefitCard icon={<Zap size={24} />} title="Growth Mindset" desc="Structured career paths and mentorship from industry veterans." />
+           <BenefitCard icon={<Target size={24} />} title="Global Impact" desc="Contribute to high-performance systems used at planetary scale." />
+           <BenefitCard icon={<ShieldCheck size={24} />} title="Premium Benefits" desc="Competitive compensation, health coverage, and flexible work environments." />
         </div>
       </div>
 
