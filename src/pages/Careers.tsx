@@ -534,7 +534,11 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
     description: '',
     requirements: '',
     status: 'active',
-    opportunity_type: 'job'
+    opportunity_type: 'job',
+    department: '',
+    responsibilities: '',
+    deadline: '',
+    portfolioRequired: false,
   });
   const [loading, setLoading] = useState(false);
 
@@ -563,7 +567,11 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         description: '',
         requirements: '',
         status: 'active',
-        opportunity_type: 'job'
+        opportunity_type: 'job',
+        department: '',
+        responsibilities: '',
+        deadline: '',
+        portfolioRequired: false,
       });
     }
   }, [job, isOpen]);
@@ -755,6 +763,29 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   className="input-main"
                 />
               </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  Department
+                </label>
+
+                <select
+                  value={formData.department}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      department: e.target.value
+                    })
+                  }
+                  className="input-main"
+                >
+                  <option value="">Select Department</option>
+                  <option value="Game Development">Game Development</option>
+                  <option value="Software Development">Software Development</option>
+                  <option value="AI/ML">AI/ML</option>
+                  <option value="UI/UX">UI/UX</option>
+                  <option value="Sales">Sales</option>
+                </select>
+              </div>
               <div className="flex items-center justify-between border border-[var(--border-main)] rounded-2xl px-5 py-4">
                 <div>
                   <h4 className="font-bold text-sm">Featured Position</h4>
@@ -785,6 +816,23 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   placeholder="Strategic overview of the role..."
                   className="input-main min-h-[100px]"
                 />
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    Responsibilities
+                  </label>
+
+                  <textarea
+                    value={formData.responsibilities}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        responsibilities: e.target.value
+                      })
+                    }
+                    placeholder="Develop game features..."
+                    className="input-main min-h-[120px]"
+                  />
+                </div>
               </div>
 
               <div>
@@ -795,6 +843,23 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   onChange={(e) => setFormData({...formData, requirements: e.target.value})}
                   placeholder="Advanced Distributed Systems Expertise&#10;Neural Network Design Mastery"
                   className="input-main min-h-[150px] font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  Application Deadline
+                </label>
+
+                <input
+                  type="date"
+                  value={formData.deadline}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      deadline: e.target.value
+                    })
+                  }
+                  className="input-main"
                 />
               </div>
 
