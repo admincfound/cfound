@@ -539,7 +539,7 @@ export default function Internship() {
                     </div>
                                       
                     {!isAdmin ? (
-                      <div className="grid grid-cols-[1fr_auto] gap-3">
+                      <div className="flex items-center gap-3">
 
                         <Link
                           to={`/internship/${opp.slug}-${opp.id}`}
@@ -550,7 +550,7 @@ export default function Internship() {
                         </Link>
                         <button
                           onClick={() => handleShare(opp)}
-                          className="w-full flex items-center justify-center p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
+                          className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
                         >
                           <Share2 size={16} />
                         </button>
@@ -558,7 +558,7 @@ export default function Internship() {
                         <button 
                           onClick={() => handleApply(opp)}
                           disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                          className={`btn-primary w-full justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
+                          className={`btn-primary flex-1 justify-center flex items-center gap-2 px-5 py-3 md:px-8 transition-all ${
                             userApplications.has(opp.id) 
                               ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                               : !completion.isComplete 
