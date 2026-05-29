@@ -469,8 +469,9 @@ export default function Careers() {
             </div>
           )}
         </div>
+        <div className="h-20"></div>
         {/* Benefits Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-32">
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-32">
            <BenefitCard icon={<Zap size={24} />} title="Growth Mindset" desc="Structured career paths and mentorship from industry veterans." />
            <BenefitCard icon={<Target size={24} />} title="Global Impact" desc="Contribute to high-performance systems used at planetary scale." />
            <BenefitCard icon={<ShieldCheck size={24} />} title="Premium Benefits" desc="Competitive compensation, health coverage, and flexible work environments." />
