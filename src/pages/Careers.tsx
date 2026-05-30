@@ -901,22 +901,49 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   </div>
 
                   {formData.mode !== 'Remote' && (
-                    <div>
-                      <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                        Location
-                      </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                      <input
-                        value={formData.location}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            location: e.target.value
-                          })
-                        }
-                        placeholder="Nagercoil"
-                        className="input-main"
-                      />
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
+                          State
+                        </label>
+
+                        <select
+                          value={formData.state || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              state: e.target.value
+                            })
+                          }
+                          className="input-main"
+                        >
+                          <option value="">Select State</option>
+                          <option value="Tamil Nadu">Tamil Nadu</option>
+                          <option value="Karnataka">Karnataka</option>
+                          <option value="Kerala">Kerala</option>
+                          <option value="Maharashtra">Maharashtra</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
+                          City / Town / Village
+                        </label>
+
+                        <input
+                          value={formData.city || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              city: e.target.value
+                            })
+                          }
+                          placeholder="Nagercoil"
+                          className="input-main"
+                        />
+                      </div>
+
                     </div>
                   )}
 
