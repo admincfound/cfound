@@ -383,7 +383,29 @@ export default function Careers() {
                           ))}
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-semibold text-[var(--text-muted)]">
+                          <span className="flex items-center gap-1">
+                            <Briefcase size={14} />
+                            {opp.type === 'full-time'
+                              ? 'Full Time'
+                              : opp.type === 'part-time'
+                              ? 'Part Time'
+                              : 'Contract'}
+                          </span>
+
+                          <span className="flex items-center gap-1">
+                            <MapPin size={14} />
+                            {opp.mode || 'Onsite'}
+                          </span>
+
+                          <span className="flex items-center gap-1">
+                            <Users size={14} />
+                            {opp.applications || 0} {(opp.applications || 0) === 1 ? 'Applicant' : 'Applicants'}
+                          </span>
+
+                          <span className="flex items-center gap-1">
+                            <Eye size={14} />
+                            {opp.views || 0} {(opp.views || 0) === 1 ? 'View' : 'Views'}
+                          </span>
                             <span className="flex items-center gap-1">
                               <MapPin size={14} />
                               {opp.location || 'Remote'}
@@ -403,11 +425,6 @@ export default function Careers() {
                             </span>
 
                             <span className="flex items-center gap-1">
-                              <MapPin size={14} />
-                              {opp.mode || 'Onsite'}
-                            </span>
-
-                            <span className="flex items-center gap-1">
                               <Users size={14} />
                               {opp.applications || 0} {(opp.applications || 0) === 1 ? 'Applicant' : 'Applicants'}
                             </span>
@@ -422,17 +439,21 @@ export default function Careers() {
                     <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
 
                       <div className="grid grid-cols-2 gap-6">
-
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
                             Company
                           </p>
 
-                          <p className="text-lg font-bold text-[var(--text-main)]">
+                          <p className="text-xl md:text-2xl font-black text-[var(--text-main)]">
                             {opp.companyName || 'C Found'}
                           </p>
-                        </div>
 
+                          <p className="text-xs font-semibold text-[var(--text-muted)] mt-1">
+                            {opp.mode === 'Remote'
+                              ? 'Remote'
+                              : opp.location || 'Nagercoil'}
+                          </p>
+                        </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
 
@@ -444,7 +465,7 @@ export default function Careers() {
 
                           </p>
 
-                          <p className="text-2xl md:text-4xl font-black text-primary-600">
+                          <p className="text-xl md:text-2xl font-black text-primary-600">
 
                             {opp.compFormat === 'hidden'
                               ? 'Not Disclosed'
