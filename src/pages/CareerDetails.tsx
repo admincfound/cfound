@@ -328,13 +328,13 @@ export default function CareerDetails() {
             {job.title}
           </h1>
           <div className="mb-2 text-sm font-bold text-[var(--text-muted)] uppercase tracking-wide">
-            {job.compModel === 'revenue'
-              ? 'Revenue Share (%)'
+            {job.compType === 'revenue'
+              ? 'Revenue Share'
               : 'Monthly Salary'}
           </div>
 
           <div className="text-3xl font-black text-primary-600 mb-4">
-            {job.compModel === 'revenue' ? (
+            {job.compType === 'revenue' ? (
               <>
                 {job.minAmount}%
                 {job.maxAmount && ` - ${job.maxAmount}%`}
