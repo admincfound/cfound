@@ -465,22 +465,18 @@ export default function CareerDetails() {
                 <h3 className="font-black mb-4">
                   Job Details
                 </h3>
-                <div>
-                  <strong>
-                    {job.compType === 'revenue'
-                      ? 'Revenue Share:'
-                      : 'Monthly Salary:'}
-                  </strong>{' '}
-                  {job.compType === 'revenue'
-                    ? `${job.minAmount}%${job.maxAmount ? ` - ${job.maxAmount}%` : ''}`
-                    : `₹${Number(job.minAmount || 0).toLocaleString('en-IN')}${
-                        job.maxAmount
-                          ? ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`
-                          : ''
-                      }`}
-                </div>
+
 
                 <div className="space-y-3 text-sm mb-6">
+                  <span className="px-3 py-2 rounded-xl bg-primary-600/10 text-primary-600 text-xs font-bold">
+                    {job.compType === 'revenue'
+                      ? `Revenue Share: ${job.minAmount}%${job.maxAmount ? ` - ${job.maxAmount}%` : ''}`
+                      : `Monthly Salary: ₹${Number(job.minAmount || 0).toLocaleString('en-IN')}${
+                          job.maxAmount
+                            ? ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`
+                            : ''
+                        }`}
+                  </span>
                   <div><strong>Job Type:</strong> {job.type || 'Full-time'}</div>
                   <div><strong>Shift:</strong> {job.timing || 'Morning Shift'}</div>
                   <div><strong>Experience:</strong> {job.experience ? `${job.experience} Years` : 'Fresher'}</div>
