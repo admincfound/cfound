@@ -493,11 +493,30 @@ export default function CareerDetails() {
 
 
                 <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-6">
-                  <h3 className="font-black mb-4">
-                    Skills
-                  </h3>
 
-                  <div className="flex flex-wrap gap-2">
+                <h3 className="font-black mb-4">
+                  Job Details
+                </h3>
+
+                <div className="space-y-3 text-sm mb-6">
+                  <div><strong>Job Type:</strong> {job.type || 'Full-time'}</div>
+                  <div><strong>Shift:</strong> {job.timing || 'Morning Shift'}</div>
+                  <div><strong>Experience:</strong> {job.experience ? `${job.experience} Years` : 'Fresher'}</div>
+                  <div><strong>Openings:</strong> {job.openings || 1}</div>
+
+                  {job.deadline && (
+                    <div>
+                      <strong>Deadline:</strong>{' '}
+                      {new Date(job.deadline).toLocaleDateString('en-IN')}
+                    </div>
+                  )}
+                </div>
+
+                <h3 className="font-black mb-4">
+                  Skills
+                </h3>
+
+                <div className="flex flex-wrap gap-2">
                     {job.skills.map((skill: string, index: number) => (
                       <span
                         key={index}
