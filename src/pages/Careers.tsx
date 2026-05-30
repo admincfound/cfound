@@ -346,7 +346,7 @@ export default function Careers() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`group p-5 md:p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col items-start justify-between gap-6 card-hover shadow-2xl min-h-[340px] ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                    className={`group p-5 md:p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col items-start justify-between gap-6 card-hover shadow-2xl min-h-[280px] ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
                     <div className="flex flex-col flex-1">
                       <div>
@@ -365,7 +365,7 @@ export default function Careers() {
                         </div>
                         <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
                         {opp.companyName && (
-                          <div className="text-sm text-[var(--text-muted)] font-medium mb-2">
+                          <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-4">
                             {opp.companyName}
                           </div>
                         )}
@@ -374,67 +374,8 @@ export default function Careers() {
                             {opp.department}
                           </div>
                         )}
-
-
-                        <div className="mt-4 flex flex-col gap-3">
-
-                          <div className="text-sm font-semibold">
-                            {opp.compFormat === 'hidden' ? (
-                              <>
-                                <span className="text-[var(--text-main)] font-semibold">
-                                  Compensation:
-                                </span>{' '}
-                                <span className="text-primary-600">
-                                  Not Disclosed
-                                </span>
-                              </>
-                            ) : opp.compType === 'revenue' ? (
-                              opp.compFormat === 'fixed' ? (
-                                <>
-                                  <span className="text-[var(--text-main)] font-semibold">
-                                    Revenue Share:
-                                  </span>{' '}
-                                  <span className="text-primary-600">
-                                    {opp.minAmount}%
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-[var(--text-main)] font-semibold">
-                                    Revenue Share:
-                                  </span>{' '}
-                                  <span className="text-primary-600">
-                                    {opp.minAmount}% - {opp.maxAmount}%
-                                  </span>
-                                </>
-                              )
-                            ) : (
-                              opp.compFormat === 'fixed' ? (
-                                <>
-                                  <span className="text-[var(--text-main)] font-semibold">
-                                    Monthly Salary:
-                                  </span>{' '}
-                                  <span className="text-primary-600">
-                                    ₹{Number(opp.minAmount).toLocaleString('en-IN')}
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-[var(--text-main)] font-semibold">
-                                    Monthly Salary:
-                                  </span>{' '}
-                                  <span className="text-primary-600">
-                                    ₹{Number(opp.minAmount).toLocaleString('en-IN')} - ₹{Number(opp.maxAmount).toLocaleString('en-IN')}
-                                  </span>
-                                </>
-                              )
-                            )}
-                          </div>
-                            
-
-                          <div className="flex flex-wrap gap-2">
                           
-
+                        <div className="flex flex-wrap gap-2">
                           {(opp.skills || []).slice(0, 3).map((skill, idx) => (
                             <span
                               key={idx}
@@ -475,8 +416,35 @@ export default function Careers() {
                             </span>
                           </div>
                         </div>
+                    </div>
+                    <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)] w-full">
 
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+
+                          {opp.compFormat === 'hidden'
+                            ? 'Compensation'
+                            : opp.compType === 'revenue'
+                              ? 'Revenue Share'
+                              : 'Monthly Salary'}
+
+                        </p>
+
+                        <p className="text-xl md:text-2xl font-black text-primary-600">
+
+                          {opp.compFormat === 'hidden'
+                            ? 'Not Disclosed'
+                            : opp.compType === 'revenue'
+                              ? opp.compFormat === 'fixed'
+                                ? `${opp.minAmount}%`
+                                : `${opp.minAmount}% - ${opp.maxAmount}%`
+                              : opp.compFormat === 'fixed'
+                                ? `₹${Number(opp.minAmount).toLocaleString('en-IN')}`
+                                : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+
+                        </p>
                       </div>
+
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
                       {isAdmin && (
