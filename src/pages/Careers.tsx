@@ -372,9 +372,18 @@ export default function Careers() {
                         <div className="mt-4 flex flex-col gap-3">
   
                           <div className="text-xl font-black text-primary-600">
-                            ₹{Number(opp.minAmount).toLocaleString('en-IN')}
-                            {opp.maxAmount &&
-                              ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                            {opp.compType === 'revenue' ? (
+                              <>
+                                {opp.minAmount}%
+                                {opp.maxAmount && ` - ${opp.maxAmount}%`}
+                              </>
+                            ) : (
+                              <>
+                                ₹{Number(opp.minAmount).toLocaleString('en-IN')}
+                                {opp.maxAmount &&
+                                  ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                              </>
+                            )}
                           </div>
 
                           <div className="flex flex-wrap gap-2">
