@@ -375,16 +375,26 @@ export default function Careers() {
 
                           <div className="text-lg font-black text-primary-600">
                             {opp.compType === 'revenue' ? (
-                              <>
-                                Revenue Share: {opp.minAmount}%
-                                {opp.maxAmount && ` - ${opp.maxAmount}%`}
-                              </>
+                              opp.compFormat === 'fixed' ? (
+                                <>Revenue Share: {opp.minAmount}%</>
+                              ) : (
+                                <>
+                                  Revenue Share: {opp.minAmount}%
+                                  {opp.maxAmount && ` - ${opp.maxAmount}%`}
+                                </>
+                              )
                             ) : (
-                              <>
-                                Monthly Salary: ₹{Number(opp.minAmount).toLocaleString('en-IN')}
-                                {opp.maxAmount &&
-                                  ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
-                              </>
+                              opp.compFormat === 'fixed' ? (
+                                <>
+                                  Monthly Salary: ₹{Number(opp.minAmount).toLocaleString('en-IN')}
+                                </>
+                              ) : (
+                                <>
+                                  Monthly Salary: ₹{Number(opp.minAmount).toLocaleString('en-IN')}
+                                  {opp.maxAmount &&
+                                    ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                                </>
+                              )
                             )}
                           </div>
 
