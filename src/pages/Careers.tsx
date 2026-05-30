@@ -900,23 +900,25 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                      Location
-                    </label>
+                  {formData.mode !== 'Remote' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
+                        Location
+                      </label>
 
-                    <input
-                      value={formData.location}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          location: e.target.value
-                        })
-                      }
-                      placeholder="Nagercoil, Tamil Nadu"
-                      className="input-main"
-                    />
-                  </div>
+                      <input
+                        value={formData.location}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            location: e.target.value
+                          })
+                        }
+                        placeholder="Nagercoil"
+                        className="input-main"
+                      />
+                    </div>
+                  )}
 
                 </div>
               </div>
