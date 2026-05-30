@@ -450,7 +450,7 @@ export default function Careers() {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--border-main)]">
+                    <div className="flex items-center gap-3 flex-wrap mt-6 pt-6 border-t border-[var(--border-main)]">
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
@@ -482,13 +482,13 @@ export default function Careers() {
                                 .replace(/[^a-z0-9\s-]/g, '')
                                 .replace(/\s+/g, '-')
                             }-${opp.id}`}
-                            className="h-12 border-2 border-primary-600 rounded-xl flex items-center justify-center font-semibold text-primary-600"
+                            className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
                           >
                             View Details
                           </Link>
                           <button
                             onClick={() => handleShare(opp)}
-                            className="h-12 border-2 border-primary-600 rounded-xl flex items-center justify-center gap-2 text-primary-600 font-semibold"                          >
+                            className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"                          >
                             <>
                               <Share2 size={18} />
                               Share
@@ -498,7 +498,7 @@ export default function Careers() {
                           <button 
                             onClick={() => handleApply(opp)}
                             disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                            className={`bg-primary-600 text-white rounded-xl h-12 w-full text-sm font-semibold flex items-center justify-center gap-3 transition-all ${
+                            className={`btn-primary justify-center flex items-center gap-2 px-5 py-3 transition-all flex items-center justify-center gap-3 transition-all ${
                               userApplications.has(opp.id) 
                                 ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                                 : !completion.isComplete 
@@ -524,7 +524,7 @@ export default function Careers() {
                               .replace(/[^a-z0-9\s-]/g, '')
                               .replace(/\s+/g, '-')
                           }-${opp.id}`}
-                          className="h-12 border-2 border-primary-600 rounded-xl flex items-center justify-center font-semibold text-primary-600"
+                          className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
                         >
                           View Details
                         </Link>
