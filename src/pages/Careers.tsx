@@ -381,7 +381,9 @@ export default function Careers() {
                               {skill}
                             </span>
                           ))}
-                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-semibold text-[var(--text-muted)]">
 
                           <span className="flex items-center gap-1">
                             <Briefcase size={14} />
@@ -398,6 +400,11 @@ export default function Careers() {
                           </span>
 
                           <span className="flex items-center gap-1">
+                            <Clock size={14} />
+                            {opp.experience || 'Fresher'}
+                          </span>
+
+                          <span className="flex items-center gap-1">
                             <Users size={14} />
                             {opp.applications || 0} {(opp.applications || 0) === 1 ? 'Applicant' : 'Applicants'}
                           </span>
@@ -406,35 +413,9 @@ export default function Careers() {
                             <Eye size={14} />
                             {opp.views || 0} {(opp.views || 0) === 1 ? 'View' : 'Views'}
                           </span>
-                            <span className="flex items-center gap-1">
-                              <MapPin size={14} />
-                              {opp.location || 'Remote'}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock size={14} />
-                              {opp.experience || 'Fresher'}
-                            </span>
 
-                            <span className="flex items-center gap-1">
-                              <Briefcase size={14} />
-                              {opp.type === 'full-time'
-                                ? 'Full Time'
-                                : opp.type === 'part-time'
-                                ? 'Part Time'
-                                : 'Contract'}
-                            </span>
-
-                            <span className="flex items-center gap-1">
-                              <Users size={14} />
-                              {opp.applications || 0} {(opp.applications || 0) === 1 ? 'Applicant' : 'Applicants'}
-                            </span>
-
-                            <span className="flex items-center gap-1">
-                              <Eye size={14} />
-                              {opp.views || 0} {(opp.views || 0) === 1 ? 'View' : 'Views'}
-                            </span>
-                          </div>
                         </div>
+                      </div>
                     </div>
                     <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
 
