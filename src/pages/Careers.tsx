@@ -364,6 +364,11 @@ export default function Careers() {
                           )}
                         </div>
                         <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
+                        {opp.companyName && (
+                          <div className="text-sm text-[var(--text-muted)] font-medium mb-2">
+                            {opp.companyName}
+                          </div>
+                        )}
                         {opp.department && (
                           <div className="mb-3 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
                             {opp.department}
@@ -374,6 +379,16 @@ export default function Careers() {
                         <div className="mt-4 flex flex-col gap-3">
 
                           <div className="text-sm font-semibold">
+                            {opp.compFormat === 'hidden' ? (
+                              <span>
+                                <span className="text-[var(--text-main)] font-semibold">
+                                  Compensation:
+                                </span>{' '}
+                                <span className="text-primary-600">
+                                  Not Disclosed
+                                </span>
+                              </span>
+                            ) : (
                             {opp.compType === 'revenue' ? (
                               opp.compFormat === 'fixed' ? (
                                 <>
@@ -590,6 +605,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
     responsibilities: '',
     deadline: '',
     portfolioRequired: false,
+    companyName: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -624,6 +640,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
         responsibilities: '',
         deadline: '',
         portfolioRequired: false,
+        companyName: '',
       });
     }
   }, [job, isOpen]);
@@ -743,6 +760,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     >
                       <option value="fixed">Fixed</option>
                       <option value="range">Range</option>
+                      <option value="hidden">Not Disclosed</option>
                     </select>
                   </div>
 
@@ -852,6 +870,23 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     })
                   }
                   placeholder="React, Firebase, UI/UX"
+                  className="input-main"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  Company Name
+                </label>
+
+                <input
+                  value={formData.companyName}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      companyName: e.target.value
+                    })
+                  }
+                  placeholder="C Found Technologies"
                   className="input-main"
                 />
               </div>
