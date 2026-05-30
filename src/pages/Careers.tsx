@@ -365,13 +365,52 @@ export default function Careers() {
                           )}
                         </div>
                         </div>
-                        <h3 className="text-4xl md:text-5xl leading-tight font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                        
+                        <h3 className="text-3xl md:text-4xl leading-tight font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                        <div className="flex items-center justify-between gap-4 mb-4">
+
+                          <div>
+                            <div className="flex items-center gap-3 text-base font-medium text-[var(--text-muted)]">
+                              <span className="font-bold text-[var(--text-main)]">
+                                {opp.companyName || 'C Found Technologies'}
+                              </span>
+
+                              <span>•</span>
+
+                              <span className="flex items-center gap-1">
+                                <MapPin size={14} className="inline mr-1" />
+                                {opp.mode === 'Remote'
+                                  ? 'Remote'
+                                  : opp.location || 'Nagercoil'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <p className="text-3xl font-black text-primary-600">
+                              {opp.compFormat === 'hidden'
+                                ? 'Not Disclosed'
+                                : opp.compType === 'revenue'
+                                  ? opp.compFormat === 'fixed'
+                                    ? `${opp.minAmount}%`
+                                    : `${opp.minAmount}% - ${opp.maxAmount}%`
+                                  : opp.compFormat === 'fixed'
+                                    ? `₹${Number(opp.minAmount).toLocaleString('en-IN')}`
+                                    : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                            </p>
+
+                            <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+                              /month
+                            </p>
+                          </div>
+
+                        </div>
                         {opp.department && (
                           <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
                             {opp.department}
                           </div>
                         )}
-                          
+                        <div className="border-t border-[var(--border-main)] my-5"></div>    
                         <div className="flex flex-wrap gap-3 mb-6">
                           {(opp.skills || []).slice(0, 3).map((skill, idx) => (
                             <span
@@ -383,7 +422,7 @@ export default function Careers() {
                           ))}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-semibold text-[var(--text-muted)]">
+                        <div className="flex flex-wrap items-center gap-5 mb-5 text-xs font-semibold text-[var(--text-muted)]">
 
                           <span className="flex items-center gap-1">
                             <Briefcase size={14} />
@@ -417,54 +456,7 @@ export default function Careers() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
-
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-                            Company
-                          </p>
-
-                          <p className="text-base font-semibold text-[var(--text-main)]">
-                            {opp.companyName || 'C Found'}
-                          </p>
-
-                          <p className="text-xs font-semibold text-[var(--text-muted)] mt-1">
-                            {opp.mode === 'Remote'
-                              ? 'Remote'
-                              : opp.location || 'Nagercoil'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-
-                            {opp.compFormat === 'hidden'
-                              ? 'Compensation'
-                              : opp.compType === 'revenue'
-                                ? 'Revenue Share'
-                                : 'Monthly Salary'}
-
-                          </p>
-
-                          <p className="text-base md:text-lg font-bold text-primary-600">
-
-                            {opp.compFormat === 'hidden'
-                              ? 'Not Disclosed'
-                              : opp.compType === 'revenue'
-                                ? opp.compFormat === 'fixed'
-                                  ? `${opp.minAmount}%`
-                                  : `${opp.minAmount}% - ${opp.maxAmount}%`
-                                : opp.compFormat === 'fixed'
-                                  ? `₹${Number(opp.minAmount).toLocaleString('en-IN')}`
-                                  : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
-
-                          </p>
-                        </div>
-
-                      </div>
-
-                    </div>
-                    <div className="flex items-center gap-3 mt-6 flex-wrap">
+                    <div className="flex items-center gap-3 mt-6 pt-6 border-t border-[var(--border-main)] flex-wrap">
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
