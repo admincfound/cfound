@@ -370,7 +370,13 @@ export default function Careers() {
                           </div>
                         )}
                         <div className="mt-4 flex flex-col gap-3">
-  
+
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                            {opp.compType === 'revenue'
+                              ? 'Revenue Share'
+                              : 'Monthly Salary'}
+                          </div>
+
                           <div className="text-xl font-black text-primary-600">
                             {opp.compType === 'revenue' ? (
                               <>
@@ -386,15 +392,16 @@ export default function Careers() {
                             )}
                           </div>
 
-                          <div className="flex flex-wrap gap-2">
-                            {(opp.skills || []).slice(0, 3).map((skill, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-bold uppercase"
-                              >
-                                {skill}
-                              </span>
-                            ))}
+                        <div className="flex flex-wrap gap-2">
+
+                          {(opp.skills || []).slice(0, 3).map((skill, idx) => (
+                            <span
+                              key={idx}
+                              className="px-3 py-1 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-bold uppercase"
+                            >
+                              {skill}
+                            </span>
+                          ))}
                           </div>
 
                           <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
