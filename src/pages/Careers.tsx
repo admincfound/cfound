@@ -373,26 +373,35 @@ export default function Careers() {
 
                         <div className="mt-4 flex flex-col gap-3">
 
-                          <div className="text-lg font-black text-primary-600">
+                          <div className="text-sm font-semibold">
                             {opp.compType === 'revenue' ? (
                               opp.compFormat === 'fixed' ? (
-                                <>Revenue Share: {opp.minAmount}%</>
+                                <>
+                                  <span className="text-[var(--text-main)] font-semibold">Revenue Share: </span>
+                                  <span className="text-primary-600">{opp.minAmount}%</span>
+                                </>
                               ) : (
                                 <>
-                                  Revenue Share: {opp.minAmount}%
-                                  {opp.maxAmount && ` - ${opp.maxAmount}%`}
+                                  <span className="text-[var(--text-main)] font-semibold">Revenue Share: </span>
+                                  <span className="text-primary-600">
+                                    {opp.minAmount}% - {opp.maxAmount}%
+                                  </span>
                                 </>
                               )
                             ) : (
                               opp.compFormat === 'fixed' ? (
                                 <>
-                                  Monthly Salary: ₹{Number(opp.minAmount).toLocaleString('en-IN')}
+                                  <span className="text-[var(--text-main)] font-semibold">Monthly Salary: </span>
+                                  <span className="text-primary-600">
+                                    ₹{Number(opp.minAmount).toLocaleString('en-IN')}
+                                  </span>
                                 </>
                               ) : (
                                 <>
-                                  Monthly Salary: ₹{Number(opp.minAmount).toLocaleString('en-IN')}
-                                  {opp.maxAmount &&
-                                    ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                                  <span className="text-[var(--text-main)] font-semibold">Monthly Salary: </span>
+                                  <span className="text-primary-600">
+                                    ₹{Number(opp.minAmount).toLocaleString('en-IN')} - ₹{Number(opp.maxAmount).toLocaleString('en-IN')}
+                                  </span>
                                 </>
                               )
                             )}
