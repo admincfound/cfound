@@ -726,7 +726,8 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          compFormat: e.target.value
+                          compFormat: e.target.value,
+                          maxAmount: e.target.value === 'fixed' ? '' : formData.maxAmount
                         })
                       }
                       className="input-main"
