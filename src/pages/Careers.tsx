@@ -351,7 +351,7 @@ export default function Careers() {
                     <div>
                       <div>
                         <div className="flex items-center justify-between gap-4 mb-8">
-                        <div className="flex items-center gap-3 mt-6 flex-wrap">
+                        <div className="flex items-center gap-3 flex-wrap">
                           {opp.featured && (
                             <div className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-[10px] font-black uppercase tracking-widest">
                               Featured
@@ -366,11 +366,6 @@ export default function Careers() {
                         </div>
                         </div>
                         <h3 className="text-lg md:text-2xl leading-tight font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
-                        {opp.companyName && (
-                          <div className="text-xs font-semibold text-[var(--text-muted)] mb-6">
-                            {opp.companyName}
-                          </div>
-                        )}
                         {opp.department && (
                           <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
                             {opp.department}
