@@ -491,7 +491,6 @@ export default function Careers() {
                             className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"                          >
                             <>
                               <Share2 size={18} />
-                              Share
                             </>
                           </button>
 
