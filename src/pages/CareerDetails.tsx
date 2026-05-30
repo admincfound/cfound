@@ -327,20 +327,6 @@ export default function CareerDetails() {
           <h1 className="text-5xl font-black uppercase italic mb-6">
             {job.title}
           </h1>
-          <div className="text-3xl font-black text-primary-600 mb-4">
-            {job.compType === 'revenue' ? (
-              <>
-                Revenue Share: {job.minAmount}%
-                {job.maxAmount && ` - ${job.maxAmount}%`}
-              </>
-            ) : (
-              <>
-                Monthly Salary: ₹{Number(job.minAmount || 0).toLocaleString('en-IN')}
-                {job.maxAmount &&
-                  ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`}
-              </>
-            )}
-          </div>
           {job.department && (
               <div className="mb-4 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
                 {job.department}
@@ -479,6 +465,20 @@ export default function CareerDetails() {
                 <h3 className="font-black mb-4">
                   Job Details
                 </h3>
+                <div>
+                  <strong>
+                    {job.compType === 'revenue'
+                      ? 'Revenue Share:'
+                      : 'Monthly Salary:'}
+                  </strong>{' '}
+                  {job.compType === 'revenue'
+                    ? `${job.minAmount}%${job.maxAmount ? ` - ${job.maxAmount}%` : ''}`
+                    : `₹${Number(job.minAmount || 0).toLocaleString('en-IN')}${
+                        job.maxAmount
+                          ? ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`
+                          : ''
+                      }`}
+                </div>
 
                 <div className="space-y-3 text-sm mb-6">
                   <div><strong>Job Type:</strong> {job.type || 'Full-time'}</div>
