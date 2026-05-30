@@ -328,7 +328,7 @@ export default function Careers() {
               Open Positions
             </h2>
             <div className="text-[10px] font-black text-[var(--text-muted)] tracking-[0.2em] px-6 py-2 border border-[var(--border-main)] rounded-full bg-[var(--bg-card)] shadow-sm">
-              {jobs.length} Open Positions
+              {filtered.length} Open Positions
             </div>
           </div>
           
@@ -348,34 +348,36 @@ export default function Careers() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
-                    <div className="flex flex-col flex-1">
+                    <div>
                       <div>
-                        <div className="mb-4 flex flex-wrap gap-2">
+                        <div className="flex items-center justify-between gap-4 mb-8">
+                        <div className="flex items-center gap-3 mt-6 flex-wrap">
                           {opp.featured && (
-                            <div className="inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-sm font-semibold">
+                            <div className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-[10px] font-black uppercase tracking-widest">
                               Featured
                             </div>
                           )}
 
                           {(opp.applications || 0) >= 1 && (
-                            <div className="inline-flex px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 text-sm font-semibold">
+                            <div className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-[10px] font-black uppercase tracking-widest">
                               High Demand
                             </div>
                           )}
                         </div>
-                        <h3 className="text-lg md:text-2xl leading-tight font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
+                        </div>
+                        <h3 className="text-lg md:text-2xl leading-tight font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
                         {opp.companyName && (
-                          <div className="text-sm font-semibold text-[var(--text-muted)] mb-4">
+                          <div className="text-xs font-semibold text-[var(--text-muted)] mb-6">
                             {opp.companyName}
                           </div>
                         )}
                         {opp.department && (
-                          <div className="mb-3 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
+                          <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
                             {opp.department}
                           </div>
                         )}
                           
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-3 mb-6">
                           {(opp.skills || []).slice(0, 3).map((skill, idx) => (
                             <span
                               key={idx}
@@ -386,14 +388,14 @@ export default function Careers() {
                           ))}
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
+                          <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-semibold text-[var(--text-muted)]">
                             <span className="flex items-center gap-1">
                               <MapPin size={14} />
                               {opp.location || 'Remote'}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock size={14} />
-                              {opp.experience ? `${opp.experience} Years` : 'Fresher'}
+                              {opp.experience || 'Fresher'}
                             </span>
 
                             <span className="flex items-center gap-1">
@@ -417,10 +419,10 @@ export default function Careers() {
                           </div>
                         </div>
                     </div>
-                    <div className="flex flex-col gap-4 pt-4 border-t border-[var(--border-main)] w-full">
+                    <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
 
                       <div>
-                        <p className="text-sm font-semibold text-[var(--text-muted)]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
 
                           {opp.compFormat === 'hidden'
                             ? 'Compensation'
@@ -430,7 +432,7 @@ export default function Careers() {
 
                         </p>
 
-                        <p className="text-xl md:text-2xl font-black text-primary-600">
+                        <p className="text-2xl md:text-4xl font-black text-primary-600">
 
                           {opp.compFormat === 'hidden'
                             ? 'Not Disclosed'
@@ -446,7 +448,7 @@ export default function Careers() {
                       </div>
 
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 mt-6 flex-wrap">
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
@@ -471,12 +473,6 @@ export default function Careers() {
                       
                       {!isAdmin ? (
                         <>
-                          <button
-                            onClick={() => handleShare(opp)}
-                            className="p-4 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
-                          >
-                            <Share2 size={18} />
-                          </button>
                           <Link
                             to={`/careers/${
                               opp.title
@@ -488,6 +484,12 @@ export default function Careers() {
                           >
                             View Details
                           </Link>
+                          <button
+                            onClick={() => handleShare(opp)}
+                            className="p-4 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
+                          >
+                            <Share2 size={18} />
+                          </button>
 
                           <button 
                             onClick={() => handleApply(opp)}
