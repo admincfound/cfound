@@ -327,7 +327,38 @@ export default function CareerDetails() {
           <h1 className="text-5xl font-black uppercase italic mb-6">
             {job.title}
           </h1>
+          <div className="text-3xl font-black text-primary-600 mb-4">
+            ₹{Number(job.minAmount || 0).toLocaleString('en-IN')}
+            {job.maxAmount &&
+              ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`}
+          </div>
+          {job.department && (
+              <div className="mb-4 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
+                {job.department}
+              </div>
+            )}
 
+            <div className="flex flex-wrap gap-6 text-sm text-[var(--text-muted)] mb-8">
+
+              <span>{job.experience ? `${job.experience} Years` : 'Fresher'}</span>
+
+              <span>{job.type || 'Full-time'}</span>
+
+              <span>{job.timing || 'Morning Shift'}</span>
+
+              <span>{job.openings || 1} Openings</span>
+
+              {job.deadline && (
+                <span>
+                  Deadline: {new Date(job.deadline).toLocaleDateString('en-IN')}
+                </span>
+              )}
+
+              <span>{job.applications || 0} Applicants</span>
+
+              <span>{job.views || 0} Views</span>
+
+            </div>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
 
             <button
@@ -384,10 +415,35 @@ export default function CareerDetails() {
           <div className="grid md:grid-cols-3 gap-6 mt-8">
 
             <div className="md:col-span-2 space-y-8">
+              {job.responsibilities && (
+                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
+                  <h2 className="text-2xl font-black mb-6">
+                    Responsibilities
+                  </h2>
+
+                  <div className="space-y-4">
+                    {job.responsibilities
+                      .split('\n')
+                      .filter((item: string) => item.trim())
+                      .map((item: string, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-3"
+                        >
+                          <CheckCircle2
+                            size={18}
+                            className="text-primary-500 mt-1"
+                          />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
                 <h2 className="text-2xl font-black mb-4">
-                  Job Description
+                  About Role
                 </h2>
 
                 <p className="text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap">
@@ -421,43 +477,7 @@ export default function CareerDetails() {
 
             <div className="space-y-6">
 
-              <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-6">
-                <h3 className="font-black mb-4">
-                  Details
-                </h3>
 
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <strong>Compensation:</strong>{' '}
-                    {job.compModel === 'revenue'
-                      ? `${job.salary} Revenue Share`
-                      : job.salary || 'Not disclosed'}
-                  </div>
-
-                  <div>
-                    <strong>Experience:</strong>{' '}
-                    {job.experience || 'Fresher'}
-                  </div>
-
-                  <div>
-                    <strong>Openings:</strong>{' '}
-                    {job.openings || 1}
-                  </div>
-
-                  <div>
-                    <strong>Views:</strong>{' '}
-                    {job.views || 0}
-                  </div>
-
-                  <div>
-                    <strong>Applicants:</strong>{' '}
-                    {job.applications || 0}
-                  </div>
-
-                </div>
-              </div>
-
-              {(job.skills?.length ?? 0) > 0 && (
                 <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-6">
                   <h3 className="font-black mb-4">
                     Skills
@@ -474,7 +494,6 @@ export default function CareerDetails() {
                     ))}
                   </div>
                 </div>
-              )}
 
             </div>
 
