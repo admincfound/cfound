@@ -297,10 +297,7 @@ export default function Careers() {
             
             {isAdmin && (
               <button 
-                onClick={() => {
-                  setEditingJob(null);
-                  setShowModal(true);
-                }}
+                onClick={() => navigate('/admin/jobs/new')}
                 className="btn-primary flex items-center gap-2 group"
               >
                 <Plus size={16} className="group-hover:rotate-90 transition-transform" /> Manage Roles
@@ -456,10 +453,7 @@ export default function Careers() {
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
-                            onClick={() => {
-                              setEditingJob(opp);
-                              setShowModal(true);
-                            }}
+                            onClick={() => navigate('/admin/jobs/new')}
                             className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-600/30 rounded-2xl transition-all shadow-xl"
                             title="Edit Position"
                           >

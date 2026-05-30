@@ -15,6 +15,7 @@ import Internship from './pages/Internship';
 import InternshipDetails from './pages/InternshipDetails';
 import Careers from './pages/Careers';
 import CareerDetails from './pages/CareerDetails';
+import AdminJobForm from './pages/AdminJobForm';
 import Blog from './pages/Blog';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
@@ -92,6 +93,8 @@ function AppContent() {
           <Route path="/internship/:slug" element={<InternshipDetails />} />
           <Route path="/careers" element={<Careers />} />
           <Route path="/careers/:slug" element={<CareerDetails />} />
+          <Route path="/admin/jobs/new" element={ <ProtectedRoute role="admin"><AdminJobForm /></ProtectedRoute>}/>
+          <Route path="/admin/jobs/edit/:id" element={ <ProtectedRoute role="admin"><AdminJobForm /></ProtectedRoute>}/>
           <Route path="/blog" element={<Blog />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/contact" element={<Contact />} />
