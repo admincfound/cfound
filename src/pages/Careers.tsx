@@ -380,24 +380,29 @@ export default function Careers() {
 
                           <div className="text-sm font-semibold">
                             {opp.compFormat === 'hidden' ? (
-                              <span>
+                              <>
                                 <span className="text-[var(--text-main)] font-semibold">
                                   Compensation:
                                 </span>{' '}
                                 <span className="text-primary-600">
                                   Not Disclosed
                                 </span>
-                              </span>
-                            ) : (
-                            {opp.compType === 'revenue' ? (
+                              </>
+                            ) : opp.compType === 'revenue' ? (
                               opp.compFormat === 'fixed' ? (
                                 <>
-                                  <span className="text-[var(--text-main)] font-semibold">Revenue Share: </span>
-                                  <span className="text-primary-600">{opp.minAmount}%</span>
+                                  <span className="text-[var(--text-main)] font-semibold">
+                                    Revenue Share:
+                                  </span>{' '}
+                                  <span className="text-primary-600">
+                                    {opp.minAmount}%
+                                  </span>
                                 </>
                               ) : (
                                 <>
-                                  <span className="text-[var(--text-main)] font-semibold">Revenue Share: </span>
+                                  <span className="text-[var(--text-main)] font-semibold">
+                                    Revenue Share:
+                                  </span>{' '}
                                   <span className="text-primary-600">
                                     {opp.minAmount}% - {opp.maxAmount}%
                                   </span>
@@ -406,14 +411,18 @@ export default function Careers() {
                             ) : (
                               opp.compFormat === 'fixed' ? (
                                 <>
-                                  <span className="text-[var(--text-main)] font-semibold">Monthly Salary: </span>
+                                  <span className="text-[var(--text-main)] font-semibold">
+                                    Monthly Salary:
+                                  </span>{' '}
                                   <span className="text-primary-600">
                                     ₹{Number(opp.minAmount).toLocaleString('en-IN')}
                                   </span>
                                 </>
                               ) : (
                                 <>
-                                  <span className="text-[var(--text-main)] font-semibold">Monthly Salary: </span>
+                                  <span className="text-[var(--text-main)] font-semibold">
+                                    Monthly Salary:
+                                  </span>{' '}
                                   <span className="text-primary-600">
                                     ₹{Number(opp.minAmount).toLocaleString('en-IN')} - ₹{Number(opp.maxAmount).toLocaleString('en-IN')}
                                   </span>
@@ -421,6 +430,7 @@ export default function Careers() {
                               )
                             )}
                           </div>
+                            
 
                           <div className="flex flex-wrap gap-2">
                           
