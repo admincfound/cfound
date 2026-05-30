@@ -859,6 +859,24 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 />
               </div>
               <div>
+              <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
+                  Company Name
+                </label>
+
+                <input
+                  value={formData.companyName}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      companyName: e.target.value
+                    })
+                  }
+                  placeholder="C Found Technologies"
+                  className="input-main"
+                />
+              </div>
+
+              <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                   <div>
@@ -901,21 +919,6 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   </div>
 
                 </div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                  Company Name
-                </label>
-
-                <input
-                  value={formData.companyName}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      companyName: e.target.value
-                    })
-                  }
-                  placeholder="C Found Technologies"
-                  className="input-main"
-                />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
