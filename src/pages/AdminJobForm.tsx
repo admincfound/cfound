@@ -73,6 +73,8 @@ export default function AdminJobForm() {
 
         timing: formData.timing,
 
+        jobType: formData.type,
+        
         experience: formData.experience,
 
         openings: Number(formData.openings || 0),
@@ -103,7 +105,7 @@ export default function AdminJobForm() {
         applications: 0,
         views: 0,
 
-        status: 'active',
+        status: formData.status,
 
         createdAt: serverTimestamp()
       });
@@ -319,7 +321,134 @@ export default function AdminJobForm() {
               })
             }
           />
+          <div className="grid md:grid-cols-3 gap-6">
 
+          <select
+            className="input-main"
+            value={formData.type}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                type: e.target.value
+              })
+            }
+          >
+            <option value="full-time">Full Time</option>
+            <option value="part-time">Part Time</option>
+            <option value="internship">Internship</option>
+            <option value="contract">Contract</option>
+            <option value="freelance">Freelance</option>
+          </select>
+
+          <select
+            className="input-main"
+            value={formData.timing}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                timing: e.target.value
+              })
+            }
+          >
+            <option value="Morning Shift">Morning Shift</option>
+            <option value="Evening Shift">Evening Shift</option>
+            <option value="Night Shift">Night Shift</option>
+            <option value="Flexible">Flexible</option>
+          </select>
+
+          <select
+            className="input-main"
+            value={formData.status}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                status: e.target.value
+              })
+            }
+          >
+            <option value="active">Active</option>
+            <option value="closed">Closed</option>
+            <option value="draft">Draft</option>
+          </select>
+
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+
+          <select
+            className="input-main"
+            value={formData.compType}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                compType: e.target.value
+              })
+            }
+          >
+            <option value="salary">Salary</option>
+            <option value="stipend">Stipend</option>
+            <option value="commission">Commission</option>
+            <option value="revenue">Revenue Share</option>
+          </select>
+
+          <select
+            className="input-main"
+            value={formData.compFormat}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                compFormat: e.target.value
+              })
+            }
+          >
+            <option value="fixed">Fixed</option>
+            <option value="range">Range</option>
+            <option value="negotiable">Negotiable</option>
+          </select>
+
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+
+          <input
+            placeholder="Minimum Amount"
+            className="input-main"
+            value={formData.minAmount}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                minAmount: e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Maximum Amount"
+            className="input-main"
+            value={formData.maxAmount}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                maxAmount: e.target.value
+              })
+            }
+          />
+
+        </div>
+
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={formData.featured}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                featured: e.target.checked
+              })
+            }
+          />
+          Featured Job
+        </label>
           <textarea
             placeholder="Requirements (one per line)"
             className="input-main min-h-[150px]"
