@@ -317,7 +317,7 @@ export default function Careers() {
               placeholder="Query career records..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-[10px] font-semibold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-[var(--text-main)]"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-xs font-semibold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-[var(--text-main)]"
             />
           </div>
         </div>
@@ -346,11 +346,11 @@ export default function Careers() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.75rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                    className={`group p-4 md:p-5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.75rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
                     <div>
                       <div>
-                        <div className="flex items-center justify-between gap-4 mb-8">
+                        <div className="flex items-center justify-between gap-4 mb-0">
                         <div className="flex items-center gap-3 flex-wrap">
                           {opp.featured && (
                             <div className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-[10px] font-black uppercase tracking-widest">
@@ -366,11 +366,13 @@ export default function Careers() {
                         </div>
                         </div>
                         
-                        <h3 className="text-lg md:text-2xl font-black mb-4 tracking-tight text-primary-700 uppercase">{opp.title}</h3>
-                        <div className="flex items-center justify-between gap-4 mb-4">
+                        <h3 className="text-xl md:text-3xl font-black mb-0 tracking-tight text-primary-700 uppercase">    
+                          {opp.title}
+                        </h3>
+                        <div className="flex items-center justify-between gap-4 mb-0">
 
                           <div>
-                            <div className="flex items-center gap-3 text-xs font-semibold text-[var(--text-muted)]">
+                            <div className="flex items-center gap-3 text-sm font-semibold text-[var(--text-muted)]">
                               <Briefcase size={16} />
                               <span className="font-semibold text-[var(--text-main)]">
                                 {opp.companyName || 'C Found Technologies'}
@@ -388,7 +390,7 @@ export default function Careers() {
                           </div>
 
                           <div className="text-right shrink-0">
-                            <p className="text-xl md:text-2xl font-black text-primary-600">
+                            <p className="text-lg md:text-1.5xl font-black text-primary-600">
                               {opp.compFormat === 'hidden'
                                 ? 'Not Disclosed'
                                 : opp.compType === 'revenue'
@@ -407,15 +409,15 @@ export default function Careers() {
 
                         </div>
                         {opp.department && (
-                          <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-semibold uppercase tracking-wide">
+                          <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-xs font-semibold uppercase tracking-wide">
                             {opp.department}
                           </div>
                         )}     
-                        <div className="flex flex-wrap gap-2 mb-5">
+                        <div className="flex flex-wrap gap-2 mb-3">
                           {(opp.skills || []).slice(0, 3).map((skill, idx) => (
                             <span
                               key={idx}
-                              className="px-3 py-1 rounded-lg bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-semibold">
+                              className="px-3 py-1 rounded-lg bg-primary-600/10 border border-primary-600/20 text-primary-600 text-xs font-semibold">
                               {skill}
                             </span>
                           ))}
@@ -450,7 +452,7 @@ export default function Careers() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap mt-6 pt-6 border-t border-[var(--border-main)]">
+                    <div className="flex items-center gap-3 flex-wrap mt-4 pt-4 border-t border-[var(--border-main)]">
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
@@ -679,7 +681,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
                   {job ? 'Edit' : 'Create'} <span className="text-primary-600">Position.</span>
                 </h2>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mt-1">Role Management Mode</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mt-1">Role Management Mode</p>
               </div>
               <button 
                 onClick={onClose}
@@ -857,6 +859,48 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 />
               </div>
               <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
+                      Work Mode
+                    </label>
+
+                    <select
+                      value={formData.mode}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          mode: e.target.value
+                        })
+                      }
+                      className="input-main"
+                    >
+                      <option value="Remote">Remote</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Onsite">Onsite</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
+                      Location
+                    </label>
+
+                    <input
+                      value={formData.location}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          location: e.target.value
+                        })
+                      }
+                      placeholder="Nagercoil, Tamil Nadu"
+                      className="input-main"
+                    />
+                  </div>
+
+                </div>
                 <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                   Company Name
                 </label>
