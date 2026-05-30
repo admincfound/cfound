@@ -357,18 +357,6 @@ export default function CareerDetails() {
 
               <span>{job.experience ? `${job.experience} Years` : 'Fresher'}</span>
 
-              <span>{job.type || 'Full-time'}</span>
-
-              <span>{job.timing || 'Morning Shift'}</span>
-
-              <span>{job.openings || 1} Openings</span>
-
-              {job.deadline && (
-                <span>
-                  Deadline: {new Date(job.deadline).toLocaleDateString('en-IN')}
-                </span>
-              )}
-
               <span>{job.applications || 0} Applicants</span>
 
               <span>{job.views || 0} Views</span>
