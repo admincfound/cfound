@@ -365,7 +365,7 @@ export default function Careers() {
                           )}
                         </div>
                         </div>
-                        <h3 className="text-lg md:text-2xl leading-tight font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                        <h3 className="text-3xl md:text-4xl leading-tight font-black font-display mb-6 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
                         {opp.department && (
                           <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
                             {opp.department}
@@ -425,7 +425,7 @@ export default function Careers() {
                             Company
                           </p>
 
-                          <p className="text-xl md:text-2xl font-black text-[var(--text-main)]">
+                          <p className="text-lg md:text-xl font-bold text-[var(--text-main)]">
                             {opp.companyName || 'C Found'}
                           </p>
 
@@ -446,7 +446,7 @@ export default function Careers() {
 
                           </p>
 
-                          <p className="text-xl md:text-2xl font-black text-primary-600">
+                          <p className="text-lg md:text-xl font-black text-primary-600">
 
                             {opp.compFormat === 'hidden'
                               ? 'Not Disclosed'
