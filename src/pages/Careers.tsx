@@ -373,7 +373,7 @@ export default function Careers() {
 
                           <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
                             {opp.compType === 'revenue'
-                              ? 'Revenue Share'
+                              ? 'Revenue Share (%)'
                               : 'Monthly Salary'}
                           </div>
 
@@ -409,20 +409,28 @@ export default function Careers() {
                               <MapPin size={14} />
                               {opp.location || 'Remote'}
                             </span>
+                            <span className="flex items-center gap-1">
+                              <Clock size={14} />
+                              {opp.experience ? `${opp.experience} Years` : 'Fresher'}
+                            </span>
 
                             <span className="flex items-center gap-1">
                               <Briefcase size={14} />
-                              {opp.experience ? `${opp.experience} Yrs` : 'Fresher'}
+                              {opp.type === 'full-time'
+                                ? 'Full-time'
+                                : opp.type === 'part-time'
+                                ? 'Part-time'
+                                : 'Contract'}
                             </span>
 
                             <span className="flex items-center gap-1">
                               <Users size={14} />
-                              {opp.applications || 0} Applicants
+                              {opp.applications || 0} {(opp.applications || 0) === 1 ? 'Applicant' : 'Applicants'}
                             </span>
 
                             <span className="flex items-center gap-1">
                               <Eye size={14} />
-                              {opp.views || 0} Views
+                              {opp.views || 0} {(opp.views || 0) === 1 ? 'View' : 'Views'}
                             </span>
                           </div>
                         </div>
