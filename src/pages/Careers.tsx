@@ -346,26 +346,26 @@ export default function Careers() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`group p-5 md:p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all flex flex-col items-start justify-between gap-6 card-hover shadow-2xl min-h-[280px] ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                    className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
                     <div className="flex flex-col flex-1">
                       <div>
                         <div className="mb-4 flex flex-wrap gap-2">
                           {opp.featured && (
-                            <div className="inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-[10px] font-black uppercase tracking-widest">
+                            <div className="inline-flex px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-sm font-semibold">
                               Featured
                             </div>
                           )}
 
                           {(opp.applications || 0) >= 1 && (
-                            <div className="inline-flex px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 text-[10px] font-black uppercase tracking-widest">
+                            <div className="inline-flex px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 text-sm font-semibold">
                               High Demand
                             </div>
                           )}
                         </div>
-                        <h3 className="text-xl md:text-3xl font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
+                        <h3 className="text-lg md:text-2xl leading-tight font-black font-display tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors mb-4 uppercase italic">{opp.title}</h3>
                         {opp.companyName && (
-                          <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-4">
+                          <div className="text-sm font-semibold text-[var(--text-muted)] mb-4">
                             {opp.companyName}
                           </div>
                         )}
@@ -417,10 +417,10 @@ export default function Careers() {
                           </div>
                         </div>
                     </div>
-                    <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)] w-full">
+                    <div className="flex flex-col gap-4 pt-4 border-t border-[var(--border-main)] w-full">
 
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                        <p className="text-sm font-semibold text-[var(--text-muted)]">
 
                           {opp.compFormat === 'hidden'
                             ? 'Compensation'
@@ -687,7 +687,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
             <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                     Timing / Shift
                   </label>
                   <input 
@@ -702,7 +702,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                     Compensation Type
                   </label>
 
@@ -721,7 +721,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   </select>
 
                   <div className="mt-4">
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                       Format
                     </label>
 
@@ -785,7 +785,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   )}
                   </div>
                     <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                      <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                         Experience Required
                       </label>
 
@@ -802,7 +802,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                       />
                   </div>    
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                       Contract Type
                     </label>
                     <select 
@@ -816,7 +816,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                     </select>
                   </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                     Number of Openings
                   </label>
 
@@ -835,7 +835,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                   Skills
                 </label>
 
@@ -852,7 +852,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                   Company Name
                 </label>
 
@@ -869,7 +869,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                   Department
                 </label>
 
@@ -913,7 +913,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">About Role</label>
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">About Role</label>
                 <textarea 
                   required
                   value={formData.description}
@@ -922,7 +922,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                   className="input-main min-h-[100px]"
                 />
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                     Responsibilities
                   </label>
 
@@ -941,7 +941,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Execution Requirements (One per line)</label>
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">Execution Requirements (One per line)</label>
                 <textarea 
                   required
                   value={formData.requirements}
@@ -951,7 +951,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
                   Application Deadline
                 </label>
 
