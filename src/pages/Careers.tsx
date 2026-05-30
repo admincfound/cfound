@@ -859,7 +859,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">Job Description (JD)</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3 pl-1">About Role</label>
                 <textarea 
                   required
                   value={formData.description}

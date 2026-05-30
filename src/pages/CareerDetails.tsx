@@ -327,10 +327,25 @@ export default function CareerDetails() {
           <h1 className="text-5xl font-black uppercase italic mb-6">
             {job.title}
           </h1>
+          <div className="mb-2 text-sm font-bold text-[var(--text-muted)] uppercase tracking-wide">
+            {job.compModel === 'revenue'
+              ? 'Revenue Share (%)'
+              : 'Monthly Salary'}
+          </div>
+
           <div className="text-3xl font-black text-primary-600 mb-4">
-            ₹{Number(job.minAmount || 0).toLocaleString('en-IN')}
-            {job.maxAmount &&
-              ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`}
+            {job.compModel === 'revenue' ? (
+              <>
+                {job.minAmount}%
+                {job.maxAmount && ` - ${job.maxAmount}%`}
+              </>
+            ) : (
+              <>
+                ₹{Number(job.minAmount || 0).toLocaleString('en-IN')}
+                {job.maxAmount &&
+                  ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`}
+              </>
+            )}
           </div>
           {job.department && (
               <div className="mb-4 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
@@ -415,6 +430,15 @@ export default function CareerDetails() {
           <div className="grid md:grid-cols-3 gap-6 mt-8">
 
             <div className="md:col-span-2 space-y-8">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
+                <h2 className="text-2xl font-black mb-4">
+                  About Role
+                </h2>
+
+                <p className="text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap">
+                  {job.description || 'No description available.'}
+                </p>
+              </div>              
               {job.responsibilities && (
                 <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
                   <h2 className="text-2xl font-black mb-6">
@@ -440,16 +464,6 @@ export default function CareerDetails() {
                   </div>
                 </div>
               )}
-
-              <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
-                <h2 className="text-2xl font-black mb-4">
-                  About Role
-                </h2>
-
-                <p className="text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap">
-                  {job.description || 'No description available.'}
-                </p>
-              </div>
 
               <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
                 <h2 className="text-2xl font-black mb-6">
