@@ -468,17 +468,24 @@ export default function CareerDetails() {
 
 
                 <div className="space-y-3 text-sm mb-6">
-                  <span className="px-3 py-2 rounded-xl bg-primary-600/10 text-primary-600 text-xs font-bold">
+                  <div>
+                    <strong>Compensation:</strong>{' '}
                     {job.compType === 'revenue'
                       ? job.compFormat === 'fixed'
-                        ? `Revenue Share: ${job.minAmount}%`
-                        : `Revenue Share: ${job.minAmount}% - ${job.maxAmount}%`
+                        ? `${job.minAmount}%`
+                        : `${job.minAmount}% - ${job.maxAmount}%`
                       : job.compFormat === 'fixed'
-                        ? `Monthly Salary: ₹${Number(job.minAmount || 0).toLocaleString('en-IN')}`
-                        : `Monthly Salary: ₹${Number(job.minAmount || 0).toLocaleString('en-IN')} - ₹${Number(job.maxAmount || 0).toLocaleString('en-IN')}`
+                        ? `₹${Number(job.minAmount || 0).toLocaleString('en-IN')}`
+                        : `₹${Number(job.minAmount || 0).toLocaleString('en-IN')} - ₹${Number(job.maxAmount || 0).toLocaleString('en-IN')}`
                     }
-                  </span>
-                  <div><strong>Job Type:</strong> {job.type || 'Full-time'}</div>
+                  </div>
+                  <div><strong>Job Type:</strong>{' '}
+                    {job.type === 'full-time'
+                      ? 'Full-time'
+                      : job.type === 'part-time'
+                      ? 'Part-time'
+                      : 'Contract'}
+                  </div>
                   <div><strong>Shift:</strong> {job.timing || 'Morning Shift'}</div>
                   <div><strong>Experience:</strong> {job.experience ? `${job.experience} Years` : 'Fresher'}</div>
                   <div><strong>Openings:</strong> {job.openings || 1}</div>
