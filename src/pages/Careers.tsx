@@ -396,10 +396,15 @@ export default function Careers() {
                             <span className="flex items-center gap-1">
                               <Briefcase size={14} />
                               {opp.type === 'full-time'
-                                ? 'Full-time'
+                                ? 'Full Time'
                                 : opp.type === 'part-time'
-                                ? 'Part-time'
+                                ? 'Part Time'
                                 : 'Contract'}
+                            </span>
+
+                            <span className="flex items-center gap-1">
+                              <MapPin size={14} />
+                              {opp.mode || 'Onsite'}
                             </span>
 
                             <span className="flex items-center gap-1">
@@ -416,30 +421,44 @@ export default function Careers() {
                     </div>
                     <div className="flex flex-col gap-6 pt-6 border-t border-[var(--border-main)]">
 
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                      <div className="grid grid-cols-2 gap-6">
 
-                          {opp.compFormat === 'hidden'
-                            ? 'Compensation'
-                            : opp.compType === 'revenue'
-                              ? 'Revenue Share'
-                              : 'Monthly Salary'}
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                            Company
+                          </p>
 
-                        </p>
+                          <p className="text-lg font-bold text-[var(--text-main)]">
+                            {opp.companyName || 'C Found'}
+                          </p>
+                        </div>
 
-                        <p className="text-2xl md:text-4xl font-black text-primary-600">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
 
-                          {opp.compFormat === 'hidden'
-                            ? 'Not Disclosed'
-                            : opp.compType === 'revenue'
-                              ? opp.compFormat === 'fixed'
-                                ? `${opp.minAmount}%`
-                                : `${opp.minAmount}% - ${opp.maxAmount}%`
-                              : opp.compFormat === 'fixed'
-                                ? `₹${Number(opp.minAmount).toLocaleString('en-IN')}`
-                                : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                            {opp.compFormat === 'hidden'
+                              ? 'Compensation'
+                              : opp.compType === 'revenue'
+                                ? 'Revenue Share'
+                                : 'Monthly Salary'}
 
-                        </p>
+                          </p>
+
+                          <p className="text-2xl md:text-4xl font-black text-primary-600">
+
+                            {opp.compFormat === 'hidden'
+                              ? 'Not Disclosed'
+                              : opp.compType === 'revenue'
+                                ? opp.compFormat === 'fixed'
+                                  ? `${opp.minAmount}%`
+                                  : `${opp.minAmount}% - ${opp.maxAmount}%`
+                                : opp.compFormat === 'fixed'
+                                  ? `₹${Number(opp.minAmount).toLocaleString('en-IN')}`
+                                  : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+
+                          </p>
+                        </div>
+
                       </div>
 
                     </div>
