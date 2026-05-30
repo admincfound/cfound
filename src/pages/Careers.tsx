@@ -268,7 +268,7 @@ export default function Careers() {
     <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto">
         {!isAdmin && user && !completion.isComplete && (
-          <div className="mb-10 bg-red-500/10 border border-red-500/20 p-6 rounded-2xl flex flex-col items-center justify-between gap-6">
+          <div className="mb-10 bg-red-500/10 border border-red-500/20 p-5 md:p-7 rounded-2xl flex flex-col items-center justify-between gap-5 md:p-7">
             <div className="flex items-center gap-4 text-red-500">
               <AlertTriangle size={24} />
               <div>
@@ -309,7 +309,7 @@ export default function Careers() {
         </div>
 
         {/* Search Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-16 border-b border-[var(--border-main)] pb-10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-5 md:p-7 mb-16 border-b border-[var(--border-main)] pb-10">
            <div className="relative w-full md:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
             <input 
@@ -346,7 +346,7 @@ export default function Careers() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`group p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.75rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                    className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.75rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
                     <div>
                       <div>
@@ -366,11 +366,11 @@ export default function Careers() {
                         </div>
                         </div>
                         
-                        <h3 className="text-4xl md:text-5xl font-black mb-4 tracking-tight text-primary-700 uppercase">{opp.title}</h3>
+                        <h3 className="text-lg md:text-2xl font-black mb-4 tracking-tight text-primary-700 uppercase">{opp.title}</h3>
                         <div className="flex items-center justify-between gap-4 mb-4">
 
                           <div>
-                            <div className="flex items-center gap-3 text-lg font-semibold text-[var(--text-muted)]">
+                            <div className="flex items-center gap-3 text-xs font-semibold text-[var(--text-muted)]">
                               <Briefcase size={16} />
                               <span className="font-semibold text-[var(--text-main)]">
                                 {opp.companyName || 'C Found Technologies'}
@@ -387,8 +387,8 @@ export default function Careers() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <p className="text-[42px] font-black text-primary-600">
+                          <div className="text-right shrink-0">
+                            <p className="text-xl md:text-2xl font-black text-primary-600">
                               {opp.compFormat === 'hidden'
                                 ? 'Not Disclosed'
                                 : opp.compType === 'revenue'
@@ -400,7 +400,7 @@ export default function Careers() {
                                     : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
                             </p>
 
-                            <span className="text-lg text-[var(--text-muted)]">
+                            <p className="text-xs text-[var(--text-muted)]">
                               /month
                             </span>
                           </div>
@@ -415,13 +415,13 @@ export default function Careers() {
                           {(opp.skills || []).slice(0, 3).map((skill, idx) => (
                             <span
                               key={idx}
-                              className="px-4 py-2 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-sm font-semibold"                            >
+                              className="px-3 py-1 rounded-lg bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-semibold">
                               {skill}
                             </span>
                           ))}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-8 mb-2 text-sm font-semibold text-[var(--text-muted)]">
+                        <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-semibold text-[var(--text-muted)]">
 
                           <span className="flex items-center gap-1">
                             <Briefcase size={14} />
@@ -667,14 +667,14 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 md:p-7 bg-black/80 backdrop-blur-sm">
           <motion.div 
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl"
           >
-            <div className="p-6 md:p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
+            <div className="p-5 md:p-7 md:p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
               <div>
                 <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
                   {job ? 'Edit' : 'Create'} <span className="text-primary-600">Position.</span>
@@ -689,7 +689,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
+            <form onSubmit={handleSubmit} className="p-5 md:p-7 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
@@ -990,7 +990,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
 
 function BenefitCard({ icon, title, desc }: any) {
   return (
-    <div className="p-6 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all card-hover group shadow-2xl">
+    <div className="p-5 md:p-7 md:p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] hover:border-primary-600/30 transition-all card-hover group shadow-2xl">
       <div className="w-16 h-16 bg-primary-600/10 rounded-2xl flex items-center justify-center text-primary-600 mb-8 transition-all group-hover:bg-primary-600 group-hover:text-white group-hover:rotate-6 shadow-lg shadow-primary-600/5">{icon}</div>
       <h4 className="text-2xl font-black font-display text-[var(--text-main)] mb-4 uppercase italic tracking-tight">{title}</h4>
       <p className="text-[var(--text-muted)] text-sm font-medium leading-relaxed opacity-80">{desc}</p>
