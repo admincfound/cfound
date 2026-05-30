@@ -276,7 +276,7 @@ export default function Careers() {
                 <p className="text-sm opacity-80">Complete your profile before applying or enrolling. Missing: {completion.missing.length} section(s).</p>
               </div>
             </div>
-            <Link to="/profile" className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-red-600 transition-colors whitespace-nowrap">
+            <Link to="/profile" className="px-6 py-3 bg-red-500 text-white rounded-xl font-semibold uppercase tracking-widest text-[10px] hover:bg-red-600 transition-colors whitespace-nowrap">
               Complete Profile
             </Link>
           </div>
@@ -288,7 +288,7 @@ export default function Careers() {
               animate={{ opacity: 1, y: 0 }}
               className="flex-1"
             >
-              <span className="text-primary-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 block underline decoration-primary-600/30 decoration-4 underline-offset-8">Career Opportunities / HQ</span>
+              <span className="text-primary-500 font-semibold text-[10px] uppercase tracking-[0.2em] mb-4 block underline decoration-primary-600/30 decoration-4 underline-offset-8">Career Opportunities / HQ</span>
               <h1 className="text-5xl md:text-8xl font-black font-display tracking-tight text-[var(--text-main)] mb-8 leading-none italic uppercase">Join our <span className="text-primary-600">Core Team.</span></h1>
               <p className="text-[var(--text-muted)] text-lg font-medium leading-relaxed max-w-2xl">
                 We are building the next generation of digital infrastructure. If you are passionate about engineering excellence and innovation, we want to hear from you.
@@ -317,7 +317,7 @@ export default function Careers() {
               placeholder="Query career records..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-[var(--text-main)]"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl pl-12 pr-6 py-3 text-[10px] font-semibold uppercase tracking-widest focus:outline-none focus:border-primary-500/50 transition-all text-[var(--text-main)]"
             />
           </div>
         </div>
@@ -346,7 +346,7 @@ export default function Careers() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`group p-5 md:p-7 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[2.5rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
+                    className={`group p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.75rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
                     <div>
                       <div>
@@ -366,12 +366,13 @@ export default function Careers() {
                         </div>
                         </div>
                         
-                        <h3 className="text-3xl md:text-4xl leading-tight font-black font-display mb-6 tracking-tight text-[var(--text-main)] group-hover:text-primary-600 transition-colors uppercase italic">{opp.title}</h3>
+                        <h3 className="text-4xl md:text-5xl font-black mb-4 tracking-tight text-primary-700 uppercase">{opp.title}</h3>
                         <div className="flex items-center justify-between gap-4 mb-4">
 
                           <div>
-                            <div className="flex items-center gap-3 text-base font-medium text-[var(--text-muted)]">
-                              <span className="font-bold text-[var(--text-main)]">
+                            <div className="flex items-center gap-3 text-lg font-semibold text-[var(--text-muted)]">
+                              <Briefcase size={16} />
+                              <span className="font-semibold text-[var(--text-main)]">
                                 {opp.companyName || 'C Found Technologies'}
                               </span>
 
@@ -386,8 +387,8 @@ export default function Careers() {
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <p className="text-3xl font-black text-primary-600">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[42px] font-black text-primary-600">
                               {opp.compFormat === 'hidden'
                                 ? 'Not Disclosed'
                                 : opp.compType === 'revenue'
@@ -399,30 +400,28 @@ export default function Careers() {
                                     : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
                             </p>
 
-                            <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+                            <span className="text-lg text-[var(--text-muted)]">
                               /month
-                            </p>
+                            </span>
                           </div>
 
                         </div>
                         {opp.department && (
-                          <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-bold uppercase tracking-wide">
+                          <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-semibold uppercase tracking-wide">
                             {opp.department}
                           </div>
-                        )}
-                        <div className="border-t border-[var(--border-main)] my-5"></div>    
-                        <div className="flex flex-wrap gap-3 mb-6">
+                        )}     
+                        <div className="flex flex-wrap gap-2 mb-5">
                           {(opp.skills || []).slice(0, 3).map((skill, idx) => (
                             <span
                               key={idx}
-                              className="px-3 py-1 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-[10px] font-bold uppercase"
-                            >
+                              className="px-4 py-2 rounded-xl bg-primary-600/10 border border-primary-600/20 text-primary-600 text-sm font-semibold"                            >
                               {skill}
                             </span>
                           ))}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-5 mb-5 text-xs font-semibold text-[var(--text-muted)]">
+                        <div className="flex flex-wrap items-center gap-8 mb-2 text-sm font-semibold text-[var(--text-muted)]">
 
                           <span className="flex items-center gap-1">
                             <Briefcase size={14} />
@@ -431,11 +430,6 @@ export default function Careers() {
                               : opp.type === 'part-time'
                               ? 'Part Time'
                               : 'Contract'}
-                          </span>
-
-                          <span className="flex items-center gap-1">
-                            <MapPin size={14} />
-                            {opp.mode || 'Onsite'}
                           </span>
 
                           <span className="flex items-center gap-1">
@@ -456,7 +450,7 @@ export default function Careers() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 mt-6 pt-6 border-t border-[var(--border-main)] flex-wrap">
+                    <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--border-main)]">
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
@@ -488,21 +482,23 @@ export default function Careers() {
                                 .replace(/[^a-z0-9\s-]/g, '')
                                 .replace(/\s+/g, '-')
                             }-${opp.id}`}
-                            className="btn-secondary px-6 py-4 text-sm font-bold"
+                            className="h-12 border-2 border-primary-600 rounded-xl flex items-center justify-center font-semibold text-primary-600"
                           >
                             View Details
                           </Link>
                           <button
                             onClick={() => handleShare(opp)}
-                            className="p-4 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"
-                          >
-                            <Share2 size={18} />
+                            className="h-12 border-2 border-primary-600 rounded-xl flex items-center justify-center gap-2 text-primary-600 font-semibold"                          >
+                            <>
+                              <Share2 size={18} />
+                              Share
+                            </>
                           </button>
 
                           <button 
                             onClick={() => handleApply(opp)}
                             disabled={applyingId === opp.id || userApplications.has(opp.id) || !completion.isComplete}
-                            className={`btn-primary px-8 py-4 text-sm font-bold min-w-[180px] flex items-center justify-center gap-3 transition-all ${
+                            className={`bg-primary-600 text-white rounded-xl h-12 w-full text-sm font-semibold flex items-center justify-center gap-3 transition-all ${
                               userApplications.has(opp.id) 
                                 ? 'opacity-50 cursor-not-allowed bg-green-600 border-green-600' 
                                 : !completion.isComplete 
@@ -516,7 +512,7 @@ export default function Careers() {
                                 ? "Applied"
                                 : !completion.isComplete
                                   ? "Profile Incomplete"
-                                  : <>Apply Now <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>}
+                                  : "Apply Now"}
                           </button>
                         </>
                       ) : (
@@ -528,7 +524,7 @@ export default function Careers() {
                               .replace(/[^a-z0-9\s-]/g, '')
                               .replace(/\s+/g, '-')
                           }-${opp.id}`}
-                          className="btn-secondary px-6 py-4 text-sm font-bold"
+                          className="h-12 border-2 border-primary-600 rounded-xl flex items-center justify-center font-semibold text-primary-600"
                         >
                           View Details
                         </Link>
@@ -684,7 +680,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
                 <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
                   {job ? 'Edit' : 'Create'} <span className="text-primary-600">Position.</span>
                 </h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">Role Management Mode</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mt-1">Role Management Mode</p>
               </div>
               <button 
                 onClick={onClose}
@@ -903,7 +899,7 @@ function JobModal({ isOpen, onClose, job, onSuccess }: any) {
               </div>
               <div className="flex items-center justify-between border border-[var(--border-main)] rounded-2xl px-5 py-4">
                 <div>
-                  <h4 className="font-bold text-sm">Featured Position</h4>
+                  <h4 className="font-semibold text-sm">Featured Position</h4>
                   <p className="text-xs text-[var(--text-muted)]">
                     Highlight this job on top
                   </p>
