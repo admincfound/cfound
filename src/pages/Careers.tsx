@@ -369,24 +369,24 @@ export default function Careers() {
                             {opp.department}
                           </div>
                         )}
+
+
                         <div className="mt-4 flex flex-col gap-3">
 
-                          <div className="mt-4 flex flex-col gap-3">
-
-                            <div className="text-lg font-black text-primary-600">
-                              {opp.compType === 'revenue' ? (
-                                <>
-                                  Revenue Share (%): {opp.minAmount}%
-                                  {opp.maxAmount && ` - ${opp.maxAmount}%`}
-                                </>
-                              ) : (
-                                <>
-                                  Monthly Salary: ₹{Number(opp.minAmount).toLocaleString('en-IN')}
-                                  {opp.maxAmount &&
-                                    ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
-                                </>
-                              )}
-                            </div>
+                          <div className="text-lg font-black text-primary-600">
+                            {opp.compType === 'revenue' ? (
+                              <>
+                                Revenue Share (%): {opp.minAmount}%
+                                {opp.maxAmount && ` - ${opp.maxAmount}%`}
+                              </>
+                            ) : (
+                              <>
+                                Monthly Salary: ₹{Number(opp.minAmount).toLocaleString('en-IN')}
+                                {opp.maxAmount &&
+                                  ` - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                              </>
+                            )}
+                          </div>
 
                           <div className="flex flex-wrap gap-2">
                           
