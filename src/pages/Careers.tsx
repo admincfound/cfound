@@ -376,7 +376,7 @@ export default function Careers() {
                           <div className="text-lg font-black text-primary-600">
                             {opp.compType === 'revenue' ? (
                               <>
-                                Revenue Share (%): {opp.minAmount}%
+                                Revenue Share: {opp.minAmount}%
                                 {opp.maxAmount && ` - ${opp.maxAmount}%`}
                               </>
                             ) : (
