@@ -371,7 +371,7 @@ export default function Careers() {
                         )}
                         <div className="mt-4 flex flex-col gap-3">
 
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-wrap">
 
                           <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
                             {opp.compType === 'revenue'
