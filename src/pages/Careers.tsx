@@ -402,7 +402,7 @@ export default function Careers() {
 
                             <p className="text-xs text-[var(--text-muted)]">
                               /month
-                            </span>
+                            </p> 
                           </div>
 
                         </div>
