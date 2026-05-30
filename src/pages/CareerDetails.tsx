@@ -327,21 +327,15 @@ export default function CareerDetails() {
           <h1 className="text-5xl font-black uppercase italic mb-6">
             {job.title}
           </h1>
-          <div className="mb-2 text-sm font-bold text-[var(--text-muted)] uppercase tracking-wide">
-            {job.compType === 'revenue'
-              ? 'Revenue Share'
-              : 'Monthly Salary'}
-          </div>
-
           <div className="text-3xl font-black text-primary-600 mb-4">
             {job.compType === 'revenue' ? (
               <>
-                {job.minAmount}%
+                Revenue Share: {job.minAmount}%
                 {job.maxAmount && ` - ${job.maxAmount}%`}
               </>
             ) : (
               <>
-                ₹{Number(job.minAmount || 0).toLocaleString('en-IN')}
+                Monthly Salary: ₹{Number(job.minAmount || 0).toLocaleString('en-IN')}
                 {job.maxAmount &&
                   ` - ₹${Number(job.maxAmount).toLocaleString('en-IN')}`}
               </>
