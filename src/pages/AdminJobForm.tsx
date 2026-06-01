@@ -11,7 +11,7 @@ export default function AdminJobForm() {
 
   const [formData, setFormData] = useState({
     title: '',
-    companyName: '',
+    companyName: 'C Found Technologies',
     department: '',
     mode: 'Remote',
 
@@ -42,7 +42,11 @@ export default function AdminJobForm() {
 
     deadline: '',
 
-    status: 'active'
+    status: 'active',
+
+    isCFoundPosition: true,
+    contactEmail: 'careers@cfound.in',
+    contactPhone: '+91 9361194545',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,6 +61,10 @@ export default function AdminJobForm() {
         title: formData.title,
 
         companyName: formData.companyName,
+
+        isCFoundPosition: formData.isCFoundPosition,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone,
 
         department: formData.department,
 
@@ -151,10 +159,29 @@ export default function AdminJobForm() {
                 })
               }
             />
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={formData.isCFoundPosition}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+
+                  setFormData({
+                    ...formData,
+                    isCFoundPosition: checked,
+                    companyName: checked ? 'C Found Technologies' : '',
+                    contactEmail: checked ? 'careers@cfound.in' : '',
+                    contactPhone: checked ? '+91 9361194545' : ''
+                  });
+                }}
+              />
+              C Found Position
+            </label>
 
             <input
               placeholder="Company Name"
               className="input-main"
+              disabled={formData.isCFoundPosition}
               value={formData.companyName}
               onChange={(e) =>
                 setFormData({
@@ -163,6 +190,35 @@ export default function AdminJobForm() {
                 })
               }
             />
+            {!formData.isCFoundPosition && (
+              <div className="grid md:grid-cols-2 gap-6">
+
+                <input
+                  placeholder="Contact Email"
+                  className="input-main"
+                  value={formData.contactEmail}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      contactEmail: e.target.value
+                    })
+                  }
+                />
+
+                <input
+                  placeholder="Contact Phone"
+                  className="input-main"
+                  value={formData.contactPhone}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      contactPhone: e.target.value
+                    })
+                  }
+                />
+
+              </div>
+            )}
 
             <select
               className="input-main"
