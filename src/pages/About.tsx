@@ -7,6 +7,11 @@ export default function About() {
     <Helmet>
       <title>About | C FOUND Technologies</title>
 
+      <link rel="canonical" href="https://www.cfound.in/about" />
+
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://www.cfound.in/about" />
+
       <meta
         name="description"
         content="Learn about C FOUND Technologies, an Indian software and game development company focused on AI systems, digital products, and innovation."
