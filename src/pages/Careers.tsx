@@ -515,7 +515,7 @@ export default function Careers() {
                               .replace(/[^a-z0-9\s-]/g, '')
                               .replace(/\s+/g, '-')
                           }-${opp.id}`}
-                          className="h-10 px-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-[var(--border-main)] transition-all"
+                          className="h-12 px-6 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:text-primary-600 hover:border-primary-500/30 transition-all flex items-center justify-center"
                         >
                           View Details
                         </Link>
