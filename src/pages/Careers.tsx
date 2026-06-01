@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   collection,
@@ -6,12 +6,10 @@ import {
   where,
   getDocs,
   setDoc,
-  addDoc,
   updateDoc,
   increment,
   deleteDoc,
-  doc,
-  serverTimestamp
+  doc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -20,10 +18,7 @@ import { Helmet } from 'react-helmet-async';
 import {
   Briefcase,
   MapPin,
-  IndianRupee,
   Clock,
-  CheckCircle2,
-  ArrowRight,
   Zap,
   Target,
   Rocket,
@@ -31,9 +26,7 @@ import {
   Edit3,
   Trash2,
   Plus,
-  X,
   Search,
-  Activity,
   AlertTriangle,
   Eye,
   Users,
@@ -51,8 +44,6 @@ export default function Careers() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [applyingId, setApplyingId] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [editingJob, setEditingJob] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -300,7 +291,7 @@ export default function Careers() {
                 onClick={() => navigate('/admin/jobs/new')}
                 className="btn-primary flex items-center gap-2 group"
               >
-                <Plus size={16} className="group-hover:rotate-90 transition-transform" /> Manage Roles
+                <Plus size={16} className="group-hover:rotate-90 transition-transform" /> Create Job
               </button>
             )}
         </div>
@@ -336,7 +327,7 @@ export default function Careers() {
           ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AnimatePresence mode="popLayout">
-                {filtered.map((opp, i) => (
+                {filtered.map((opp) => (
                   <motion.div 
                     layout
                     key={opp.id}
@@ -424,10 +415,14 @@ export default function Careers() {
 
                           <span className="flex items-center gap-1">
                             <Briefcase size={14} />
-                            {opp.type === 'full-time'
+                            {opp.jobType === 'full-time'
                               ? 'Full Time'
-                              : opp.type === 'part-time'
+                              : opp.jobType === 'part-time'
                               ? 'Part Time'
+                              : opp.jobType === 'freelance'
+                              ? 'Freelance'
+                              : opp.jobType === 'internship'
+                              ? 'Internship'
                               : 'Contract'}
                           </span>
 
@@ -453,7 +448,7 @@ export default function Careers() {
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
-                            onClick={() => navigate('/admin/jobs/new')}
+                            onClick={() => navigate(`/admin/jobs/edit/${opp.id}`)}
                             className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-600/30 rounded-2xl transition-all shadow-xl"
                             title="Edit Position"
                           >
@@ -549,512 +544,8 @@ export default function Careers() {
            <BenefitCard icon={<ShieldCheck size={24} />} title="Premium Benefits" desc="Competitive compensation, health coverage, and flexible work environments." />
         </div>
       </div>
-
-      <JobModal 
-        isOpen={showModal} 
-        onClose={() => setShowModal(false)} 
-        job={editingJob} 
-        onSuccess={fetchJobs}
-      />
     </div>
     </>
-  );
-}
-
-function JobModal({ isOpen, onClose, job, onSuccess }: any) {
-  const [formData, setFormData] = useState({
-    title: '',
-    location: 'Remote', 
-    type: 'full-time',
-    timing: 'Morning Shift',
-    skills: [],
-    mode: 'Remote',
-    experience: '',
-    openings: '',
-    featured: false,
-    compType: 'salary',
-    compFormat: 'fixed',
-    minAmount: '',
-    maxAmount: '',
-    description: '',
-    requirements: '',
-    status: 'active',
-    opportunity_type: 'job',
-    department: '',
-    responsibilities: '',
-    deadline: '',
-    portfolioRequired: false,
-    companyName: '',
-  });
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (job) {
-      setFormData({
-        ...job,
-        requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : job.requirements,
-        opportunity_type: 'job',
-        timing: job.timing || 'Morning Shift',
-      });
-    } else {
-      setFormData({
-        title: '',
-        location: 'Remote',
-        type: 'full-time',
-        timing: 'Morning Shift',
-        compType: 'salary',
-        compFormat: 'fixed',
-        minAmount: '',
-        maxAmount: '',
-        skills: [],
-        mode: 'Remote',
-        experience: '',
-        openings: '',
-        featured: false,
-        description: '',
-        requirements: '',
-        status: 'active',
-        opportunity_type: 'job',
-        department: '',
-        responsibilities: '',
-        deadline: '',
-        portfolioRequired: false,
-        companyName: '',
-      });
-    }
-  }, [job, isOpen]);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const data = {
-        ...formData,
-        type: formData.opportunity_type === 'job' ? 'job' : 'internship', // Ensure type is correct even if called differently
-        requirements: formData.requirements.split('\n').filter(r => r.trim())
-      };
-
-      // In the database 'opportunities' collection handles both 'type' == 'job' and 'internship'
-      // But for Careers page we force it to be 'job'
-      const finalData = { ...data, type: 'job' };
-
-      if (job?.id) {
-        await updateDoc(doc(db, 'opportunities', job.id), {
-          ...finalData,
-          updatedAt: serverTimestamp()
-        });
-      } else {
-        await addDoc(collection(db, 'opportunities'), {
-          ...finalData,
-          views: 0,
-          applications: 0,
-          createdAt: serverTimestamp()
-        });
-      }
-      onSuccess();
-      onClose();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 md:p-7 bg-black/80 backdrop-blur-sm">
-          <motion.div 
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            className="w-full max-w-2xl bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl"
-          >
-            <div className="p-5 md:p-7 md:p-10 border-b border-[var(--border-main)] flex items-center justify-between bg-[var(--bg-card)]">
-              <div>
-                <h2 className="text-2xl font-black font-display text-[var(--text-main)] uppercase italic tracking-tight">
-                  {job ? 'Edit' : 'Create'} <span className="text-primary-600">Position.</span>
-                </h2>
-                <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mt-1">Role Management Mode</p>
-              </div>
-              <button 
-                onClick={onClose}
-                className="p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-2xl text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-5 md:p-7 md:p-10 space-y-6 overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                    Timing / Shift
-                  </label>
-                  <input 
-                    required
-                    value={formData.timing}
-                    onChange={(e) => setFormData({...formData, timing: e.target.value})}
-                    placeholder="e.g., 9AM - 6PM / Morning"
-                    className="input-main"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                    Compensation Type
-                  </label>
-
-                  <select
-                    value={formData.compType}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        compType: e.target.value
-                      })
-                    }
-                    className="input-main"
-                  >
-                    <option value="salary">Salary</option>
-                    <option value="revenue">Revenue Share</option>
-                  </select>
-
-                  <div className="mt-4">
-                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                      Format
-                    </label>
-
-                    <select
-                      value={formData.compFormat}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          compFormat: e.target.value,
-                          maxAmount: e.target.value === 'fixed' ? '' : formData.maxAmount
-                        })
-                      }
-                      className="input-main"
-                    >
-                      <option value="fixed">Fixed</option>
-                      <option value="range">Range</option>
-                      <option value="hidden">Not Disclosed</option>
-                    </select>
-                  </div>
-
-                  {formData.compFormat === 'fixed' && (
-                    <input
-                      value={formData.minAmount}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          minAmount: e.target.value
-                        })
-                      }
-                      placeholder={formData.compType === 'salary' ? 'Salary Amount' : 'Revenue %'}
-                      className="input-main mt-4"
-                    />
-                  )}
-
-                  {formData.compFormat === 'range' && (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <input
-                        value={formData.minAmount}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            minAmount: e.target.value
-                          })
-                        }
-                        placeholder={formData.compType === 'salary' ? 'Min Salary' : 'Min %'}
-                        className="input-main"
-                      />
-
-                      <input
-                        value={formData.maxAmount}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            maxAmount: e.target.value
-                          })
-                        }
-                        placeholder={formData.compType === 'salary' ? 'Max Salary' : 'Max %'}
-                        className="input-main"
-                      />
-                    </div>
-                  )}
-                  </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                        Experience Required
-                      </label>
-
-                      <input
-                        value={formData.experience}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            experience: e.target.value
-                          })
-                        }
-                        placeholder="0-2 Years"
-                        className="input-main"
-                      />
-                  </div>    
-                  <div>
-                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                      Contract Type
-                    </label>
-                    <select 
-                      value={formData.type}
-                      onChange={(e) => setFormData({...formData, type: e.target.value})}
-                      className="input-main"
-                    >
-                      <option value="full-time">Full-time</option>
-                      <option value="part-time">Part-time</option>
-                      <option value="contract">Contract</option>
-                    </select>
-                  </div>
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                    Number of Openings
-                  </label>
-
-                  <input
-                    type="number"
-                    value={formData.openings}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        openings: e.target.value
-                      })
-                    }
-                    placeholder="5"
-                    className="input-main"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                  Skills
-                </label>
-
-                <input
-                  value={(formData.skills || []).join(', ')}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      skills: e.target.value.split(',').map(s => s.trim())
-                    })
-                  }
-                  placeholder="React, Firebase, UI/UX"
-                  className="input-main"
-                />
-              </div>
-              <div>
-              <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                  Company Name
-                </label>
-
-                <input
-                  value={formData.companyName}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      companyName: e.target.value
-                    })
-                  }
-                  placeholder="C Found Technologies"
-                  className="input-main"
-                />
-              </div>
-
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                  <div>
-                    <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                      Work Mode
-                    </label>
-
-                    <select
-                      value={formData.mode}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          mode: e.target.value
-                        })
-                      }
-                      className="input-main"
-                    >
-                      <option value="Remote">Remote</option>
-                      <option value="Hybrid">Hybrid</option>
-                      <option value="Onsite">Onsite</option>
-                    </select>
-                  </div>
-
-                  {formData.mode !== 'Remote' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                          State
-                        </label>
-
-                        <select
-                          value={formData.state || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              state: e.target.value
-                            })
-                          }
-                          className="input-main"
-                        >
-                          <option value="">Select State</option>
-                          <option value="Tamil Nadu">Tamil Nadu</option>
-                          <option value="Karnataka">Karnataka</option>
-                          <option value="Kerala">Kerala</option>
-                          <option value="Maharashtra">Maharashtra</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                          City / Town / Village
-                        </label>
-
-                        <input
-                          value={formData.city || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              city: e.target.value
-                            })
-                          }
-                          placeholder="Nagercoil"
-                          className="input-main"
-                        />
-                      </div>
-
-                    </div>
-                  )}
-
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                  Department
-                </label>
-
-                <select
-                  value={formData.department}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      department: e.target.value
-                    })
-                  }
-                  className="input-main"
-                >
-                  <option value="">Select Department</option>
-                  <option value="Game Development">Game Development</option>
-                  <option value="Software Development">Software Development</option>
-                  <option value="AI/ML">AI/ML</option>
-                  <option value="UI/UX">UI/UX</option>
-                  <option value="Sales">Sales</option>
-                </select>
-              </div>
-              <div className="flex items-center justify-between border border-[var(--border-main)] rounded-2xl px-5 py-4">
-                <div>
-                  <h4 className="font-semibold text-sm">Featured Position</h4>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    Highlight this job on top
-                  </p>
-                </div>
-
-                <input
-                  type="checkbox"
-                  checked={formData.featured}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      featured: e.target.checked
-                    })
-                  }
-                  className="w-5 h-5"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">About Role</label>
-                <textarea 
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Strategic overview of the role..."
-                  className="input-main min-h-[100px]"
-                />
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                    Responsibilities
-                  </label>
-
-                  <textarea
-                    value={formData.responsibilities}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        responsibilities: e.target.value
-                      })
-                    }
-                    placeholder="Develop game features..."
-                    className="input-main min-h-[120px]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">Execution Requirements (One per line)</label>
-                <textarea 
-                  required
-                  value={formData.requirements}
-                  onChange={(e) => setFormData({...formData, requirements: e.target.value})}
-                  placeholder="Advanced Distributed Systems Expertise&#10;Neural Network Design Mastery"
-                  className="input-main min-h-[150px] font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-3 pl-1">
-                  Application Deadline
-                </label>
-
-                <input
-                  type="date"
-                  value={formData.deadline}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      deadline: e.target.value
-                    })
-                  }
-                  className="input-main"
-                />
-              </div>
-
-              <div className="pt-6 border-t border-[var(--border-main)] flex justify-end gap-4">
-                <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-                <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-                  {loading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus size={16} />}
-                  {job ? 'Save Changes' : 'Create Position'}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
   );
 }
 
