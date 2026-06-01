@@ -17,6 +17,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   Briefcase,
+  Building2,
   MapPin,
   Clock,
   Zap,
@@ -84,24 +85,38 @@ export default function Careers() {
   }, [isAdmin, user]);
 
   const handleShare = async (opp: any) => {
-  const url = `${window.location.origin}/careers/${
-    opp.title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-  }-${opp.id}`;
+    const url = `${window.location.origin}/careers/${
+      opp.slug || opp.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+    }-${opp.id}`;
 
-  try {
-    await navigator.share({
-      title: opp.title,
-      text: 'Check out this career opportunity',
-      url
-    });
-  } catch {
-    navigator.clipboard.writeText(url);
-    toast.success('Link copied');
-  }
-};
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: opp.title,
+          text: 'Check out this internship opportunity',
+          url,
+        });
+
+        toast.success('Share opened');
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard');
+    } catch (error) {
+      console.error(error);
+
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success('Link copied to clipboard');
+      } catch {
+        window.open(url, '_blank');
+      }
+    }
+  };
 
   const handleApply = async (opp: any) => {
     if (isAdmin) return;
@@ -336,10 +351,9 @@ export default function Careers() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className={`group p-4 md:p-5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.75rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
-                    <div>
-                      <div>
+
                         <div className="flex items-center justify-between gap-4 mb-0">
-                        <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-3">
                           {opp.featured && (
                             <div className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-[10px] font-black uppercase tracking-widest">
                               Featured
@@ -354,31 +368,13 @@ export default function Careers() {
                         </div>
                         </div>
                         
-                        <h3 className="text-xl md:text-3xl font-black mb-0 tracking-tight text-primary-700 uppercase">    
-                          {opp.title}
-                        </h3>
-                        <div className="flex items-center justify-between gap-4 mb-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mt-3 mb-2">
+                          <h3 className="text-3xl md:text-3xl font-black font-display tracking-tight text-primary-700 uppercase leading-none">
+                            {opp.title}
+                          </h3>
 
-                          <div>
-                            <div className="flex items-center gap-3 text-sm font-semibold text-[var(--text-muted)]">
-                              <Briefcase size={16} />
-                              <span className="font-semibold text-[var(--text-main)]">
-                                {opp.companyName || 'C Found Technologies'}
-                              </span>
-
-                              <span>•</span>
-
-                              <span className="flex items-center gap-1">
-                                <MapPin size={14} className="inline mr-1" />
-                                {opp.mode === 'Remote'
-                                  ? 'Remote'
-                                  : opp.location || 'Nagercoil'}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <p className="text-lg md:text-1.5xl font-black text-primary-600">
+                          <div className="sm:text-right">
+                            <p className="text-sm md:text-base font-bold text-primary-600">
                               {opp.compFormat === 'hidden'
                                 ? 'Not Disclosed'
                                 : opp.compType === 'revenue'
@@ -390,28 +386,28 @@ export default function Careers() {
                                     : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
                             </p>
 
-                            <p className="text-xs text-[var(--text-muted)]">
+                            <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
                               /month
-                            </p> 
+                            </p>
                           </div>
-
                         </div>
-                        {opp.department && (
-                          <div className="mb-6 inline-flex px-3 py-1 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-xs font-semibold uppercase tracking-wide">
-                            {opp.department}
-                          </div>
-                        )}     
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {(opp.skills || []).slice(0, 3).map((skill, idx) => (
-                            <span
-                              key={idx}
-                              className="px-3 py-1 rounded-lg bg-primary-600/10 border border-primary-600/20 text-primary-600 text-xs font-semibold">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm font-semibold text-[var(--text-muted)] mb-2">
+                          <Building2 size={14} />
 
-                        <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-semibold text-[var(--text-muted)]">
+                          <span className="font-semibold text-[var(--text-main)]">
+                            {opp.companyName || 'C Found Technologies'}
+                          </span>
+
+                          <span>•</span>
+
+                          <span className="flex items-center gap-1">
+                            <MapPin size={14} />
+                            {opp.mode === 'Remote'
+                              ? 'Remote'
+                              : opp.location || 'Nagercoil'}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1 mb-2 text-xs font-semibold text-[var(--text-muted)]">
 
                           <span className="flex items-center gap-1">
                             <Briefcase size={14} />
@@ -442,9 +438,7 @@ export default function Careers() {
                           </span>
 
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 flex-wrap mt-4 pt-4 border-t border-[var(--border-main)]">
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
                       {isAdmin && (
                         <div className="flex gap-3">
                           <button 
@@ -473,16 +467,19 @@ export default function Careers() {
                                 .replace(/[^a-z0-9\s-]/g, '')
                                 .replace(/\s+/g, '-')
                             }-${opp.id}`}
-                            className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
+                          className="h-10 px-4 rounded-xl border border-gray-200 bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-wide hover:text-primary-600 transition-all flex items-center justify-center gap-1 cursor-pointer"
                           >
                             View Details
                           </Link>
                           <button
+                            type="button"
                             onClick={() => handleShare(opp)}
-                            className="p-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-muted)] hover:text-primary-600 hover:border-primary-500 transition-all"                          >
-                            <>
-                              <Share2 size={18} />
-                            </>
+                          className="h-10 px-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-wide hover:text-primary-600 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <Share2 size={10} />
+                            <span className="text-[10px] font-bold uppercase tracking-wide">
+                              Share
+                            </span>
                           </button>
 
                           <button 
@@ -514,7 +511,7 @@ export default function Careers() {
                               .replace(/[^a-z0-9\s-]/g, '')
                               .replace(/\s+/g, '-')
                           }-${opp.id}`}
-                          className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-primary-500 transition-all"
+                          className="h-10 px-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-widest hover:border-[var(--border-main)] transition-all"
                         >
                           View Details
                         </Link>
