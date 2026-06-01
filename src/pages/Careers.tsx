@@ -473,7 +473,11 @@ export default function Careers() {
                           </Link>
                           <button
                             type="button"
-                            onClick={() => handleShare(opp)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleShare(opp);
+                            }}
                           className="h-10 px-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] text-[10px] font-black uppercase tracking-wide hover:text-primary-600 transition-all flex items-center justify-center gap-1 cursor-pointer"
                           >
                             <Share2 size={10} />
