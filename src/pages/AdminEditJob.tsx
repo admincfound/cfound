@@ -143,8 +143,15 @@ export default function AdminEditJob() {
         compType: formData.compType,
         compFormat: formData.compFormat,
 
-        minAmount: formData.minAmount,
-        maxAmount: formData.maxAmount,
+        minAmount:
+          formData.compFormat === 'negotiable'
+            ? ''
+            : formData.minAmount,
+
+        maxAmount:
+          formData.compFormat === 'range'
+            ? formData.maxAmount
+            : '',
 
         description: formData.description,
 
@@ -458,14 +465,14 @@ export default function AdminEditJob() {
             <option value="fixed">Fixed</option>
             <option value="range">Range</option>
             <option value="negotiable">Negotiable</option>
+            <option value="percentage">Percentage</option>
           </select>
 
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-
+        {formData.compFormat === 'fixed' && (
           <input
-            placeholder="Minimum Amount"
+            placeholder="Amount"
             className="input-main"
             value={formData.minAmount}
             onChange={(e) =>
@@ -475,20 +482,49 @@ export default function AdminEditJob() {
               })
             }
           />
+        )}
 
+        {formData.compFormat === 'range' && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <input
+              placeholder="Minimum Amount"
+              className="input-main"
+              value={formData.minAmount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  minAmount: e.target.value
+                })
+              }
+            />
+
+            <input
+              placeholder="Maximum Amount"
+              className="input-main"
+              value={formData.maxAmount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  maxAmount: e.target.value
+                })
+              }
+            />
+          </div>
+        )}
+
+        {formData.compFormat === 'percentage' && (
           <input
-            placeholder="Maximum Amount"
+            placeholder="Percentage (%)"
             className="input-main"
-            value={formData.maxAmount}
+            value={formData.minAmount}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                maxAmount: e.target.value
+                minAmount: e.target.value
               })
             }
           />
-
-        </div>
+        )}
 
         <label className="flex items-center gap-3">
           <input
