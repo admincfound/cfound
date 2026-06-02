@@ -309,7 +309,7 @@ export default function Profile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputGroup label="Full Name">
                 <input
-                  disabled={!isEditing}
+                  disabled={false}
                   type="text" 
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
@@ -320,7 +320,7 @@ export default function Profile() {
 
               <InputGroup label="Email Address">
                 <input 
-                  disabled={!isEditing}
+                  disabled={false}
                   type="email" 
                   value={formData.email || profile?.email || ""}
                   readOnly
@@ -330,7 +330,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="Phone Number">
                 <input 
-                  disabled={!isEditing}
+                  disabled={false}
                   type="text" 
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -340,7 +340,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="Country">
                 <input 
-                  disabled={!isEditing}
+                  disabled={false}
                   type="text" 
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
@@ -350,7 +350,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="State / Province">
                 <input 
-                  disabled={!isEditing}
+                  disabled={false}
                   type="text" 
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
@@ -360,7 +360,7 @@ export default function Profile() {
               </InputGroup>
               <InputGroup label="City">
                 <input 
-                  disabled={!isEditing}
+                  disabled={false}
                   type="text" 
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -372,7 +372,7 @@ export default function Profile() {
             <div className="mt-6">
                <InputGroup label="About / Bio">
                   <textarea 
-                    disabled={!isEditing}
+                    disabled={false}
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[120px]"
@@ -384,7 +384,7 @@ export default function Profile() {
             <div className="mt-8 pt-8 border-t border-[var(--border-main)] grid grid-cols-1 md:grid-cols-2 gap-6">
                <InputGroup label="Primary Role / Interest">
                   <input 
-                    disabled={!isEditing}
+                    disabled={false}
                     type="text" 
                     value={formData.primaryRole}
                     onChange={(e) => setFormData({ ...formData, primaryRole: e.target.value })}
@@ -423,7 +423,7 @@ export default function Profile() {
                     </div>
                     <div className="flex gap-2">
                       <input
-                        disabled={!isEditing}
+                        disabled={false}
                         type="text" 
                         value={skillInput}
                         onChange={(e) => setSkillInput(e.target.value)}
@@ -635,7 +635,7 @@ export default function Profile() {
             <div className="space-y-6">
               <label className="flex items-start gap-3 cursor-pointer">
                   <input
-                    disabled={!isEditing}
+                    disabled={false}
                     type="checkbox" 
                     checked={formData.declarationAccepted} 
                     onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })} 
@@ -649,7 +649,7 @@ export default function Profile() {
                <div className="pt-4 border-t border-[var(--border-main)]">
                  <InputGroup label="Digital Signature (Type Full Name)">
                     <input 
-                      disabled={!isEditing}
+                      disabled={false}
                       type="text" 
                       value={formData.signature}
                       onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
@@ -740,7 +740,7 @@ function AdminProfileView({ formData, setFormData, handleImageUpload, handleUpda
             <input  value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" />
           </InputGroup>
           <InputGroup label="Bio">
-            <textarea disabled={!isEditing} value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[80px]" placeholder="Brief overview..." />
+            <textarea disabled={false} value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[80px]" placeholder="Brief overview..." />
           </InputGroup>
           <button disabled={loading} className="w-full bg-primary-600 text-white rounded-xl py-4 text-sm font-semibold mt-4 flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors">
             {loading ? "Saving..." : <><Save size={16} /> Save Changes</>}
@@ -1085,7 +1085,7 @@ function SocialInput({ icon, value, onChange, placeholder, isEditing }: any) {
         {icon}
       </div>
         <input
-          disabled={!isEditing}
+          disabled={false}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
