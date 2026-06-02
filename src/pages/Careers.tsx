@@ -373,23 +373,20 @@ export default function Careers() {
                             {opp.title}
                           </h3>
 
-                          <div className="sm:text-right">
-                            <p className="text-sm md:text-base font-bold text-primary-600">
-                              {opp.compFormat === 'hidden'
-                                ? 'Not Disclosed'
-                                : opp.compType === 'revenue'
-                                  ? opp.compFormat === 'fixed'
-                                    ? `${opp.minAmount}%`
-                                    : `${opp.minAmount}% - ${opp.maxAmount}%`
-                                  : opp.compFormat === 'fixed'
-                                    ? `₹${Number(opp.minAmount).toLocaleString('en-IN')}`
-                                    : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
-                            </p>
+                          {opp.compFormat !== 'negotiable' &&
+                           opp.compFormat !== 'percentage' && (
+                            <div className="sm:text-right">
+                              <p className="text-sm md:text-base font-bold text-primary-600">
+                                {opp.compFormat === 'fixed'
+                                  ? `₹${Number(opp.minAmount).toLocaleString('en-IN')}`
+                                  : `₹${Number(opp.minAmount).toLocaleString('en-IN')} - ₹${Number(opp.maxAmount).toLocaleString('en-IN')}`}
+                              </p>
 
-                            <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
-                              /month
-                            </p>
-                          </div>
+                              <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+                                /month
+                              </p>
+                            </div>
+)}
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm font-semibold text-[var(--text-muted)] mb-2">
                           <Building2 size={14} />

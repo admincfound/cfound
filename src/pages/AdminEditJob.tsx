@@ -110,6 +110,17 @@ export default function AdminEditJob() {
     setLoading(true);
 
     try {
+
+      if (
+        formData.compFormat === 'percentage' &&
+        (Number(formData.minAmount) < 1 ||
+         Number(formData.minAmount) > 100)
+      ) {
+        toast.error('Percentage must be between 1 and 100');
+        setLoading(false);
+        return;
+      }
+
       await updateDoc(doc(db, 'opportunities', id), {
         type: 'job',
 
@@ -514,7 +525,10 @@ export default function AdminEditJob() {
 
         {formData.compFormat === 'percentage' && (
           <input
-            placeholder="Percentage (%)"
+            type="number"
+            min="1"
+            max="100"
+            placeholder="Percentage (1-100)"
             className="input-main"
             value={formData.minAmount}
             onChange={(e) =>
