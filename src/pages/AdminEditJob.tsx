@@ -1247,13 +1247,21 @@ export default function AdminEditJob() {
 
                 <label className="flex items-center gap-3 mt-3">
 
-                  <input
-                    type="checkbox"
-                    checked={formData.featured}
-                    onChange={() => {
-                      alert("clicked");
-                    }}
-                  />
+                  onChange={(e) => {
+                    console.log(window.scrollY);
+
+                    setFormData(prev => ({
+                      ...prev,
+                      featured: e.target.checked
+                    }));
+
+                    setTimeout(() => {
+                      console.log(
+                        "after",
+                        window.scrollY
+                      );
+                    }, 100);
+                  }}
 
                   Show as Featured
                 </label>
