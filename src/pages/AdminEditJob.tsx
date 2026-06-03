@@ -436,6 +436,66 @@ export default function AdminEditJob() {
 
           </div>
 
+          <div className="grid md:grid-cols-3 gap-6">
+
+            <select
+              className="input-main"
+              value={formData.educationRequirement}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  educationRequirement: e.target.value
+                })
+              }
+            >
+              <option value="">Education Requirement</option>
+              <option value="10th Pass">10th Pass</option>
+              <option value="12th Pass">12th Pass</option>
+              <option value="Diploma">Diploma</option>
+              <option value="Any Degree">Any Degree</option>
+              <option value="BCA">BCA</option>
+              <option value="B.Sc">B.Sc</option>
+              <option value="B.Tech / BE">B.Tech / BE</option>
+              <option value="MCA">MCA</option>
+              <option value="MBA">MBA</option>
+              <option value="Any Qualification">Any Qualification</option>
+            </select>
+
+            <select
+              className="input-main"
+              value={formData.industry}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  industry: e.target.value
+                })
+              }
+            >
+              <option value="">Industry</option>
+              <option value="Software Development">Software Development</option>
+              <option value="Game Development">Game Development</option>
+              <option value="AI / ML">AI / ML</option>
+              <option value="Education">Education</option>
+              <option value="Sales">Sales</option>
+              <option value="Marketing">Marketing</option>
+              <option value="HR">HR</option>
+              <option value="Customer Support">Customer Support</option>
+            </select>
+
+            <input
+              placeholder="Work Hours"
+              className="input-main"
+              value={formData.workHours}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  workHours: e.target.value
+                })
+              }
+            />
+
+          </div>
+
           <textarea
             placeholder="Skills (comma separated)"
             className="input-main min-h-[100px]"
@@ -444,6 +504,18 @@ export default function AdminEditJob() {
               setFormData({
                 ...formData,
                 skills: e.target.value
+              })
+            }
+          />
+
+          <textarea
+            placeholder="Job Benefits"
+            className="input-main min-h-[100px]"
+            value={formData.jobBenefits}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                jobBenefits: e.target.value
               })
             }
           />
@@ -631,65 +703,6 @@ export default function AdminEditJob() {
           />
           Featured Job
         </label>
-          <textarea
-            placeholder="Requirements (one per line)"
-            className="input-main min-h-[150px]"
-            value={formData.requirements}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                requirements: e.target.value
-              })
-            }
-          />
-
-          <textarea
-            placeholder="Education Requirement"
-            className="input-main min-h-[100px]"
-            value={formData.educationRequirement}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                educationRequirement: e.target.value
-              })
-            }
-          />
-
-          <input
-            placeholder="Industry"
-            className="input-main"
-            value={formData.industry}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                industry: e.target.value
-              })
-            }
-          />
-
-          <input
-            placeholder="Work Hours"
-            className="input-main"
-            value={formData.workHours}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                workHours: e.target.value
-              })
-            }
-          />
-
-          <textarea
-            placeholder="Job Benefits"
-            className="input-main min-h-[100px]"
-            value={formData.jobBenefits}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                jobBenefits: e.target.value
-              })
-            }
-          />
 
           <div className="flex justify-end gap-4">
 

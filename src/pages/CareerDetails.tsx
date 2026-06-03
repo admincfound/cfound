@@ -454,7 +454,17 @@ export default function CareerDetails() {
                   ))}
                 </div>
               </div>
+                {job.jobBenefits && (
+                  <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8">
+                    <h2 className="text-2xl font-black mb-6">
+                      Benefits
+                    </h2>
 
+                    <p className="whitespace-pre-wrap">
+                      {job.jobBenefits}
+                    </p>
+                  </div>
+                )}
             </div>
 
             <div className="space-y-6">
@@ -520,7 +530,7 @@ export default function CareerDetails() {
                 </h3>
 
                 <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill: string, index: number) => (
+                    {(job.skills || []).map((skill: string, index: number) => (
                       <span
                         key={index}
                         className="px-3 py-2 rounded-xl bg-primary-600/10 text-primary-600 text-xs font-bold"
