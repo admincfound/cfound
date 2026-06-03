@@ -137,7 +137,11 @@ export default function AdminEditJob() {
 
     educationRequirement: '',
     industry: '',
-    workHours: '',
+    workStart: '09:00',
+    workStartPeriod: 'AM',
+
+    workEnd: '06:00',
+    workEndPeriod: 'PM',
     jobBenefits: [],
     salaryCurrency: 'INR'
   });
@@ -500,17 +504,87 @@ export default function AdminEditJob() {
               <option value="Customer Support">Customer Support</option>
             </select>
 
-            <input
-              placeholder="Work Hours"
-              className="input-main"
-              value={formData.workHours}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  workHours: e.target.value
-                })
-              }
-            />
+            <div className="grid grid-cols-2 gap-4">
+
+            <div className="flex gap-2">
+
+              <select
+                className="input-main"
+                value={formData.workStart}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    workStart: e.target.value
+                  })
+                }
+              >
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="01:00">01:00</option>
+                <option value="02:00">02:00</option>
+                <option value="03:00">03:00</option>
+                <option value="04:00">04:00</option>
+                <option value="05:00">05:00</option>
+                <option value="06:00">06:00</option>
+                <option value="07:00">07:00</option>
+                <option value="08:00">08:00</option>
+              </select>
+
+              <select
+                className="input-main"
+                value={formData.workStartPeriod}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    workStartPeriod: e.target.value
+                  })
+                }
+              >
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+
+            </div>
+
+            <div className="flex gap-2">
+
+              <select
+                className="input-main"
+                value={formData.workEnd}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    workEnd: e.target.value
+                  })
+                }
+              >
+                <option value="06:00">06:00</option>
+                <option value="07:00">07:00</option>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+              </select>
+
+              <select
+                className="input-main"
+                value={formData.workEndPeriod}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    workEndPeriod: e.target.value
+                  })
+                }
+              >
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+
+            </div>
+
+          </div>
 
           </div>
 
