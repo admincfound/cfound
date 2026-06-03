@@ -357,6 +357,11 @@ export default function AdminEditJob() {
           city:
             formData.city,
 
+          location:
+            formData.mode === 'Remote'
+              ? 'Remote'
+              : `${formData.city}, ${formData.state}`,
+
           contactEmail:
             formData.contactEmail,
 
@@ -438,7 +443,6 @@ export default function AdminEditJob() {
                   }
                 />
               </div>
-
             </div>
 
             <label className="flex items-center gap-3 font-medium">
@@ -448,14 +452,67 @@ export default function AdminEditJob() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
+
                     isCFoundPosition:
+                      e.target.checked,
+
+                    companyName:
                       e.target.checked
+                        ? 'C Found Technologies'
+                        : '',
+
+                    contactEmail:
+                      e.target.checked
+                        ? 'careers@cfound.in'
+                        : '',
+
+                    contactPhone:
+                      e.target.checked
+                        ? '+91 9361194545'
+                        : ''
                   })
                 }
               />
 
               C Found Position
             </label>
+
+            {!formData.isCFoundPosition && (
+              <div className="grid md:grid-cols-2 gap-6">
+
+                <div>
+                  <Label>Company Email</Label>
+
+                  <input
+                    type="email"
+                    className="input-main"
+                    value={formData.contactEmail}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contactEmail: e.target.value
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label>Company Contact Number</Label>
+
+                  <input
+                    className="input-main"
+                    value={formData.contactPhone}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contactPhone: e.target.value
+                      })
+                    }
+                  />
+                </div>
+
+              </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-6">
 
@@ -495,6 +552,42 @@ export default function AdminEditJob() {
               </div>
 
             </div>
+
+            {formData.mode !== 'Remote' && (
+              <div className="grid md:grid-cols-2 gap-6">
+
+                <div>
+                  <Label>State</Label>
+
+                  <input
+                    className="input-main"
+                    value={formData.state}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        state: e.target.value
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label>City / Town</Label>
+
+                  <input
+                    className="input-main"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        city: e.target.value
+                      })
+                    }
+                  />
+                </div>
+
+              </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-6">
 
@@ -701,7 +794,7 @@ export default function AdminEditJob() {
               </select>
             </div>
 
-                        {formData.timing !== 'Flexible' && (
+            {formData.timing !== 'Flexible' && (
               <div className="grid md:grid-cols-2 gap-6">
 
                 <div>
