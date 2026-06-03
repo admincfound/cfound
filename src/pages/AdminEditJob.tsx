@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { db } from '../lib/firebase';
 import { toast } from 'react-hot-toast';
 
 const SectionCard = ({
@@ -210,12 +210,26 @@ export default function AdminEditJob() {
             data.joiningTime || '',
 
           compType:
-            data.compType ||
-            'Monthly Salary',
+            data.compType === 'salary'
+              ? 'Monthly Salary'
+              : data.compType === 'stipend'
+              ? 'Stipend'
+              : data.compType === 'commission'
+              ? 'Commission'
+              : data.compType === 'revenue'
+              ? 'Revenue Share'
+              : 'Monthly Salary',
 
           compFormat:
-            data.compFormat ||
-            'Fixed',
+            data.compFormat === 'fixed'
+              ? 'Fixed'
+              : data.compFormat === 'range'
+              ? 'Range'
+              : data.compFormat === 'percentage'
+              ? 'Percentage'
+              : data.compFormat === 'negotiable'
+              ? 'Negotiable'
+              : 'Fixed',
 
           minAmount:
             data.minAmount || '',
@@ -325,6 +339,15 @@ export default function AdminEditJob() {
         return 'Maximum Amount is required';
     }
 
+    if (!formData.description)
+      return 'About Role is required';
+
+    if (!formData.responsibilities)
+      return 'Responsibilities are required';
+
+    if (!formData.requirements)
+      return 'Requirements are required';
+
     return null;
   };
 
@@ -337,6 +360,8 @@ export default function AdminEditJob() {
 
     const error =
       validateForm();
+
+
 
     if (error) {
       toast.error(error);
@@ -431,10 +456,22 @@ export default function AdminEditJob() {
             formData.joiningTime,
 
           compType:
-            formData.compType,
+            formData.compType === 'Monthly Salary'
+              ? 'salary'
+              : formData.compType === 'Stipend'
+              ? 'stipend'
+              : formData.compType === 'Commission'
+              ? 'commission'
+              : 'revenue',
 
           compFormat:
-            formData.compFormat,
+            formData.compFormat === 'Fixed'
+              ? 'fixed'
+              : formData.compFormat === 'Range'
+              ? 'range'
+              : formData.compFormat === 'Percentage'
+              ? 'percentage'
+              : 'negotiable',
 
           minAmount:
             formData.minAmount,
