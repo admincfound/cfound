@@ -1249,15 +1249,10 @@ export default function AdminEditJob() {
 
                   <input
                     type="checkbox"
-                    checked={
-                      formData.featured
-                    }
-                    onChange={(e) =>
-                      setFormData(prev => ({
-                        ...prev,
-                        featured: e.target.checked
-                      }))
-                    }
+                    checked={formData.featured}
+                    onChange={() => {
+                      alert("clicked");
+                    }}
                   />
 
                   Show as Featured
