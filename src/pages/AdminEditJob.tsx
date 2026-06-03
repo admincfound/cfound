@@ -1253,11 +1253,10 @@ export default function AdminEditJob() {
                       formData.featured
                     }
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        featured:
-                          e.target.checked
-                      })
+                      setFormData(prev => ({
+                        ...prev,
+                        featured: e.target.checked
+                      }))
                     }
                   />
 

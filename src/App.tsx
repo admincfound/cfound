@@ -53,13 +53,6 @@ function AppContent() {
   const location = useLocation();
   
     useEffect(() => {
-    if (
-      location.pathname.includes('/admin/jobs/edit/') ||
-      location.pathname.includes('/admin/jobs/new')
-    ) {
-      return;
-    }
-
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
