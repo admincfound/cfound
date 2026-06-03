@@ -228,7 +228,7 @@ export default function AdminEditJob() {
 
         educationRequirement: formData.educationRequirement,
         industry: formData.industry,
-        workHours: formData.workHours,
+        workHours: `${formData.workStart} ${formData.workStartPeriod} → ${formData.workEnd} ${formData.workEndPeriod}`,
         jobBenefits: formData.jobBenefits,
         salaryCurrency: formData.salaryCurrency,
       });
@@ -458,7 +458,7 @@ export default function AdminEditJob() {
 
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
 
             <select
               className="input-main"
@@ -505,6 +505,10 @@ export default function AdminEditJob() {
             </select>
 
             <div className="grid grid-cols-2 gap-4">
+
+            <label className="block mb-2 font-semibold md:col-span-2">
+              Working Hours
+            </label>
 
             <div className="flex gap-2">
 
