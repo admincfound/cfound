@@ -1,82 +1,12 @@
 import { useState, useEffect } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useNavigate, useParams } from 'react-router-dom';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { useParams } from 'react-router-dom';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
 
 export default function AdminEditJob() {
   const navigate = useNavigate();
   const { id } = useParams();
-
-  useEffect(() => {
-    const loadJob = async () => {
-      if (!id) return;
-
-      const snap = await getDoc(doc(db, 'opportunities', id));
-
-      if (!snap.exists()) return;
-
-      const data = snap.data();
-
-      setFormData({
-        title: data.title || '',
-        companyName: data.companyName || '',
-        department: data.department || '',
-        mode: data.mode || 'Remote',
-
-        state: data.state || '',
-        city: data.city || '',
-
-        timing: data.timing || 'Morning Shift',
-
-        type: data.jobType || 'full-time',
-
-        experience: data.experience || '',
-
-        openings: String(data.openings || ''),
-
-        featured: data.featured || false,
-
-        compType: data.compType || 'salary',
-        compFormat: data.compFormat || 'fixed',
-
-        minAmount: data.minAmount || '',
-        maxAmount: data.maxAmount || '',
-
-        skills: Array.isArray(data.skills)
-          ? data.skills.join(', ')
-          : '',
-
-        description: data.description || '',
-
-        responsibilities: data.responsibilities || '',
-
-        requirements: Array.isArray(data.requirements)
-          ? data.requirements.join('\n')
-          : '',
-
-        deadline: data.deadline || '',
-
-        status: data.status || 'active',
-
-        isCFoundPosition: data.isCFoundPosition ?? true,
-        contactEmail: data.contactEmail || 'careers@cfound.in',
-        contactPhone: data.contactPhone || '+91 9361194545',
-
-        educationRequirement: data.educationRequirement || '',
-        industry: data.industry || '',
-        workHours: data.workHours || '',
-        jobBenefits: Array.isArray(data.jobBenefits)
-          ? data.jobBenefits
-          : [],
-        salaryCurrency: data.salaryCurrency || 'INR'
-      });
-    };
-
-    loadJob();
-  }, [id]);
 
   const [loading, setLoading] = useState(false);
 
@@ -85,7 +15,6 @@ export default function AdminEditJob() {
     'Flexible Schedule',
     'Performance Bonus',
     'Commission Pay',
-    'Paid Internship',
     'Certificate',
     'PPO Opportunity',
     'Mentorship',
@@ -98,22 +27,37 @@ export default function AdminEditJob() {
 
   const [formData, setFormData] = useState({
     title: '',
-    companyName: '',
-    department: '',
+    companyName: 'C Found Technologies',
+
+    isCFoundPosition: true,
+
     mode: 'Remote',
+    department: '',
 
-    state: '',
-    city: '',
+    experience: '',
+    openings: '',
+    deadline: '',
 
-    timing: 'Morning Shift',
+    educationRequirement: '',
+    industry: '',
 
     type: 'full-time',
 
-    experience: '',
+    contractDuration: '',
 
-    openings: '',
+    timing: 'Morning Shift',
 
-    featured: false,
+    workStart: '09:00',
+    workStartPeriod: 'AM',
+
+    workEnd: '06:00',
+    workEndPeriod: 'PM',
+
+    workDays: '5 Days',
+
+    hiringUrgently: false,
+
+    joiningTime: '',
 
     compType: 'salary',
     compFormat: 'fixed',
@@ -123,128 +67,284 @@ export default function AdminEditJob() {
 
     skills: '',
 
+    jobBenefits: [] as string[],
+
     description: '',
     responsibilities: '',
     requirements: '',
 
-    deadline: '',
+    featured: false,
 
     status: 'active',
 
-    isCFoundPosition: true,
+    state: '',
+    city: '',
+
     contactEmail: 'careers@cfound.in',
     contactPhone: '+91 9361194545',
 
-    educationRequirement: '',
-    industry: '',
-    workStart: '09:00',
-    workStartPeriod: 'AM',
-
-    workEnd: '06:00',
-    workEndPeriod: 'PM',
-    jobBenefits: [],
     salaryCurrency: 'INR'
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    useEffect(() => {
+    const loadJob = async () => {
+      if (!id) return;
+
+      try {
+        const snap = await getDoc(
+          doc(db, 'opportunities', id)
+        );
+
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+
+        setFormData({
+          title: data.title || '',
+          companyName:
+            data.companyName || 'C Found Technologies',
+
+          isCFoundPosition:
+            data.isCFoundPosition ?? true,
+
+          mode: data.mode || 'Remote',
+          department: data.department || '',
+
+          experience: data.experience || '',
+          openings: String(data.openings || ''),
+
+          deadline: data.deadline || '',
+
+          educationRequirement:
+            data.educationRequirement || '',
+
+          industry: data.industry || '',
+
+          type: data.jobType || 'full-time',
+
+          contractDuration:
+            data.contractDuration || '',
+
+          timing:
+            data.timing || 'Morning Shift',
+
+          workStart: '09:00',
+          workStartPeriod: 'AM',
+
+          workEnd: '06:00',
+          workEndPeriod: 'PM',
+
+          workDays:
+            data.workDays || '5 Days',
+
+          hiringUrgently:
+            data.hiringUrgently || false,
+
+          joiningTime:
+            data.joiningTime || '',
+
+          compType:
+            data.compType || 'salary',
+
+          compFormat:
+            data.compFormat || 'fixed',
+
+          minAmount:
+            data.minAmount || '',
+
+          maxAmount:
+            data.maxAmount || '',
+
+          skills: Array.isArray(data.skills)
+            ? data.skills.join(', ')
+            : '',
+
+          jobBenefits:
+            data.jobBenefits || [],
+
+          description:
+            data.description || '',
+
+          responsibilities:
+            data.responsibilities || '',
+
+          requirements: Array.isArray(
+            data.requirements
+          )
+            ? data.requirements.join('\n')
+            : '',
+
+          featured:
+            data.featured || false,
+
+          status:
+            data.status || 'active',
+
+          state:
+            data.state || '',
+
+          city:
+            data.city || '',
+
+          contactEmail:
+            data.contactEmail ||
+            'careers@cfound.in',
+
+          contactPhone:
+            data.contactPhone ||
+            '+91 9361194545',
+
+          salaryCurrency:
+            data.salaryCurrency || 'INR'
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadJob();
+  }, [id]);
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
 
     setLoading(true);
 
     try {
+      await updateDoc(
+        doc(db, 'opportunities', id!),
+        {
+          type: 'job',
 
-      if (
-        formData.compFormat === 'percentage' &&
-        (Number(formData.minAmount) < 1 ||
-         Number(formData.minAmount) > 100)
-      ) {
-        toast.error('Percentage must be between 1 and 100');
-        setLoading(false);
-        return;
-      }
+          title: formData.title,
 
-      await updateDoc(doc(db, 'opportunities', id), {
-        type: 'job',
+          companyName:
+            formData.companyName,
 
-        title: formData.title,
+          isCFoundPosition:
+            formData.isCFoundPosition,
 
-        companyName: formData.companyName,
-        isCFoundPosition: formData.isCFoundPosition,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone,
+          department:
+            formData.department,
 
-        department: formData.department,
+          mode:
+            formData.mode,
 
-        mode: formData.mode,
+          state:
+            formData.state,
 
-        state: formData.state,
+          city:
+            formData.city,
 
-        city: formData.city,
+          location:
+            formData.mode === 'Remote'
+              ? 'Remote'
+              : `${formData.city}, ${formData.state}`,
 
-        location:
-          formData.mode === 'Remote'
-            ? 'Remote'
-            : `${formData.city}, ${formData.state}`,
+          experience:
+            formData.experience,
 
-        timing: formData.timing,
+          openings:
+            Number(formData.openings || 0),
 
-        jobType: formData.type,
-        
-        experience: formData.experience,
+          deadline:
+            formData.deadline,
 
-        openings: Number(formData.openings || 0),
+          educationRequirement:
+            formData.educationRequirement,
 
-        featured: formData.featured,
+          industry:
+            formData.industry,
 
-        compType: formData.compType,
-        compFormat: formData.compFormat,
+          jobType:
+            formData.type,
 
-        minAmount:
-          formData.compFormat === 'negotiable'
-            ? ''
-            : formData.minAmount,
+          contractDuration:
+            formData.contractDuration,
 
-        maxAmount:
-          formData.compFormat === 'range'
-            ? formData.maxAmount
-            : '',
+          timing:
+            formData.timing,
 
-        description: formData.description,
+          workHours:
+            formData.timing === 'Flexible'
+              ? ''
+              : `${formData.workStart} ${formData.workStartPeriod} → ${formData.workEnd} ${formData.workEndPeriod}`,
 
-        responsibilities: formData.responsibilities,
+          workDays:
+            formData.workDays,
 
-        requirements: formData.requirements
-          .split('\n')
-          .filter((x) => x.trim()),
+          hiringUrgently:
+            formData.hiringUrgently,
 
-        skills: formData.skills
-          .split(',')
-          .map((x) => x.trim())
-          .filter(Boolean),
+          joiningTime:
+            formData.joiningTime,
 
-        deadline: formData.deadline,
+          compType:
+            formData.compType,
 
-        status: formData.status,
+          compFormat:
+            formData.compFormat,
 
-        educationRequirement: formData.educationRequirement,
-        industry: formData.industry,
-        workHours: `${formData.workStart} ${formData.workStartPeriod} → ${formData.workEnd} ${formData.workEndPeriod}`,
-        jobBenefits: formData.jobBenefits,
-        salaryCurrency: formData.salaryCurrency,
-      });
+          minAmount:
+            formData.minAmount,
 
-      toast.success('Job Updated');
+          maxAmount:
+            formData.maxAmount,
+
+          skills: formData.skills
+            .split(',')
+            .map((x) => x.trim())
+            .filter(Boolean),
+
+          jobBenefits:
+            formData.jobBenefits,
+
+          description:
+            formData.description,
+
+          responsibilities:
+            formData.responsibilities,
+
+          requirements:
+            formData.requirements
+              .split('\n')
+              .filter((x) => x.trim()),
+
+          featured:
+            formData.featured,
+
+          status:
+            formData.status,
+
+          contactEmail:
+            formData.contactEmail,
+
+          contactPhone:
+            formData.contactPhone,
+
+          salaryCurrency:
+            formData.salaryCurrency
+        }
+      );
+
+      toast.success(
+        'Job Updated Successfully'
+      );
 
       navigate('/careers');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to update job');
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        'Failed To Update Job'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  return (
+    return (
     <div className="pt-32 pb-24 px-6 min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-5xl mx-auto">
 
@@ -261,81 +361,55 @@ export default function AdminEditJob() {
           className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-8 space-y-8"
         >
 
+          {/* Job Title */}
+
+          <input
+            placeholder="Job Title"
+            className="input-main"
+            value={formData.title}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                title: e.target.value
+              })
+            }
+          />
+
+          {/* C Found */}
+
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={formData.isCFoundPosition}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  isCFoundPosition: e.target.checked
+                })
+              }
+            />
+            C Found Position
+          </label>
+
+          {/* Company */}
+
+          <input
+            placeholder="Company Name"
+            className="input-main"
+            value={formData.companyName}
+            disabled={formData.isCFoundPosition}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                companyName: e.target.value
+              })
+            }
+          />
+
+          {/* Mode + Department */}
+
           <div className="grid md:grid-cols-2 gap-6">
 
-            <input
-              placeholder="Job Title"
-              className="input-main"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  title: e.target.value
-                })
-              }
-            />
-
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={formData.isCFoundPosition}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-
-                  setFormData({
-                    ...formData,
-                    isCFoundPosition: checked,
-                    companyName: checked ? 'C Found Technologies' : '',
-                    contactEmail: checked ? 'careers@cfound.in' : '',
-                    contactPhone: checked ? '+91 9361194545' : ''
-                  });
-                }}
-              />
-              C Found Position
-            </label>
-
-            <input
-              placeholder="Company Name"
-              className="input-main"
-              disabled={formData.isCFoundPosition}
-              value={formData.companyName}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  companyName: e.target.value
-                })
-              }
-            />
-
-            {!formData.isCFoundPosition && (
-              <div className="grid md:grid-cols-2 gap-6">
-
-                <input
-                  placeholder="Contact Email"
-                  className="input-main"
-                  value={formData.contactEmail}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      contactEmail: e.target.value
-                    })
-                  }
-                />
-
-                <input
-                  placeholder="Contact Phone"
-                  className="input-main"
-                  value={formData.contactPhone}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      contactPhone: e.target.value
-                    })
-                  }
-                />
-
-              </div>
-            )}
             <select
               className="input-main"
               value={formData.mode}
@@ -351,7 +425,8 @@ export default function AdminEditJob() {
               <option value="Onsite">Onsite</option>
             </select>
 
-            <select
+            <input
+              placeholder="Department"
               className="input-main"
               value={formData.department}
               onChange={(e) =>
@@ -360,63 +435,11 @@ export default function AdminEditJob() {
                   department: e.target.value
                 })
               }
-            >
-              <option value="">Department</option>
-              <option value="Software Development">
-                Software Development
-              </option>
-              <option value="Game Development">
-                Game Development
-              </option>
-              <option value="AI/ML">
-                AI/ML
-              </option>
-              <option value="UI/UX">
-                UI/UX
-              </option>
-              <option value="Sales">
-                Sales
-              </option>
-            </select>
+            />
 
           </div>
 
-          {formData.mode !== 'Remote' && (
-            <div className="grid md:grid-cols-2 gap-6">
-
-              <select
-                className="input-main"
-                value={formData.state}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    state: e.target.value
-                  })
-                }
-              >
-                <option value="">Select State</option>
-                <option>Tamil Nadu</option>
-                <option>Kerala</option>
-                <option>Karnataka</option>
-                <option>Maharashtra</option>
-                <option>Telangana</option>
-                <option>Andhra Pradesh</option>
-              </select>
-
-              <input
-                placeholder="City / Town / Village"
-                className="input-main"
-                value={formData.city}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    city: e.target.value
-                  })
-                }
-              />
-
-            </div>
-          )}
+          {/* Experience */}
 
           <div className="grid md:grid-cols-3 gap-6">
 
@@ -458,32 +481,25 @@ export default function AdminEditJob() {
 
           </div>
 
+          {/* Education + Industry */}
+
           <div className="grid md:grid-cols-2 gap-6">
 
-            <select
+            <input
+              placeholder="Education Requirement"
               className="input-main"
               value={formData.educationRequirement}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  educationRequirement: e.target.value
+                  educationRequirement:
+                    e.target.value
                 })
               }
-            >
-              <option value="">Education Requirement</option>
-              <option value="10th Pass">10th Pass</option>
-              <option value="12th Pass">12th Pass</option>
-              <option value="Diploma">Diploma</option>
-              <option value="Any Degree">Any Degree</option>
-              <option value="BCA">BCA</option>
-              <option value="B.Sc">B.Sc</option>
-              <option value="B.Tech / BE">B.Tech / BE</option>
-              <option value="MCA">MCA</option>
-              <option value="MBA">MBA</option>
-              <option value="Any Qualification">Any Qualification</option>
-            </select>
+            />
 
-            <select
+            <input
+              placeholder="Industry"
               className="input-main"
               value={formData.industry}
               onChange={(e) =>
@@ -492,27 +508,111 @@ export default function AdminEditJob() {
                   industry: e.target.value
                 })
               }
+            />
+
+          </div>
+
+          {/* Job Type */}
+
+          <select
+            className="input-main"
+            value={formData.type}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                type: e.target.value
+              })
+            }
+          >
+            <option value="full-time">
+              Full Time
+            </option>
+
+            <option value="part-time">
+              Part Time
+            </option>
+
+            <option value="contract">
+              Contract
+            </option>
+
+            <option value="freelance">
+              Freelance
+            </option>
+          </select>
+
+          {/* Contract Duration */}
+
+          {formData.type === 'contract' && (
+            <select
+              className="input-main"
+              value={formData.contractDuration}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  contractDuration:
+                    e.target.value
+                })
+              }
             >
-              <option value="">Industry</option>
-              <option value="Software Development">Software Development</option>
-              <option value="Game Development">Game Development</option>
-              <option value="AI / ML">AI / ML</option>
-              <option value="Education">Education</option>
-              <option value="Sales">Sales</option>
-              <option value="Marketing">Marketing</option>
-              <option value="HR">HR</option>
-              <option value="Customer Support">Customer Support</option>
+              <option value="">
+                Contract Duration
+              </option>
+
+              <option value="1 Month">
+                1 Month
+              </option>
+
+              <option value="3 Months">
+                3 Months
+              </option>
+
+              <option value="6 Months">
+                6 Months
+              </option>
+
+              <option value="1 Year">
+                1 Year
+              </option>
             </select>
+          )}
 
-            <div className="grid grid-cols-2 gap-4">
+          {/* Shift */}
 
-            <label className="block mb-2 font-semibold md:col-span-2">
-              Working Hours
-            </label>
+          <select
+            className="input-main"
+            value={formData.timing}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                timing: e.target.value
+              })
+            }
+          >
+            <option value="Morning Shift">
+              Morning Shift
+            </option>
 
-            <div className="flex gap-2">
+            <option value="Evening Shift">
+              Evening Shift
+            </option>
 
-              <select
+            <option value="Night Shift">
+              Night Shift
+            </option>
+
+            <option value="Flexible">
+              Flexible
+            </option>
+          </select>
+
+          {/* Working Hours */}
+
+          {formData.timing !== 'Flexible' && (
+            <div className="grid md:grid-cols-2 gap-6">
+
+              <input
+                placeholder="Start Time"
                 className="input-main"
                 value={formData.workStart}
                 onChange={(e) =>
@@ -521,40 +621,10 @@ export default function AdminEditJob() {
                     workStart: e.target.value
                   })
                 }
-              >
-                <option value="09:00">09:00</option>
-                <option value="10:00">10:00</option>
-                <option value="11:00">11:00</option>
-                <option value="12:00">12:00</option>
-                <option value="01:00">01:00</option>
-                <option value="02:00">02:00</option>
-                <option value="03:00">03:00</option>
-                <option value="04:00">04:00</option>
-                <option value="05:00">05:00</option>
-                <option value="06:00">06:00</option>
-                <option value="07:00">07:00</option>
-                <option value="08:00">08:00</option>
-              </select>
+              />
 
-              <select
-                className="input-main"
-                value={formData.workStartPeriod}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    workStartPeriod: e.target.value
-                  })
-                }
-              >
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-
-            </div>
-
-            <div className="flex gap-2">
-
-              <select
+              <input
+                placeholder="End Time"
                 className="input-main"
                 value={formData.workEnd}
                 onChange={(e) =>
@@ -563,34 +633,169 @@ export default function AdminEditJob() {
                     workEnd: e.target.value
                   })
                 }
-              >
-                <option value="06:00">06:00</option>
-                <option value="07:00">07:00</option>
-                <option value="08:00">08:00</option>
-                <option value="09:00">09:00</option>
-                <option value="10:00">10:00</option>
-                <option value="11:00">11:00</option>
-              </select>
+              />
 
-              <select
+            </div>
+          )}
+
+          {/* Work Days */}
+
+          <select
+            className="input-main"
+            value={formData.workDays}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                workDays: e.target.value
+              })
+            }
+          >
+            <option value="5 Days">
+              5 Days
+            </option>
+
+            <option value="6 Days">
+              6 Days
+            </option>
+
+            <option value="7 Days">
+              7 Days
+            </option>
+          </select>
+
+          {/* Hiring Urgently */}
+
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={formData.hiringUrgently}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  hiringUrgently:
+                    e.target.checked
+                })
+              }
+            />
+            Hiring Urgently
+          </label>
+
+          {/* Joining Time */}
+
+          <input
+            placeholder="Joining Time"
+            className="input-main"
+            value={formData.joiningTime}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                joiningTime:
+                  e.target.value
+              })
+            }
+          />
+
+
+                    {/* Compensation */}
+
+          <div className="grid md:grid-cols-2 gap-6">
+
+            <select
+              className="input-main"
+              value={formData.compType}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  compType: e.target.value
+                })
+              }
+            >
+              <option value="salary">Salary</option>
+              <option value="stipend">Stipend</option>
+              <option value="commission">Commission</option>
+              <option value="revenue">Revenue Share</option>
+            </select>
+
+            <select
+              className="input-main"
+              value={formData.compFormat}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  compFormat: e.target.value
+                })
+              }
+            >
+              <option value="fixed">Fixed</option>
+              <option value="range">Range</option>
+              <option value="negotiable">Negotiable</option>
+              <option value="percentage">Percentage</option>
+            </select>
+
+          </div>
+
+          {formData.compFormat === 'fixed' && (
+            <input
+              placeholder="Amount"
+              className="input-main"
+              value={formData.minAmount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  minAmount: e.target.value
+                })
+              }
+            />
+          )}
+
+          {formData.compFormat === 'range' && (
+            <div className="grid md:grid-cols-2 gap-6">
+
+              <input
+                placeholder="Minimum Amount"
                 className="input-main"
-                value={formData.workEndPeriod}
+                value={formData.minAmount}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    workEndPeriod: e.target.value
+                    minAmount: e.target.value
                   })
                 }
-              >
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
+              />
+
+              <input
+                placeholder="Maximum Amount"
+                className="input-main"
+                value={formData.maxAmount}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    maxAmount: e.target.value
+                  })
+                }
+              />
 
             </div>
+          )}
 
-          </div>
+          {formData.compFormat === 'percentage' && (
+            <input
+              type="number"
+              min="1"
+              max="100"
+              placeholder="Percentage"
+              className="input-main"
+              value={formData.minAmount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  minAmount: e.target.value
+                })
+              }
+            />
+          )}
 
-          </div>
+          {/* Skills */}
 
           <textarea
             placeholder="Skills (comma separated)"
@@ -604,7 +809,10 @@ export default function AdminEditJob() {
             }
           />
 
+          {/* Benefits */}
+
           <div>
+
             <label className="block mb-3 font-semibold">
               Benefits
             </label>
@@ -614,20 +822,26 @@ export default function AdminEditJob() {
               {benefitOptions.map((benefit) => {
 
                 const selected =
-                  formData.jobBenefits.includes(benefit);
+                  formData.jobBenefits.includes(
+                    benefit
+                  );
 
                 return (
                   <button
-                    type="button"
                     key={benefit}
+                    type="button"
                     onClick={() =>
                       setFormData({
                         ...formData,
                         jobBenefits: selected
                           ? formData.jobBenefits.filter(
-                              (b) => b !== benefit
+                              (b) =>
+                                b !== benefit
                             )
-                          : [...formData.jobBenefits, benefit]
+                          : [
+                              ...formData.jobBenefits,
+                              benefit
+                            ]
                       })
                     }
                     className={`px-4 py-2 rounded-full border ${
@@ -643,7 +857,10 @@ export default function AdminEditJob() {
               })}
 
             </div>
+
           </div>
+
+          {/* About Role */}
 
           <textarea
             placeholder="About Role"
@@ -657,6 +874,8 @@ export default function AdminEditJob() {
             }
           />
 
+          {/* Responsibilities */}
+
           <textarea
             placeholder="Responsibilities"
             className="input-main min-h-[150px]"
@@ -664,44 +883,44 @@ export default function AdminEditJob() {
             onChange={(e) =>
               setFormData({
                 ...formData,
-                responsibilities: e.target.value
+                responsibilities:
+                  e.target.value
               })
             }
           />
-          <div className="grid md:grid-cols-3 gap-6">
 
-          <select
-            className="input-main"
-            value={formData.type}
+          {/* Requirements */}
+
+          <textarea
+            placeholder="Requirements (one per line)"
+            className="input-main min-h-[150px]"
+            value={formData.requirements}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                type: e.target.value
+                requirements:
+                  e.target.value
               })
             }
-          >
-            <option value="full-time">Full Time</option>
-            <option value="part-time">Part Time</option>
-            <option value="internship">Internship</option>
-            <option value="contract">Contract</option>
-            <option value="freelance">Freelance</option>
-          </select>
+          />
 
-          <select
-            className="input-main"
-            value={formData.timing}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                timing: e.target.value
-              })
-            }
-          >
-            <option value="Morning Shift">Morning Shift</option>
-            <option value="Evening Shift">Evening Shift</option>
-            <option value="Night Shift">Night Shift</option>
-            <option value="Flexible">Flexible</option>
-          </select>
+          {/* Featured */}
+
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={formData.featured}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  featured: e.target.checked
+                })
+              }
+            />
+            Featured Job
+          </label>
+
+          {/* Status */}
 
           <select
             className="input-main"
@@ -713,127 +932,28 @@ export default function AdminEditJob() {
               })
             }
           >
-            <option value="active">Active</option>
-            <option value="closed">Closed</option>
-            <option value="draft">Draft</option>
+            <option value="active">
+              Active
+            </option>
+
+            <option value="closed">
+              Closed
+            </option>
+
+            <option value="draft">
+              Draft
+            </option>
           </select>
 
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-
-          <select
-            className="input-main"
-            value={formData.compType}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                compType: e.target.value
-              })
-            }
-          >
-            <option value="salary">Salary</option>
-            <option value="stipend">Stipend</option>
-            <option value="commission">Commission</option>
-            <option value="revenue">Revenue Share</option>
-          </select>
-
-          <select
-            className="input-main"
-            value={formData.compFormat}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                compFormat: e.target.value
-              })
-            }
-          >
-            <option value="fixed">Fixed</option>
-            <option value="range">Range</option>
-            <option value="negotiable">Negotiable</option>
-            <option value="percentage">Percentage</option>
-          </select>
-
-        </div>
-
-        {formData.compFormat === 'fixed' && (
-          <input
-            placeholder="Amount"
-            className="input-main"
-            value={formData.minAmount}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                minAmount: e.target.value
-              })
-            }
-          />
-        )}
-
-        {formData.compFormat === 'range' && (
-          <div className="grid md:grid-cols-2 gap-6">
-            <input
-              placeholder="Minimum Amount"
-              className="input-main"
-              value={formData.minAmount}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  minAmount: e.target.value
-                })
-              }
-            />
-
-            <input
-              placeholder="Maximum Amount"
-              className="input-main"
-              value={formData.maxAmount}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  maxAmount: e.target.value
-                })
-              }
-            />
-          </div>
-        )}
-
-        {formData.compFormat === 'percentage' && (
-          <input
-            type="number"
-            min="1"
-            max="100"
-            placeholder="Percentage (1-100)"
-            className="input-main"
-            value={formData.minAmount}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                minAmount: e.target.value
-              })
-            }
-          />
-        )}
-
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={formData.featured}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                featured: e.target.checked
-              })
-            }
-          />
-          Featured Job
-        </label>
+          {/* Buttons */}
 
           <div className="flex justify-end gap-4">
 
             <button
               type="button"
-              onClick={() => navigate('/careers')}
+              onClick={() =>
+                navigate('/careers')
+              }
               className="btn-secondary"
             >
               Cancel
@@ -844,12 +964,15 @@ export default function AdminEditJob() {
               disabled={loading}
               className="btn-primary"
             >
-              {loading ? 'Saving...' : 'Update Job'}
+              {loading
+                ? 'Saving...'
+                : 'Update Job'}
             </button>
 
           </div>
 
         </form>
+
       </div>
     </div>
   );
