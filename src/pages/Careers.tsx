@@ -412,9 +412,12 @@ export default function Careers() {
 
                           <span className="flex items-center gap-1">
                             <Clock size={14} />
-                            {opp.experience && opp.experience.trim()
-                              ? `${opp.experience} Year${opp.experience === "1" ? "" : "s"}`
-                              : "Fresher"}
+
+                            {opp.freshersAllowed
+                              ? 'Fresher'
+                              : `${opp.experience} Year${
+                                  opp.experience === '1' ? '' : 's'
+                                }`}
                           </span>
 
                           <span className="flex items-center gap-1">
