@@ -82,6 +82,7 @@ const generateCardsHTML = (
 export const sendApplicationEmail = async (data: {
   to_name: string;
   to_email: string;
+  company_email?: string;
   role_title: string;
   application_type: string;
   user_name: string;
@@ -129,6 +130,7 @@ export const sendApplicationEmail = async (data: {
     const payload = {
 
       to_email: 'admin.cfound@gmail.com',
+      company_email: data.company_email || '',
 
       candidate_email: data.to_email || 'N/A',
 

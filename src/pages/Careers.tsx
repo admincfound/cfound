@@ -192,6 +192,7 @@ export default function Careers() {
           to_email: user.email || '',
           role_title: opp.title,
           application_type: 'Job',
+          company_email: opp.contactEmail || '',
           user_name: profile.displayName,
           phone: profile.phone || 'N/A',
           skills: profile.skills ? profile.skills.join(', ') : 'N/A',
