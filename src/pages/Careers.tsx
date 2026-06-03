@@ -53,9 +53,13 @@ export default function Careers() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const q = isAdmin 
+      const q = isAdmin
         ? query(collection(db, 'opportunities'), where('type', '==', 'job'))
-        : query(collection(db, 'opportunities'), where('type', '==', 'job'), where('status', 'in', ['active', 'featured']));
+        : query(
+            collection(db, 'opportunities'),
+            where('type', '==', 'job'),
+            where('status', '==', 'active')
+          );
       const snap = await getDocs(q);
       const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setJobs(data);
@@ -192,6 +196,7 @@ export default function Careers() {
           phone: profile.phone || 'N/A',
           skills: profile.skills ? profile.skills.join(', ') : 'N/A',
           resume_url: profile.resumeUrl || 'N/A',
+          company_email: opp.companyEmail || opp.contactEmail || '',
           portfolio_url: profile.portfolioUrl || profile.githubUrl || profile.linkedinUrl || 'N/A',
           user_id: user.uid,
           profile: profile,
@@ -345,6 +350,7 @@ export default function Careers() {
                 {filtered.map((opp) => (
                   <motion.div 
                     layout
+                    relative
                     key={opp.id}
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -352,24 +358,8 @@ export default function Careers() {
                     className={`group p-4 md:p-5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[1.75rem] hover:border-primary-600/30 hover:-translate-y-1 transition-all flex flex-col justify-between card-hover shadow-xl ${opp.status === 'hidden' ? 'opacity-60 grayscale' : ''}`}
                   >
 
-                        <div className="flex items-center justify-between gap-4 mb-0">
-                        <div className="flex items-center gap-3">
-                          {opp.featured && (
-                            <div className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-[10px] font-black uppercase tracking-widest">
-                              Featured
-                            </div>
-                          )}
-
-                          {(opp.applications || 0) >= 1 && (
-                            <div className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-[10px] font-black uppercase tracking-widest">
-                              High Demand
-                            </div>
-                          )}
-                        </div>
-                        </div>
-                        
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mt-3 mb-2">
-                          <h3 className="text-3xl md:text-3xl font-black font-display tracking-tight text-primary-700 uppercase leading-none">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mt-0 mb-2">
+                          <h3 className="text-lg md:text-2xl leading-tight font-black font-display mb-1 tracking-tight text-primary-600 group-hover:text-primary-600 transition-colors uppercase italic">
                             {opp.title}
                           </h3>
 
@@ -388,7 +378,7 @@ export default function Careers() {
                             </div>
 )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm font-semibold text-[var(--text-muted)] mb-2">
+                        <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm font-semibold text-[var(--text-muted)] mb-1">
                           <Building2 size={14} />
 
                           <span className="font-semibold text-[var(--text-main)]">
@@ -404,7 +394,7 @@ export default function Careers() {
                               : opp.location || 'Nagercoil'}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1 mb-2 text-xs font-semibold text-[var(--text-muted)]">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1 mb-1 text-xs font-semibold text-[var(--text-muted)]">
 
                           <span className="flex items-center gap-1">
                             <Briefcase size={14} />
@@ -421,7 +411,9 @@ export default function Careers() {
 
                           <span className="flex items-center gap-1">
                             <Clock size={14} />
-                            {opp.experience || 'Fresher'}
+                            {opp.experience && opp.experience.trim()
+                              ? `${opp.experience} Year${opp.experience === "1" ? "" : "s"}`
+                              : "Fresher"}
                           </span>
 
                           <span className="flex items-center gap-1">
