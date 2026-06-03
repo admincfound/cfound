@@ -719,8 +719,7 @@ export default function AdminEditJob() {
               </select>
             </div>
 
-            {formData.type ===
-              'contract' && (
+            <div>
               <div>
                 <Label>
                   Contract Duration
@@ -760,7 +759,7 @@ export default function AdminEditJob() {
                   </option>
                 </select>
               </div>
-            )}
+            </div>
 
             <div>
               <Label>Shift</Label>
