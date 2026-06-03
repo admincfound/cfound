@@ -1250,22 +1250,13 @@ export default function AdminEditJob() {
                   <input
                     type="checkbox"
                     checked={formData.featured}
-                    onChange={() => {
-                      setLoading(prev => !prev);
-                    }}onChange={(e) => {
-                      console.log(window.scrollY);
+                    onChange={(e) => {
+                      e.preventDefault();
 
-                      setFormData(prev => ({
-                        ...prev,
+                      setFormData({
+                        ...formData,
                         featured: e.target.checked
-                      }));
-
-                      setTimeout(() => {
-                        console.log(
-                          "after",
-                          window.scrollY
-                        );
-                      }, 100);
+                      });
                     }}
                   />
 
