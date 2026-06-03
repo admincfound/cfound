@@ -68,7 +68,9 @@ export default function AdminEditJob() {
         educationRequirement: data.educationRequirement || '',
         industry: data.industry || '',
         workHours: data.workHours || '',
-        jobBenefits: data.jobBenefits || '',
+        jobBenefits: Array.isArray(data.jobBenefits)
+          ? data.jobBenefits
+          : [],
         salaryCurrency: data.salaryCurrency || 'INR'
       });
     };
@@ -77,6 +79,22 @@ export default function AdminEditJob() {
   }, [id]);
 
   const [loading, setLoading] = useState(false);
+
+  const benefitOptions = [
+    'Work From Home',
+    'Flexible Schedule',
+    'Performance Bonus',
+    'Commission Pay',
+    'Paid Internship',
+    'Certificate',
+    'PPO Opportunity',
+    'Mentorship',
+    'Training Program',
+    'Laptop Provided',
+    'Internet Allowance',
+    'Health Insurance',
+    'Paid Leave'
+  ];
 
   const [formData, setFormData] = useState({
     title: '',
@@ -120,7 +138,7 @@ export default function AdminEditJob() {
     educationRequirement: '',
     industry: '',
     workHours: '',
-    jobBenefits: '',
+    jobBenefits: [],
     salaryCurrency: 'INR'
   });
 
@@ -508,17 +526,46 @@ export default function AdminEditJob() {
             }
           />
 
-          <textarea
-            placeholder="Job Benefits"
-            className="input-main min-h-[100px]"
-            value={formData.jobBenefits}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                jobBenefits: e.target.value
-              })
-            }
-          />
+          <div>
+            <label className="block mb-3 font-semibold">
+              Benefits
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+
+              {benefitOptions.map((benefit) => {
+
+                const selected =
+                  formData.jobBenefits.includes(benefit);
+
+                return (
+                  <button
+                    type="button"
+                    key={benefit}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        jobBenefits: selected
+                          ? formData.jobBenefits.filter(
+                              (b) => b !== benefit
+                            )
+                          : [...formData.jobBenefits, benefit]
+                      })
+                    }
+                    className={`px-4 py-2 rounded-full border ${
+                      selected
+                        ? 'bg-primary-600 text-white border-primary-600'
+                        : ''
+                    }`}
+                  >
+                    {selected ? '✓ ' : '+ '}
+                    {benefit}
+                  </button>
+                );
+              })}
+
+            </div>
+          </div>
 
           <textarea
             placeholder="About Role"
