@@ -63,7 +63,13 @@ export default function AdminEditJob() {
 
         isCFoundPosition: data.isCFoundPosition ?? true,
         contactEmail: data.contactEmail || 'careers@cfound.in',
-        contactPhone: data.contactPhone || '+91 9361194545'
+        contactPhone: data.contactPhone || '+91 9361194545',
+
+        educationRequirement: data.educationRequirement || '',
+        industry: data.industry || '',
+        workHours: data.workHours || '',
+        jobBenefits: data.jobBenefits || '',
+        salaryCurrency: data.salaryCurrency || 'INR'
       });
     };
 
@@ -109,7 +115,13 @@ export default function AdminEditJob() {
 
     isCFoundPosition: true,
     contactEmail: 'careers@cfound.in',
-    contactPhone: '+91 9361194545'
+    contactPhone: '+91 9361194545',
+
+    educationRequirement: '',
+    industry: '',
+    workHours: '',
+    jobBenefits: '',
+    salaryCurrency: 'INR'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,6 +203,12 @@ export default function AdminEditJob() {
         deadline: formData.deadline,
 
         status: formData.status,
+
+        educationRequirement: formData.educationRequirement,
+        industry: formData.industry,
+        workHours: formData.workHours,
+        jobBenefits: formData.jobBenefits,
+        salaryCurrency: formData.salaryCurrency,
       });
 
       toast.success('Job Updated');
@@ -621,6 +639,54 @@ export default function AdminEditJob() {
               setFormData({
                 ...formData,
                 requirements: e.target.value
+              })
+            }
+          />
+
+          <textarea
+            placeholder="Education Requirement"
+            className="input-main min-h-[100px]"
+            value={formData.educationRequirement}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                educationRequirement: e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Industry"
+            className="input-main"
+            value={formData.industry}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                industry: e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Work Hours"
+            className="input-main"
+            value={formData.workHours}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                workHours: e.target.value
+              })
+            }
+          />
+
+          <textarea
+            placeholder="Job Benefits"
+            className="input-main min-h-[100px]"
+            value={formData.jobBenefits}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                jobBenefits: e.target.value
               })
             }
           />

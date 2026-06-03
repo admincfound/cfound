@@ -47,6 +47,12 @@ export default function AdminJobForm() {
     isCFoundPosition: true,
     contactEmail: 'careers@cfound.in',
     contactPhone: '+91 9361194545',
+
+    educationRequirement: '',
+    industry: '',
+    workHours: '',
+    jobBenefits: '',
+    salaryCurrency: 'INR',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,6 +136,12 @@ export default function AdminJobForm() {
         views: 0,
 
         status: formData.status,
+
+        educationRequirement: formData.educationRequirement,
+        industry: formData.industry,
+        workHours: formData.workHours,
+        jobBenefits: formData.jobBenefits,
+        salaryCurrency: formData.salaryCurrency,
 
         createdAt: serverTimestamp()
       });
@@ -564,7 +576,54 @@ export default function AdminJobForm() {
               })
             }
           />
+          <textarea
+            placeholder="Education Requirement"
+            className="input-main min-h-[100px]"
+            value={formData.educationRequirement}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                educationRequirement: e.target.value
+              })
+            }
+          />
 
+          <input
+            placeholder="Industry"
+            className="input-main"
+            value={formData.industry}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                industry: e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Work Hours"
+            className="input-main"
+            value={formData.workHours}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                workHours: e.target.value
+              })
+            }
+          />
+
+          <textarea
+            placeholder="Job Benefits"
+            className="input-main min-h-[100px]"
+            value={formData.jobBenefits}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                jobBenefits: e.target.value
+              })
+            }
+          />
+            
           <div className="flex justify-end gap-4">
 
             <button

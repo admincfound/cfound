@@ -489,6 +489,23 @@ export default function CareerDetails() {
                   <div><strong>Shift:</strong> {job.timing || 'Morning Shift'}</div>
                   <div><strong>Experience:</strong> {job.experience ? `${job.experience} Years` : 'Fresher'}</div>
                   <div><strong>Openings:</strong> {job.openings || 1}</div>
+                  {job.educationRequirement && (
+                    <div>
+                      <strong>Education:</strong> {job.educationRequirement}
+                    </div>
+                  )}
+
+                  {job.industry && (
+                    <div>
+                      <strong>Industry:</strong> {job.industry}
+                    </div>
+                  )}
+
+                  {job.workHours && (
+                    <div>
+                      <strong>Work Hours:</strong> {job.workHours}
+                    </div>
+                  )}
 
                   {job.deadline && (
                     <div>
