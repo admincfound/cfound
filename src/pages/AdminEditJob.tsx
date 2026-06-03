@@ -86,26 +86,26 @@ export default function AdminEditJob() {
   });
 
     const SectionCard = ({
-    title,
-    children
-  }: any) => (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-6 space-y-5">
-      <h2 className="text-xl font-bold">
-        {title}
-      </h2>
+      title,
+      children
+    }: any) => (
+      <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl p-6 space-y-5">
+        <h2 className="text-xl font-bold">
+          {title}
+        </h2>
 
-      {children}
-    </div>
-  );
+        {children}
+      </div>
+    );
 
 
     const Label = ({
-    children
-  }: any) => (
-    <label className="block text-sm font-semibold mb-2">
-      {children}
-    </label>
-  );
+      children
+    }: any) => (
+      <div className="block text-sm font-semibold mb-2">
+        {children}
+      </div>
+    );
 
     useEffect(() => {
     const loadJob = async () => {
@@ -719,7 +719,8 @@ export default function AdminEditJob() {
               </select>
             </div>
 
-            <div>
+            {formData.type ===
+              'contract' && (
               <div>
                 <Label>
                   Contract Duration
@@ -759,7 +760,7 @@ export default function AdminEditJob() {
                   </option>
                 </select>
               </div>
-            </div>
+            )}
 
             <div>
               <Label>Shift</Label>
