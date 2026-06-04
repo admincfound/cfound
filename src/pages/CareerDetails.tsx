@@ -392,9 +392,8 @@ return (
       property="og:image"
       content="https://www.cfound.in/og-image.png"
     />
-  </Helmet>
 
-  <link
+      <link
     rel="canonical"
     href={`https://www.cfound.in${window.location.pathname}`}
   />
@@ -461,6 +460,7 @@ return (
       })
     }}
   />
+  </Helmet>
 
   <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
 
