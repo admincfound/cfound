@@ -345,14 +345,6 @@ export default function CareerDetails() {
   if (!job) {
   return (
     <>
-      <Helmet>
-        <title>Careers | C Found</title>
-        <meta
-          name="description"
-          content="Explore career opportunities at C Found Technologies."
-        />
-      </Helmet>
-
       <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
         <div className="max-w-7xl mx-auto animate-pulse">
 
