@@ -107,6 +107,8 @@ export default function AdminCreateJob() {
 
     hiringUrgently: false,
 
+    freshersAllowed: false,
+
     joiningTime: '',
 
     compType: 'Monthly Salary',
@@ -143,8 +145,12 @@ export default function AdminCreateJob() {
     if (!formData.department)
       return 'Department is required';
 
-    if (!formData.experience)
+    if (
+      !formData.freshersAllowed &&
+      !formData.experience
+    ) {
       return 'Experience is required';
+    }
 
     if (!formData.openings)
       return 'Openings is required';
@@ -302,6 +308,9 @@ export default function AdminCreateJob() {
 
           hiringUrgently:
             formData.hiringUrgently,
+
+          freshersAllowed:
+            formData.freshersAllowed,
 
           joiningTime:
             formData.joiningTime,
@@ -677,27 +686,51 @@ export default function AdminCreateJob() {
 
         <SectionCard title="Hiring Details">
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-4 gap-6">
 
             <div>
-              <Label required>
-                Experience
+              <Label>
+                Freshers Allowed
               </Label>
 
-              <input
-                className="input-main"
-                value={
-                  formData.experience
-                }
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    experience:
-                      e.target.value
-                  })
-                }
-              />
+              <label className="flex items-center gap-3 mt-4">
+                <input
+                  type="checkbox"
+                  checked={formData.freshersAllowed}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      freshersAllowed: e.target.checked,
+                      experience: e.target.checked
+                        ? 'Fresher'
+                        : ''
+                    })
+                  }
+                />
+
+                Yes
+              </label>
             </div>
+
+            {!formData.freshersAllowed && (
+              <div>
+                <Label required>
+                  Experience
+                </Label>
+
+                <input
+                  className="input-main"
+                  value={formData.experience}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      experience:
+                        e.target.value
+                    })
+                  }
+                />
+              </div>
+            )}
 
             <div>
               <Label required>
