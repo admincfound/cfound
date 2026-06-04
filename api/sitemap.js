@@ -20,19 +20,11 @@ export default async function handler(req, res) {
   try {
     const baseUrl = "https://www.cfound.in";
 
-    try {
-      const collections = await db.listCollections();
+    const careersSnapshot = await db.collection("careers").limit(1).get();
 
-      return res.status(200).json({
-        database: "connected",
-        collections: collections.map(c => c.id),
-      });
-    } catch (err) {
-      console.error("LIST COLLECTIONS ERROR:", err);
-      return res.status(500).json({
-        error: err.message,
-      });
-    }
+    return res.status(200).json({
+      careersCount: careersSnapshot.size,
+    });
 
     let urls = [];
 
