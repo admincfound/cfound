@@ -396,10 +396,8 @@ return (
 
     <meta
       name="description"
-      content={
-        job.description?.slice(0, 160) ||
-        'Explore career opportunities at C Found Technologies'
-      }
+      content={job.description?.slice(0, 160)}
+      data-rh="true"
     />
 
     <meta
