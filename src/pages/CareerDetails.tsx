@@ -267,29 +267,34 @@ export default function CareerDetails() {
       await sendApplicationEmail({
         to_name:
           profileData?.displayName || '',
+
         to_email:
           user.email || '',
+
         role_title:
           job.title,
+
         application_type:
           'Job',
+
         company_email:
-          job.contactEmail || '',
+          job.companyEmail ||
+          job.contactEmail ||
+          '',
+
         user_name:
           profileData?.displayName || '',
+
         phone:
           profileData?.phone || 'N/A',
+
         skills:
-          profileData?.skills?.join(', ') || 'N/A',
-        resume_url:
-          profileData?.resumeUrl || 'N/A',
-        portfolio_url:
-          profileData?.portfolioUrl ||
-          profileData?.githubUrl ||
-          profileData?.linkedinUrl ||
+          profileData?.skills?.join(', ') ||
           'N/A',
+
         user_id:
           user.uid,
+
         profile:
           profileData
       });
