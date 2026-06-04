@@ -232,10 +232,16 @@ export default function AdminCreateJob() {
     setLoading(true);
 
     try {
+      const slug = formData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-');
 
       await addDoc(
-        collection(db, 'opportunities'),
+        collection(db, 'careers'),
         {
+          slug,
+          
           type: 'job',
 
           title:

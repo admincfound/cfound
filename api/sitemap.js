@@ -15,25 +15,90 @@ db.settings({
 });
 
 module.exports = async (req, res) => {
-  const jobs = await db.collection("opportunities").get();
+  try {
+    const baseUrl = "https://cfound.in";
 
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+    const careersSnapshot = await db.collection("careers").get();
+    const internshipsSnapshot = await db.collection("opportunities").get();
 
-  jobs.forEach((doc) => {
-    const job = doc.data();
+    const staticPages = [
+      "",
+      "/about",
+      "/careers",
+      "/internship",
+      "/contact",
+      "/privacy-policy",
+      "/terms-and-conditions",
+    ];
 
-    if (job.slug) {
-      xml += `
-  <url>
-    <loc>https://www.cfound.in/careers/${job.slug}</loc>
-  </url>`;
-    }
-  });
+    let urls = [];
 
-  xml += `
-</urlset>`;
+    // Static Pages
+    staticPages.forEach((page) => {
+      urls.push(`
+        <url>
+          <loc>${baseUrl}${page}</loc>
+          <changefreq>daily</changefreq>
+          <priority>${page === "" ? "1.0" : "0.8"}</priority>
+        </url>
+      `);
+    });
 
-  res.setHeader("Content-Type", "application/xml");
-  res.status(200).send(xml);
+    // Career Jobs
+    careersSnapshot.forEach((doc) => {
+      const data = doc.data();
+
+      const slug =
+        data.slug ||
+        data.title
+          ?.toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-");
+
+      urls.push(`
+        <url>
+          <loc>${baseUrl}/careers/${slug}-${doc.id}</loc>
+          <lastmod>${new Date().toISOString()}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.9</priority>
+        </url>
+      `);
+    });
+
+    // Internship Jobs
+    internshipsSnapshot.forEach((doc) => {
+      const data = doc.data();
+
+      const slug =
+        data.slug ||
+        data.title
+          ?.toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-");
+
+      urls.push(`
+        <url>
+          <loc>${baseUrl}/internship/${slug}-${doc.id}</loc>
+          <lastmod>${new Date().toISOString()}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.9</priority>
+        </url>
+      `);
+    });
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+      <urlset
+        xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        ${urls.join("")}
+      </urlset>`;
+
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
+
+    return res.status(200).send(sitemap);
+  } catch (error) {
+    console.error("Sitemap generation error:", error);
+
+    return res.status(500).send("Error generating sitemap");
+  }
 };

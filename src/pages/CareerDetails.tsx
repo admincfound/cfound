@@ -93,7 +93,7 @@ export default function CareerDetails() {
       });
 
       await updateDoc(
-        doc(db, 'opportunities', job.id),
+        doc(db, 'careers', job.id),
         {
           views: increment(1)
         }
@@ -133,7 +133,7 @@ export default function CareerDetails() {
 
       try {
         const snap = await getDoc(
-          doc(db, 'opportunities', id)
+          doc(db, 'careers', id)
         );
 
         if (snap.exists()) {
@@ -258,7 +258,7 @@ export default function CareerDetails() {
       );
 
       await updateDoc(
-        doc(db, 'opportunities', job.id),
+        doc(db, 'careers', job.id),
         {
           applications: increment(1)
         }
@@ -440,26 +440,49 @@ return (
         ).toISOString(),
         validThrough:
           job.deadline || "",
+
         employmentType:
-          job.jobType || "FULL_TIME",
-        hiringOrganization: {
-          "@type": "Organization",
-          name:
-            job.companyName ||
-            "C Found",
-          sameAs:
-            "https://www.cfound.in"
-        },
-        jobLocation: {
-          "@type": "Place",
-          address: {
-            "@type":
-              "PostalAddress",
-            addressLocality:
-              job.location || "",
-            addressCountry: "IN"
-          }
-        },
+          job.jobType === "full-time"
+            ? "FULL_TIME"
+            : job.jobType === "part-time"
+            ? "PART_TIME"
+            : job.jobType === "contract"
+            ? "CONTRACTOR"
+            : job.jobType === "freelance"
+            ? "CONTRACTOR"
+            : job.jobType === "internship"
+            ? "INTERN"
+            : "FULL_TIME",  
+
+          hiringOrganization: {
+            "@type": "Organization",
+            name:
+              job.companyName ||
+              "C Found",
+            sameAs:
+              "https://www.cfound.in"
+          },
+
+          ...(job.mode === "Remote"
+            ? {
+                jobLocationType: "TELECOMMUTE",
+                applicantLocationRequirements: {
+                  "@type": "Country",
+                  name: "India"
+                }
+              }
+            : {
+                jobLocation: {
+                  "@type": "Place",
+                  address: {
+                    "@type": "PostalAddress",
+                    addressLocality:
+                      job.location || "",
+                    addressCountry: "IN"
+                  }
+                }
+              }),
+
         baseSalary: {
           "@type":
             "MonetaryAmount",

@@ -54,9 +54,9 @@ export default function Careers() {
     setLoading(true);
     try {
       const q = isAdmin
-        ? query(collection(db, 'opportunities'), where('type', '==', 'job'))
+        ? query(collection(db, 'careers'), where('type', '==', 'job'))
         : query(
-            collection(db, 'opportunities'),
+            collection(db, 'careers'),
             where('type', '==', 'job'),
             where('status', '==', 'active')
           );
@@ -171,7 +171,7 @@ export default function Careers() {
 
       try {
         await updateDoc(
-          doc(db, 'opportunities', opp.id),
+          doc(db, 'careers', opp.id),
           {
             applications: increment(1)
           }
@@ -223,7 +223,7 @@ export default function Careers() {
     }
 
     try {
-      await deleteDoc(doc(db, 'opportunities', id));
+      await deleteDoc(doc(db, 'careers', id));
       setDeletingId(null);
       fetchJobs();
       toast.success("Role purged from database.");

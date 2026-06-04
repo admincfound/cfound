@@ -138,7 +138,7 @@ export default function AdminEditJob() {
 
       try {
         const snap = await getDoc(
-          doc(db, 'opportunities', id)
+          doc(db, 'careers', id)
         );
 
         if (!snap.exists()) return;
@@ -381,13 +381,20 @@ export default function AdminEditJob() {
 
     try {
 
+      const slug = formData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-');    
+
       await updateDoc(
         doc(
           db,
-          'opportunities',
+          'careers',
           id
         ),
         {
+          slug,
+          
           type: 'job',
 
           title:
