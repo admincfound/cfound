@@ -344,19 +344,46 @@ export default function CareerDetails() {
 
   if (!job) {
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-14 h-14 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+    <>
+      <Helmet>
+        <title>Careers | C Found</title>
+        <meta
+          name="description"
+          content="Explore career opportunities at C Found Technologies."
+        />
+      </Helmet>
 
-        <h2 className="font-bold text-lg">
-          Loading Opportunity
-        </h2>
+      <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
+        <div className="max-w-7xl mx-auto animate-pulse">
 
-        <p className="text-sm text-[var(--text-muted)] mt-2">
-          Fetching latest details...
-        </p>
+          <div className="rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)] p-8 mb-8">
+            <div className="h-5 w-32 bg-[var(--border-main)] rounded mb-6"></div>
+
+            <div className="h-14 w-2/3 bg-[var(--border-main)] rounded mb-6"></div>
+
+            <div className="flex gap-4 mb-8">
+              <div className="h-5 w-32 bg-[var(--border-main)] rounded"></div>
+              <div className="h-5 w-32 bg-[var(--border-main)] rounded"></div>
+            </div>
+
+            <div className="h-12 w-64 bg-[var(--border-main)] rounded"></div>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+
+            <div className="lg:col-span-2">
+              <div className="h-80 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-main)]"></div>
+            </div>
+
+            <div>
+              <div className="h-80 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-main)]"></div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
