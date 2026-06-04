@@ -391,7 +391,7 @@ return (
 <>
   <Helmet>
     <title>
-      TEST TITLE SEO FIX
+      {job?.title ? `${job.title} | C Found Careers` : 'Careers | C Found'}
     </title>
 
     <meta
@@ -443,9 +443,11 @@ return (
           name: "C Found",
           value: job.id
         },
-        datePosted:
-          job.createdAt ||
-          new Date().toISOString(),
+        datePosted: new Date(
+          job.createdAt?.seconds
+            ? job.createdAt.seconds * 1000
+            : job.createdAt || Date.now()
+        ).toISOString(),
         validThrough:
           job.deadline || "",
         employmentType:
