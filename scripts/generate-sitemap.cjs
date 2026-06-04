@@ -2,8 +2,12 @@ const fs = require("fs");
 
 const urls = [
   "https://www.cfound.in/",
-  "https://www.cfound.in/internships",
-  "https://www.cfound.in/jobs",
+  "https://www.cfound.in/about",
+  "https://www.cfound.in/services",
+  "https://www.cfound.in/projects",
+  "https://www.cfound.in/internship",
+  "https://www.cfound.in/careers",
+  "https://www.cfound.in/courses",
   "https://www.cfound.in/contact",
 ];
 
