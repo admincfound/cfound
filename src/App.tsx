@@ -57,25 +57,35 @@ function AppContent() {
   }, [location.pathname]);
 
   useEffect(() => {
-    const titles: { [key: string]: string } = {
-      '/': 'C FOUND | Premier Indian Game & Software Studio',
-      '/about': 'About | C FOUND Technology',
-      '/services': 'Services | C FOUND Solutions',
-      '/projects': 'Portfolio | C FOUND Digital Works',
-      '/internship': 'Training Labs | Graduate Engineering @ C FOUND',
-      '/careers': 'Fleet Careers | Join C FOUND India',
-      '/blog': 'Research Journal | C FOUND Insights',
-      '/courses': 'Academy | Skill Procurement Sector',
-      '/contact': 'Protocol Contact | C FOUND Studio',
-      '/login': 'Secure Access | C FOUND Console',
-      '/admin': 'Command Center | C FOUND Admin',
-      '/dashboard': 'User Terminal | C FOUND Dashboard',
-      '/profile': 'Engineer Profile | C FOUND System',
-    };
-    
-    const pageTitle = titles[location.pathname] || 'C FOUND | Digital Worlds';
-    document.title = pageTitle;
-  }, [location]);
+    useEffect(() => {
+      if (
+        location.pathname.startsWith('/careers/') ||
+        location.pathname.startsWith('/internship/')
+      ) {
+        return;
+      }
+
+      const titles: { [key: string]: string } = {
+        '/': 'C FOUND | Premier Indian Game & Software Studio',
+        '/about': 'About | C FOUND Technology',
+        '/services': 'Services | C FOUND Solutions',
+        '/projects': 'Portfolio | C FOUND Digital Works',
+        '/internship': 'Training Labs | Graduate Engineering @ C FOUND',
+        '/careers': 'Fleet Careers | Join C FOUND India',
+        '/blog': 'Research Journal | C FOUND Insights',
+        '/courses': 'Academy | Skill Procurement Sector',
+        '/contact': 'Protocol Contact | C FOUND Studio',
+        '/login': 'Secure Access | C FOUND Console',
+        '/admin': 'Command Center | C FOUND Admin',
+        '/dashboard': 'User Terminal | C FOUND Dashboard',
+        '/profile': 'Engineer Profile | C FOUND System',
+      };
+
+      const pageTitle =
+        titles[location.pathname] || 'C FOUND | Digital Worlds';
+
+      document.title = pageTitle;
+    }, [location]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
