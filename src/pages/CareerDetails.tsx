@@ -394,6 +394,74 @@ return (
     />
   </Helmet>
 
+  <link
+    rel="canonical"
+    href={`https://www.cfound.in${window.location.pathname}`}
+  />
+
+  <meta
+    name="robots"
+    content="index,follow"
+  />
+
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "JobPosting",
+        title: job.title,
+        description: job.description || "",
+        identifier: {
+          "@type": "PropertyValue",
+          name: "C Found",
+          value: job.id
+        },
+        datePosted:
+          job.createdAt ||
+          new Date().toISOString(),
+        validThrough:
+          job.deadline || "",
+        employmentType:
+          job.jobType || "FULL_TIME",
+        hiringOrganization: {
+          "@type": "Organization",
+          name:
+            job.companyName ||
+            "C Found",
+          sameAs:
+            "https://www.cfound.in"
+        },
+        jobLocation: {
+          "@type": "Place",
+          address: {
+            "@type":
+              "PostalAddress",
+            addressLocality:
+              job.location || "",
+            addressCountry: "IN"
+          }
+        },
+        baseSalary: {
+          "@type":
+            "MonetaryAmount",
+          currency: "INR",
+          value: {
+            "@type":
+              "QuantitativeValue",
+            minValue: Number(
+              job.minAmount || 0
+            ),
+            maxValue: Number(
+              job.maxAmount || 0
+            ),
+            unitText: "MONTH"
+          }
+        }
+      })
+    }}
+  />
+
   <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
 
     <div className="max-w-7xl mx-auto">
