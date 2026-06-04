@@ -20,11 +20,8 @@ export default async function handler(req, res) {
   try {
     const baseUrl = "https://www.cfound.in";
 
-    const careersSnapshot = await db.collection("careers").limit(1).get();
-
-    return res.status(200).json({
-      careersCount: careersSnapshot.size,
-    });
+    const careersSnapshot = await db.collection("careers").get();
+    const internshipsSnapshot = await db.collection("opportunities").get();
 
     let urls = [];
 
