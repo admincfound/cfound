@@ -18,8 +18,13 @@ db.settings({
 
 export default async function handler(req, res) {
   try {
+    console.log("URL:", req.url);
+
     const slug = req.url.split("/").pop();
+    console.log("SLUG:", slug);
+
     const id = slug.split("-").pop();
+    console.log("ID:", id);
 
     const snap = await db.collection("careers").doc(id).get();
 
