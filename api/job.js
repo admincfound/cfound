@@ -91,6 +91,7 @@ ${JSON.stringify(schema)}
 </html>
 `);
   } catch (err) {
-    return res.status(500).send(err.message);
+    console.error("FULL ERROR:", err);
+    return res.status(500).send(String(err.stack || err));
   }
 }
