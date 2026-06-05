@@ -192,7 +192,6 @@ export default function Careers() {
           to_email: user.email || '',
           role_title: opp.title,
           application_type: 'Job',
-          company_email: opp.contactEmail || '',
           user_name: profile.displayName,
           phone: profile.phone || 'N/A',
           skills: profile.skills ? profile.skills.join(', ') : 'N/A',
@@ -241,6 +240,11 @@ export default function Careers() {
     <>
     <Helmet>
       <title>Fleet Careers | Join C FOUND India</title>
+
+      <link
+        rel="canonical"
+        href="https://www.cfound.in/careers"
+      />
 
       <meta
         name="description"

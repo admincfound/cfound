@@ -410,10 +410,10 @@ return (
       content="https://www.cfound.in/og-image.png"
     />
 
-      <link
-    rel="canonical"
-    href={`https://www.cfound.in${window.location.pathname}`}
-  />
+    <link
+      rel="canonical"
+      href={`https://www.cfound.in/careers/${slug}`}
+    />
 
   <meta
     name="robots"
@@ -438,8 +438,9 @@ return (
             ? job.createdAt.seconds * 1000
             : job.createdAt || Date.now()
         ).toISOString(),
-        validThrough:
-          job.deadline || "",
+        ...(job.deadline && {
+          validThrough: new Date(job.deadline).toISOString()
+        }),
 
         employmentType:
           job.jobType === "full-time"

@@ -29,8 +29,6 @@ export default function InternshipDetails() {
   const { slug } = useParams();
 
   const id = slug?.replace(/^.*-/, '');
-  console.log("Slug:", slug);
-  console.log("Extracted ID:", id);
   const [internship, setInternship] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [applying, setApplying] = useState(false);

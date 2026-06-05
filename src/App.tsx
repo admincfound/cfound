@@ -52,9 +52,11 @@ import { useLocation } from 'react-router-dom';
 function AppContent() {
   const location = useLocation();
   
-    useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+        window.scrollTo(0, 0);
+      }
+    }, [location.pathname]);
 
   useEffect(() => {
     if (
@@ -83,8 +85,10 @@ function AppContent() {
     const pageTitle =
       titles[location.pathname] || 'C FOUND | Digital Worlds';
 
-    document.title = pageTitle;
-  }, [location]);
+    if (typeof document !== "undefined") {
+        document.title = pageTitle;
+      }
+    }, [location]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">

@@ -151,7 +151,9 @@ export default function AdminEditJob() {
           title: data.title || '',
 
           isCFoundPosition:
-            data.isCFoundPosition ?? true,
+            typeof data.isCFoundPosition !== 'undefined'
+            ? data.isCFoundPosition
+            : true,
 
           companyName:
             data.companyName ||
