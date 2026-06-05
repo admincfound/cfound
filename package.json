@@ -3,7 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
@@ -13,7 +12,6 @@
     "lint": "tsc --noEmit",
     "generate-sitemap": "node scripts/generate-sitemap.cjs"
   },
-
   "reactSnap": {
     "source": "dist",
     "routes": [
@@ -21,7 +19,6 @@
       "/careers"
     ]
   },
-
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@google/genai": "^1.29.0",
@@ -48,7 +45,6 @@
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
-    "react-snap": "^1.13.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
