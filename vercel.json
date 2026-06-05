@@ -1,10 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/careers/(.*)",
-      "destination": "/api/job"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
