@@ -443,6 +443,14 @@ return (
             name: job.companyName || "C Found"
           },
           jobLocationType: job.mode === "Remote" ? "TELECOMMUTE" : undefined,
+          applicantLocationRequirements:
+          job.mode === "Remote"
+            ? {
+                "@type": "Country",
+                name: "India"
+              }
+            : undefined,
+
           baseSalary: {
             "@type": "MonetaryAmount",
             currency: "INR",
