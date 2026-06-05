@@ -1,5 +1,6 @@
 import admin from "firebase-admin";
 
+
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -17,6 +18,7 @@ db.settings({
 });
 
 export default async function handler(req, res) {
+  console.log("JOB API HIT:", req.url);
   try {
     const slug = req.url.split("/").pop();
 
