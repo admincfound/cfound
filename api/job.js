@@ -86,11 +86,6 @@ ${JSON.stringify(schema)}
 
 <p>${job.description || ""}</p>
 
-<script>
-window.location.replace(
-  "/careers/${slug}"
-);
-</script>
 
 </body>
 </html>
