@@ -19,7 +19,6 @@ db.settings({
 export default async function handler(req, res) {
   try {
     const slug = req.url.split("/").pop();
-
     const id = slug.split("-").pop();
 
     const snap = await db.collection("careers").doc(id).get();
@@ -58,18 +57,20 @@ export default async function handler(req, res) {
     res.setHeader("Content-Type", "text/html");
 
     return res.send(`
-      <!DOCTYPE html>
+      <!doctype html>
       <html>
-      <head>
-        <title>${job.title}</title>
-        <script type="application/ld+json">
-          ${JSON.stringify(schema)}
-        </script>
-      </head>
-      <body>
-        <h1>${job.title}</h1>
-        <p>${job.description}</p>
-      </body>
+        <head>
+          <title>${job.title}</title>
+
+          <script type="application/ld+json">
+            ${JSON.stringify(schema)}
+          </script>
+        </head>
+
+        <body>
+          <h1>${job.title}</h1>
+          <p>${job.description}</p>
+        </body>
       </html>
     `);
 
