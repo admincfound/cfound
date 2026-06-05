@@ -46,6 +46,13 @@ export default async function handler(req, res) {
         job.mode === "Remote"
           ? "TELECOMMUTE"
           : undefined,
+      applicantLocationRequirements:
+        job.mode === "Remote"
+          ? {
+              "@type": "Country",
+              name: "India"
+            }
+          : undefined,
       baseSalary: {
         "@type": "MonetaryAmount",
         currency: "INR",
