@@ -75,9 +75,7 @@ export default async function handler(req, res) {
         </script>
       </head>
       <body>
-        <script>
-          window.location.href="/careers/${slug}";
-        </script>
+        Job schema loaded
       </body>
       </html>
     `);
