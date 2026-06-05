@@ -26,7 +26,11 @@ export default async function handler(req, res) {
     const id = slug.split("-").pop();
     console.log("ID:", id);
 
+    console.log("Database:", db.databaseId);
+
     const snap = await db.collection("careers").doc(id).get();
+
+    console.log("Exists:", snap.exists);
 
     if (!snap.exists) {
       return res.status(404).send("Job not found");
