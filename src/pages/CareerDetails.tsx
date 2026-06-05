@@ -420,89 +420,44 @@ return (
     content="index,follow"
   />
 
-  <script
-    type="application/ld+json"
-    dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "JobPosting",
-        title: job.title,
-        description: job.description || "",
-        identifier: {
-          "@type": "PropertyValue",
-          name: "C Found",
-          value: job.id
-        },
-        datePosted: new Date(
-          job.createdAt?.seconds
-            ? job.createdAt.seconds * 1000
-            : job.createdAt || Date.now()
-        ).toISOString(),
-        ...(job.deadline && {
-          validThrough: new Date(job.deadline).toISOString()
-        }),
-
-        employmentType:
-          job.jobType === "full-time"
-            ? "FULL_TIME"
-            : job.jobType === "part-time"
-            ? "PART_TIME"
-            : job.jobType === "contract"
-            ? "CONTRACTOR"
-            : job.jobType === "freelance"
-            ? "CONTRACTOR"
-            : job.jobType === "internship"
-            ? "INTERN"
-            : "FULL_TIME",  
-
+  {job && (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          title: job.title,
+          description: job.description || "",
+          datePosted: new Date(
+            job.createdAt?.seconds
+              ? job.createdAt.seconds * 1000
+              : job.createdAt || Date.now()
+          ).toISOString(),
+          validThrough: job.deadline
+            ? new Date(job.deadline).toISOString()
+            : undefined,
+          employmentType: job.jobType || "FULL_TIME",
           hiringOrganization: {
             "@type": "Organization",
-            name:
-              job.companyName ||
-              "C Found",
-            sameAs:
-              "https://www.cfound.in"
+            name: job.companyName || "C Found"
           },
-
-          ...(job.mode === "Remote"
-            ? {
-                jobLocationType: "TELECOMMUTE",
-                applicantLocationRequirements: {
-                  "@type": "Country",
-                  name: "India"
-                }
-              }
-            : {
-                jobLocation: {
-                  "@type": "Place",
-                  address: {
-                    "@type": "PostalAddress",
-                    addressLocality:
-                      job.location || "",
-                    addressCountry: "IN"
-                  }
-                }
-              }),
-
-        baseSalary: {
-          "@type":
-            "MonetaryAmount",
-          currency: "INR",
-          value: {
-            "@type":
-              "QuantitativeValue",
-            minValue: Number(
-              job.minAmount || 0
-            ),
-            maxValue: Number(
-              job.maxAmount || 0
-            ),
-            unitText: "MONTH"
+          jobLocationType: job.mode === "Remote" ? "TELECOMMUTE" : undefined,
+          baseSalary: {
+            "@type": "MonetaryAmount",
+            currency: "INR",
+            value: {
+              "@type": "QuantitativeValue",
+              minValue: Number(job.minAmount || 0),
+              maxValue: Number(job.maxAmount || 0),
+              unitText: "MONTH"
+            }
           }
-        }
-      })
-    }}
-  />
+        })
+      }}
+    />
+  )}
+
   </Helmet>
 
   <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
