@@ -51,7 +51,6 @@ export default function CareerDetails() {
   const id = slug?.split('-').slice(-1)[0];
 
   const [job, setJob] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [applying, setApplying] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
@@ -131,7 +130,6 @@ export default function CareerDetails() {
   useEffect(() => {
     const fetchJob = async () => {
       if (!id) {
-        setLoading(false);
         return;
       }
 
@@ -141,6 +139,7 @@ export default function CareerDetails() {
         );
 
         if (snap.exists()) {
+          console.log("JOB FOUND", snap.id);
           setJob({
             id: snap.id,
             ...snap.data()
@@ -148,9 +147,7 @@ export default function CareerDetails() {
         }
       } catch (error) {
         console.error(error);
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
 
     fetchJob();
@@ -348,49 +345,8 @@ export default function CareerDetails() {
     return 'Negotiable';
   };
 
-  if (loading) {
-  return (
-    <>
-      <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
-        <div className="max-w-7xl mx-auto animate-pulse">
-
-          <div className="rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)] p-8 mb-8">
-            <div className="h-5 w-32 bg-[var(--border-main)] rounded mb-6"></div>
-
-            <div className="h-14 w-2/3 bg-[var(--border-main)] rounded mb-6"></div>
-
-            <div className="flex gap-4 mb-8">
-              <div className="h-5 w-32 bg-[var(--border-main)] rounded"></div>
-              <div className="h-5 w-32 bg-[var(--border-main)] rounded"></div>
-            </div>
-
-            <div className="h-12 w-64 bg-[var(--border-main)] rounded"></div>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-
-            <div className="lg:col-span-2">
-              <div className="h-80 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-main)]"></div>
-            </div>
-
-            <div>
-              <div className="h-80 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-main)]"></div>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-    </>
-  );
-}
-
 if (!job) {
-  return (
-    <div className="pt-32 text-center">
-      Job not found
-    </div>
-  );
+  return null;
 }
 
 return (
