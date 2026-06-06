@@ -1,1 +1,1 @@
-export default '/careers/@slug'
+export default '/careers/:slug'

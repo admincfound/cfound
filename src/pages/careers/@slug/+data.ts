@@ -1,5 +1,5 @@
 export async function data(pageContext: any) {
   return {
-    slug: pageContext.routeParams.slug
+    slug: pageContext.routeParams?.slug
   }
 }
