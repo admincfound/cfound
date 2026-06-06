@@ -51,6 +51,7 @@ export default function CareerDetails() {
   const id = slug?.split('-').slice(-1)[0];
 
   const [job, setJob] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [applying, setApplying] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
@@ -129,7 +130,10 @@ export default function CareerDetails() {
 
   useEffect(() => {
     const fetchJob = async () => {
-      if (!id) return;
+      if (!id) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const snap = await getDoc(
@@ -144,6 +148,8 @@ export default function CareerDetails() {
         }
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -342,7 +348,7 @@ export default function CareerDetails() {
     return 'Negotiable';
   };
 
-  if (!job) {
+  if (loading) {
   return (
     <>
       <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
@@ -376,6 +382,14 @@ export default function CareerDetails() {
         </div>
       </div>
     </>
+  );
+}
+
+if (!job) {
+  return (
+    <div className="pt-32 text-center">
+      Job not found
+    </div>
   );
 }
 
