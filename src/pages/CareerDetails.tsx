@@ -132,13 +132,16 @@ export default function CareerDetails() {
       if (!id) return;
 
       try {
-        const res = await fetch(`/api/job/${id}`);
-        const data = await res.json();
-
-        setJob(data);
         const snap = await getDoc(
           doc(db, 'careers', id)
         );
+
+        if (snap.exists()) {
+          setJob({
+            id: snap.id,
+            ...snap.data()
+          });
+        }
 
         if (snap.exists()) {
           setJob({
