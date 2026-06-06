@@ -129,17 +129,18 @@ export default function CareerDetails() {
 
   useEffect(() => {
     const fetchJob = async () => {
-      if (!id) {
-        return;
-      }
+      if (!id) return;
 
       try {
+        const res = await fetch(`/api/job/${id}`);
+        const data = await res.json();
+
+        setJob(data);
         const snap = await getDoc(
           doc(db, 'careers', id)
         );
 
         if (snap.exists()) {
-          console.log("JOB FOUND", snap.id);
           setJob({
             id: snap.id,
             ...snap.data()
@@ -147,7 +148,7 @@ export default function CareerDetails() {
         }
       } catch (error) {
         console.error(error);
-      } 
+      }
     };
 
     fetchJob();
@@ -345,8 +346,41 @@ export default function CareerDetails() {
     return 'Negotiable';
   };
 
-if (!job) {
-  return null;
+  if (!job) {
+  return (
+    <>
+      <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
+        <div className="max-w-7xl mx-auto animate-pulse">
+
+          <div className="rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)] p-8 mb-8">
+            <div className="h-5 w-32 bg-[var(--border-main)] rounded mb-6"></div>
+
+            <div className="h-14 w-2/3 bg-[var(--border-main)] rounded mb-6"></div>
+
+            <div className="flex gap-4 mb-8">
+              <div className="h-5 w-32 bg-[var(--border-main)] rounded"></div>
+              <div className="h-5 w-32 bg-[var(--border-main)] rounded"></div>
+            </div>
+
+            <div className="h-12 w-64 bg-[var(--border-main)] rounded"></div>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+
+            <div className="lg:col-span-2">
+              <div className="h-80 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-main)]"></div>
+            </div>
+
+            <div>
+              <div className="h-80 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-main)]"></div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </>
+  );
 }
 
 return (
@@ -380,62 +414,98 @@ return (
       content="https://www.cfound.in/og-image.png"
     />
 
-    <link
-      rel="canonical"
-      href={`https://www.cfound.in/careers/${slug}`}
-    />
+      <link
+    rel="canonical"
+    href={`https://www.cfound.in${window.location.pathname}`}
+  />
 
   <meta
     name="robots"
     content="index,follow"
   />
 
-  {job && (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "JobPosting",
-          title: job.title,
-          description: job.description || "",
-          datePosted: new Date(
-            job.createdAt?.seconds
-              ? job.createdAt.seconds * 1000
-              : job.createdAt || Date.now()
-          ).toISOString(),
-          validThrough: job.deadline
-            ? new Date(job.deadline).toISOString()
-            : undefined,
-          employmentType: job.jobType || "FULL_TIME",
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "JobPosting",
+        title: job.title,
+        description: job.description || "",
+        identifier: {
+          "@type": "PropertyValue",
+          name: "C Found",
+          value: job.id
+        },
+        datePosted: new Date(
+          job.createdAt?.seconds
+            ? job.createdAt.seconds * 1000
+            : job.createdAt || Date.now()
+        ).toISOString(),
+        validThrough:
+          job.deadline || "",
+
+        employmentType:
+          job.jobType === "full-time"
+            ? "FULL_TIME"
+            : job.jobType === "part-time"
+            ? "PART_TIME"
+            : job.jobType === "contract"
+            ? "CONTRACTOR"
+            : job.jobType === "freelance"
+            ? "CONTRACTOR"
+            : job.jobType === "internship"
+            ? "INTERN"
+            : "FULL_TIME",  
+
           hiringOrganization: {
             "@type": "Organization",
-            name: job.companyName || "C Found"
+            name:
+              job.companyName ||
+              "C Found",
+            sameAs:
+              "https://www.cfound.in"
           },
-          jobLocationType: job.mode === "Remote" ? "TELECOMMUTE" : undefined,
-          applicantLocationRequirements:
-          job.mode === "Remote"
+
+          ...(job.mode === "Remote"
             ? {
-                "@type": "Country",
-                name: "India"
+                jobLocationType: "TELECOMMUTE",
+                applicantLocationRequirements: {
+                  "@type": "Country",
+                  name: "India"
+                }
               }
-            : undefined,
+            : {
+                jobLocation: {
+                  "@type": "Place",
+                  address: {
+                    "@type": "PostalAddress",
+                    addressLocality:
+                      job.location || "",
+                    addressCountry: "IN"
+                  }
+                }
+              }),
 
-          baseSalary: {
-            "@type": "MonetaryAmount",
-            currency: "INR",
-            value: {
-              "@type": "QuantitativeValue",
-              minValue: Number(job.minAmount || 0),
-              maxValue: Number(job.maxAmount || 0),
-              unitText: "MONTH"
-            }
+        baseSalary: {
+          "@type":
+            "MonetaryAmount",
+          currency: "INR",
+          value: {
+            "@type":
+              "QuantitativeValue",
+            minValue: Number(
+              job.minAmount || 0
+            ),
+            maxValue: Number(
+              job.maxAmount || 0
+            ),
+            unitText: "MONTH"
           }
-        })
-      }}
-    />
-  )}
-
+        }
+      })
+    }}
+  />
   </Helmet>
 
   <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
