@@ -5,6 +5,10 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/careers/:slug",
+      "destination": "/careers/:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
