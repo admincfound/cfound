@@ -47,11 +47,15 @@ const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: 
 
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 
 function AppContent() {
-  const location = useLocation();
-  
+  const location = {
+    pathname:
+      typeof window !== 'undefined'
+        ? window.location.pathname
+        : '/'
+  };
+    
   useEffect(() => {
     if (typeof window !== "undefined") {
         window.scrollTo(0, 0);
