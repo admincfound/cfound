@@ -435,6 +435,9 @@ return (
         "@type": "JobPosting",
         title: job.title,
         description: job.description || "",
+
+        directApply: true,
+
         identifier: {
           "@type": "PropertyValue",
           name: "C Found",
@@ -445,8 +448,10 @@ return (
             ? job.createdAt.seconds * 1000
             : job.createdAt || Date.now()
         ).toISOString(),
-        validThrough:
-          job.deadline || "",
+
+        validThrough: job.deadline
+          ? `${job.deadline}T23:59:59+05:30`
+          : undefined,
 
         employmentType:
           job.jobType === "full-time"
