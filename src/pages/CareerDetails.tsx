@@ -430,22 +430,19 @@ return (
         url: `https://www.cfound.in/careers/${slug}`,
 
         title: job.title,
-        description: `
-        ${job.description || ''}
-
-        Requirements:
-        ${Array.isArray(job.requirements)
-          ? job.requirements.join('\n')
-          : ''}
-
-        Responsibilities:
-        ${job.responsibilities || ''}
-
-        Benefits:
-        ${Array.isArray(job.jobBenefits)
-          ? job.jobBenefits.join('\n')
-          : ''}
-        `
+        description: [
+          job.description || '',
+          'Requirements:',
+          Array.isArray(job.requirements)
+            ? job.requirements.join('\n')
+            : '',
+          'Responsibilities:',
+          job.responsibilities || '',
+          'Benefits:',
+          Array.isArray(job.jobBenefits)
+            ? job.jobBenefits.join('\n')
+            : ''
+        ].join('\n'),
 
         directApply: true,
 
