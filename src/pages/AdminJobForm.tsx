@@ -74,8 +74,12 @@ export default function AdminCreateJob() {
 
     mode: 'Remote',
 
+    country: 'India',
+
     state: '',
     city: '',
+
+    officeLocation: '',
 
     department: '',
 
@@ -166,6 +170,16 @@ export default function AdminCreateJob() {
 
       if (!formData.contactPhone)
         return 'Company Contact is required';
+    }
+
+    if (!formData.country)
+     return 'Country is required';
+
+    if (
+      formData.mode === 'Remote'
+    ) {
+      if (!formData.officeLocation)
+        return 'Office Location is required';
     }
 
     if (
@@ -262,17 +276,22 @@ export default function AdminCreateJob() {
           mode:
             formData.mode,
 
+          country:
+            formData.country,
+
           state:
             formData.state,
 
           city:
             formData.city,
 
+          officeLocation:
+            formData.officeLocation,
+
           location:
-            formData.mode ===
-            'Remote'
-              ? 'Remote'
-              : `${formData.city}, ${formData.state}`,
+            formData.mode === 'Remote'
+              ? formData.officeLocation
+              : `${formData.city}, ${formData.state}, ${formData.country}`,
 
           department:
             formData.department,
@@ -580,6 +599,23 @@ export default function AdminCreateJob() {
 
             <div>
               <Label required>
+                Country
+              </Label>
+
+              <input
+                className="input-main"
+                value={formData.country}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    country: e.target.value
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <Label required>
                 Department
               </Label>
 
@@ -599,6 +635,30 @@ export default function AdminCreateJob() {
             </div>
 
           </div>
+
+          {formData.mode === 'Remote' && (
+
+            <div>
+
+              <Label required>
+                Office Location
+              </Label>
+
+              <input
+                className="input-main"
+                placeholder="Chennai, Tamil Nadu"
+                value={formData.officeLocation}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    officeLocation: e.target.value
+                  })
+                }
+              />
+
+            </div>
+
+          )}
 
           {formData.mode !== 'Remote' && (
 
