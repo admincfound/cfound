@@ -472,9 +472,20 @@ return (
           ...(String(job.mode).toLowerCase() === "remote"
             ? {
                 jobLocationType: "TELECOMMUTE",
+
                 applicantLocationRequirements: {
                   "@type": "Country",
-                  name: "India"
+                  name: job.country || "India"
+                },
+
+                jobLocation: {
+                  "@type": "Place",
+                  address: {
+                    "@type": "PostalAddress",
+                    addressCountry: job.country || "India",
+                    addressRegion: job.state || "",
+                    addressLocality: job.city || ""
+                  }
                 }
               }
             : {
@@ -483,8 +494,13 @@ return (
                   address: {
                     "@type": "PostalAddress",
                     addressLocality:
-                      job.location || "",
-                    addressCountry: "IN"
+                      job.city || "",
+
+                    addressRegion:
+                      job.state || "",
+
+                    addressCountry:
+                      job.country || "India"
                   }
                 }
               }),
@@ -552,7 +568,9 @@ return (
 
             <div className="flex items-center gap-2">
               <MapPin size={16} />
-              {job.location || 'Remote'}
+              {job.mode === 'Remote'
+                ? job.officeLocation || 'Remote'
+                : `${job.city || ''}, ${job.state || ''}, ${job.country || 'India'}`}
             </div>
 
             <div className="flex items-center gap-2">
@@ -1031,6 +1049,41 @@ return (
             'C Found Technologies'}
         </p>
       </div>
+      {job.country && (
+        <div>
+          <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
+            Country
+          </p>
+
+          <p className="font-semibold">
+            {job.country}
+          </p>
+        </div>
+      )}
+
+      {job.mode !== 'Remote' && (
+        <>
+          <div>
+            <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
+              State
+            </p>
+
+            <p className="font-semibold">
+              {job.state}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
+              City
+            </p>
+
+            <p className="font-semibold">
+              {job.city}
+            </p>
+          </div>
+        </>
+      )}
 
       <div>
         <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
@@ -1042,15 +1095,31 @@ return (
         </p>
       </div>
 
-      <div>
-        <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
-          Location
-        </p>
+      {job.mode === 'Remote' ? (
 
-        <p className="font-semibold">
-          {job.location || 'Remote'}
-        </p>
-      </div>
+        <div>
+          <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
+            Office Location
+          </p>
+
+          <p className="font-semibold">
+            {job.officeLocation || 'Not Specified'}
+          </p>
+        </div>
+
+      ) : (
+
+        <div>
+          <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
+            Work Location
+          </p>
+
+          <p className="font-semibold">
+            {job.city}, {job.state}, {job.country || 'India'}
+          </p>
+        </div>
+
+      )}
 
       {job.openings && (
         <div>

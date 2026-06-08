@@ -79,8 +79,6 @@ export default function AdminCreateJob() {
     state: '',
     city: '',
 
-    officeLocation: '',
-
     department: '',
 
     industry: '',
@@ -177,13 +175,6 @@ export default function AdminCreateJob() {
 
     if (
       formData.mode === 'Remote'
-    ) {
-      if (!formData.officeLocation)
-        return 'Office Location is required';
-    }
-
-    if (
-      formData.mode !== 'Remote'
     ) {
       if (!formData.state)
         return 'State is required';
@@ -286,12 +277,10 @@ export default function AdminCreateJob() {
             formData.city,
 
           officeLocation:
-            formData.officeLocation,
+            `${formData.city}, ${formData.state}, ${formData.country}`,
 
           location:
-            formData.mode === 'Remote'
-              ? formData.officeLocation
-              : `${formData.city}, ${formData.state}, ${formData.country}`,
+            `${formData.city}, ${formData.state}, ${formData.country}`,
 
           department:
             formData.department,
@@ -638,23 +627,41 @@ export default function AdminCreateJob() {
 
           {formData.mode === 'Remote' && (
 
-            <div>
+            <div className="grid md:grid-cols-2 gap-6">
 
-              <Label required>
-                Office Location
-              </Label>
+              <div>
+                <Label required>
+                  State
+                </Label>
 
-              <input
-                className="input-main"
-                placeholder="Chennai, Tamil Nadu"
-                value={formData.officeLocation}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    officeLocation: e.target.value
-                  })
-                }
-              />
+                <input
+                  className="input-main"
+                  value={formData.state}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      state: e.target.value
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label required>
+                  City
+                </Label>
+
+                <input
+                  className="input-main"
+                  value={formData.city}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      city: e.target.value
+                    })
+                  }
+                />
+              </div>
 
             </div>
 
