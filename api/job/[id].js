@@ -1,21 +1,30 @@
-export default async function handler(req, res) {
-  const { id } = req.query;
+async function loadJobDetails() {
+  try {
+    // 1. Grab the path (e.g., /careers/ui-ux-designer-abc123)
+    const path = window.location.pathname; 
+    
+    // 2. Extract ONLY the Firestore document ID at the very end after the last hyphen
+    const jobId = path.split('-').pop(); 
 
-  console.log("REQ ID:", id);
+    // 3. Request data from your updated API route
+    const response = await fetch(`/api/job/${jobId}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to retrieve job details from database.');
+    }
+    
+    const jobData = await response.json();
 
-  const snap = await db.collection("careers").doc(id).get();
-
-  console.log("EXISTS:", snap.exists);
-
-  if (!snap.exists) {
-    return res.status(404).json({
-      error: "Job not found",
-      requestedId: id
-    });
+    // 4. Update your HTML elements with the actual data fields
+    document.getElementById('job-title').textContent = jobData.title || "Job Opportunity";
+    document.getElementById('job-location').textContent = jobData.location || "Nagercoil, TN";
+    document.getElementById('job-description').innerHTML = jobData.description || "";
+    
+  } catch (error) {
+    console.error("Frontend Render Error:", error);
+    document.getElementById('job-container').textContent = "Error loading job listing details.";
   }
-
-  res.status(200).json({
-    id: snap.id,
-    ...snap.data(),
-  });
 }
+
+// Run the function when the page DOM loads
+document.addEventListener('DOMContentLoaded', loadJobDetails);

@@ -54,9 +54,22 @@ export default function Footer() {
              <h4 className="text-[10px] font-bold uppercase text-primary-600 tracking-widest mb-8">Newsletter</h4>
              <p className="text-xs font-medium text-[var(--text-muted)] mb-6 opacity-80 leading-relaxed">Join our inner circle for the latest intelligence on emerging technologies and program releases.</p>
              <form className="relative">
-                <input type="email" placeholder="Email address" className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-sm focus:border-primary-600 focus:outline-none text-[var(--text-main)] font-semibold" />
-                <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary-600 hover:scale-110 transition-transform"><Mail size={18}/></button>
-             </form>
+              <input
+                id="newsletter-email"
+                name="newsletterEmail"
+                type="email"
+                autoComplete="email"
+                placeholder="Email address"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-sm focus:border-primary-600 focus:outline-none text-[var(--text-main)] font-semibold"
+              />
+
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary-600 hover:scale-110 transition-transform"
+              >
+                <Mail size={18} />
+              </button>
+            </form>
           </div>
         </div>
 
