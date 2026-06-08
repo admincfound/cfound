@@ -142,13 +142,6 @@ export default function CareerDetails() {
             ...snap.data()
           });
         }
-
-        if (snap.exists()) {
-          setJob({
-            id: snap.id,
-            ...snap.data()
-          });
-        }
       } catch (error) {
         console.error(error);
       }
@@ -433,6 +426,9 @@ return (
       __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "JobPosting",
+
+        url: `https://www.cfound.in/careers/${slug}`,
+
         title: job.title,
         description: job.description || "",
 
@@ -468,14 +464,12 @@ return (
 
           hiringOrganization: {
             "@type": "Organization",
-            name:
-              job.companyName ||
-              "C Found",
-            sameAs:
-              "https://www.cfound.in"
+            name: job.companyName || "C Found",
+            sameAs: "https://www.cfound.in",
+            url: "https://www.cfound.in"
           },
 
-          ...(job.mode === "Remote"
+          ...(String(job.mode).toLowerCase() === "remote"
             ? {
                 jobLocationType: "TELECOMMUTE",
                 applicantLocationRequirements: {
@@ -495,22 +489,20 @@ return (
                 }
               }),
 
-        baseSalary: {
-          "@type":
-            "MonetaryAmount",
-          currency: "INR",
-          value: {
-            "@type":
-              "QuantitativeValue",
-            minValue: Number(
-              job.minAmount || 0
-            ),
-            maxValue: Number(
-              job.maxAmount || 0
-            ),
-            unitText: "MONTH"
-          }
-        }
+        ...(job.minAmount
+          ? {
+              baseSalary: {
+                "@type": "MonetaryAmount",
+                currency: "INR",
+                value: {
+                  "@type": "QuantitativeValue",
+                  minValue: Number(job.minAmount),
+                  maxValue: Number(job.maxAmount || job.minAmount),
+                  unitText: "MONTH"
+                }
+              }
+            }
+          : {})
       })
     }}
   />
