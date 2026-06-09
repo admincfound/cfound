@@ -448,7 +448,7 @@ return (
 
         identifier: {
           "@type": "PropertyValue",
-          name: "C Found",
+          name: job.companyName || "C Found",
           value: job.id
         },
         datePosted: new Date(
@@ -478,7 +478,8 @@ return (
             "@type": "Organization",
             name: job.companyName || "C Found",
             sameAs: "https://www.cfound.in",
-            url: "https://www.cfound.in"
+            url: "https://www.cfound.in",
+            logo: "https://www.cfound.in/logo.png"
           },
 
           ...(String(job.mode).toLowerCase() === "remote"
