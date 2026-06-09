@@ -3,11 +3,11 @@ import admin from "firebase-admin";
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: process.env.FB_PROJECT_ID,
-      clientEmail: process.env.FB_CLIENT_EMAIL,
-      privateKey: process.env.FB_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      projectId: process.env.project_id,
+      clientEmail: process.env.client_email,
+      privateKey: process.env.private_key?.replace(/\\n/g, "\n"),
     }),
   });
 }
 
-export const db = admin.firestore();
+export const adminDb = admin.firestore();
