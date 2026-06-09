@@ -2,11 +2,19 @@ import { adminDb } from "../../firebase-admin";
 
 export default async function handler(req, res) {
   const slug = req.query.slug;
-  const snapshot = await adminDb
+
+  const id = slug.split("-").pop();
+
+  const docRef = await adminDb
     .collection("careers")
-    .where("slug", "==", slug)
-    .limit(1)
+    .doc(id)
     .get();
+
+  if (!docRef.exists) {
+    return res.status(404).send("Not Found");
+  }
+
+  const job = docRef.data();
 
   if (snapshot.empty) {
     return res.status(404).send("Not Found");
