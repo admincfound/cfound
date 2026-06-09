@@ -1,31 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/job-test/:slug",
-      "destination": "/api/job/:slug"
-    },
-    {
-      "source": "/careers/:slug",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(Googlebot|bingbot|LinkedInBot|Twitterbot|facebookexternalhit).*"
-        }
-      ],
-      "destination": "/api/job/:slug"
-    },
-    {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     },
     {
       "source": "/careers/:slug",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/api/job/:slug"
     }
   ]
 }
