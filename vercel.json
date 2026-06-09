@@ -8,9 +8,5 @@
       "source": "/careers/:slug",
       "destination": "/api/job/:slug"
     },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
   ]
 }
