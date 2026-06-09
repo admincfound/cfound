@@ -1,6 +1,10 @@
 import { adminDb } from "../../firebase-admin";
 
 export default async function handler(req, res) {
+  return res.send("JOB API WORKING");
+}
+
+export default async function handler(req, res) {
   const slug = req.query.slug;
   const id = slug.split("-").pop();
 
