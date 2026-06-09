@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/careers/:slug",
+      "source": "/careers/(.*)",
       "has": [
         {
           "type": "header",
@@ -9,7 +9,13 @@
           "value": "(googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|embedly|prerender)"
         }
       ],
-      "destination": "https://service.prerender.io/https://www.cfound.in/careers/:slug"
+      "headers": [
+        {
+          "key": "X-Prerender-Token",
+          "value": "HmkrZMemSTznfsK9UWL3"
+        }
+      ],
+      "destination": "https://service.prerender.io/https://www.cfound.in/careers/$1"
     },
     {
       "source": "/careers/:slug",
