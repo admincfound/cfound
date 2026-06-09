@@ -9,12 +9,6 @@
           "value": "(googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|embedly|prerender)"
         }
       ],
-      "headers": [
-        {
-          "key": "X-Prerender-Token",
-          "value": "HmkrZMemSTznfsK9UWL3"
-        }
-      ],
       "destination": "https://service.prerender.io/https://www.cfound.in/careers/$1"
     },
     {
