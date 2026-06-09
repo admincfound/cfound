@@ -51,7 +51,11 @@ ${urls.map((u) => `<url><loc>${baseUrl}${u}</loc></url>`).join("\n")}
     res.setHeader("Content-Type", "application/xml");
     res.status(200).send(xml);
   } catch (err) {
-    console.error(err);
-    res.status(500).send(String(err));
+    console.error("SITEMAP ERROR:", err);
+    res.status(500).send(JSON.stringify({
+      message: err.message,
+      code: err.code,
+      stack: err.stack
+    }));
   }
 }
