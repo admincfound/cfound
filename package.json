@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
-    "postbuild": "react-snap",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
@@ -45,7 +44,4 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
   },
-  "reactSnap": {
-    "inlineCss": true
-  }
 }
