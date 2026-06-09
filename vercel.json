@@ -1,16 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/job/:slug",
+      "source": "/careers/:slug",
       "destination": "/api/job/:slug"
     },
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
-    },
-    {
-      "source": "/careers/:slug",
-      "destination": "/api/job/:slug"
     },
     {
       "source": "/(.*)",
