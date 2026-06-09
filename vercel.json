@@ -9,7 +9,7 @@
           "value": "(googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|embedly|prerender)"
         }
       ],
-      "destination": "https://service.prerender.io/https://www.cfound.in/careers/$1"
+      "destination": "https://service.prerender.io/YOUR_PRERENDER_TOKEN_HERE/https://www.cfound.in/careers/$1"
     },
     {
       "source": "/careers/:slug",
