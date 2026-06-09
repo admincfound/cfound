@@ -6,11 +6,22 @@
     },
     {
       "source": "/careers/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|bingbot|LinkedInBot|Twitterbot|facebookexternalhit).*"
+        }
+      ],
       "destination": "/api/job/:slug"
     },
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
+    },
+    {
+      "source": "/careers/:slug",
+      "destination": "/index.html"
     },
     {
       "source": "/(.*)",
