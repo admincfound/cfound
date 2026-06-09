@@ -2,13 +2,17 @@ import { adminDb } from "../../firebase-admin";
 
 export default async function handler(req, res) {
   const slug = req.query.slug;
-  const id = slug.split("-").pop();
+  const snapshot = await adminDb
+    .collection("careers")
+    .where("slug", "==", slug)
+    .limit(1)
+    .get();
 
-  const docSnap = await adminDb.collection("careers").doc(id).get();
+  if (snapshot.empty) {
+    return res.status(404).send("Not Found");
+  }
 
-  if (!docSnap.exists) return res.status(404).send("Not Found");
-
-  const job = docSnap.data();
+  const job = snapshot.docs[0].data();
 
   const schema = {
     "@context": "https://schema.org",
@@ -19,7 +23,12 @@ export default async function handler(req, res) {
       ? job.createdAt.toDate().toISOString()
       : new Date().toISOString(),
     validThrough: `${job.deadline}T23:59:59+05:30`,
-    employmentType: job.jobType === "full-time" ? "FULL_TIME" : "PART_TIME",
+    employmentType:
+      job.jobType === "full-time"
+        ? "FULL_TIME"
+        : job.jobType === "part-time"
+        ? "PART_TIME"
+        : "CONTRACTOR",
     hiringOrganization: {
       "@type": "Organization",
       name: job.companyName,
@@ -52,7 +61,8 @@ export default async function handler(req, res) {
 <!DOCTYPE html>
 <html>
 <head>
-<title>${job.title}</title>
+<title>${job.title} | ${job.companyName}</title>
+<meta name="description" content="${job.title} job at ${job.companyName} in ${job.city}">
 <meta name="robots" content="index,follow">
 <script type="application/ld+json">
 ${JSON.stringify(schema)}
@@ -60,6 +70,9 @@ ${JSON.stringify(schema)}
 </head>
 <body>
 <h1>${job.title}</h1>
+<p>${job.companyName}</p>
+<p>${job.city}, ${job.state}</p>
+<div>${job.description}</div>
 </body>
 </html>
   `);
