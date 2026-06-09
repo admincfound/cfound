@@ -410,15 +410,15 @@ return (
       content="https://www.cfound.in/og-image.png"
     />
 
-      <link
-    rel="canonical"
-    href={`https://www.cfound.in${window.location.pathname}`}
-  />
+    <link
+      rel="canonical"
+      href={`https://www.cfound.in/careers/${slug}`}
+    />
 
-  <meta
-    name="robots"
-    content="index,follow"
-  />
+    <meta
+      name="robots"
+      content="index,follow"
+    />
 
   <script
     type="application/ld+json"
