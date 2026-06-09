@@ -1,22 +1,4 @@
 {
-  "headers": [
-    {
-      "source": "/careers/(.*)",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|embedly|prerender)"
-        }
-      ],
-      "headers": [
-        {
-          "key": "X-Prerender-Token",
-          "value": "HmkrZMemSTznfsK9UWL3"
-        }
-      ]
-    }
-  ],
   "rewrites": [
     {
       "source": "/careers/(.*)",
@@ -27,7 +9,7 @@
           "value": "(googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|embedly|prerender)"
         }
       ],
-      "destination": "https://service.prerender.io/https://www.cfound.in/careers/$1"
+      "destination": "https://service.prerender.io/https://www.cfound.in/careers/$1?_prerender_token=HmkrZMemSTznfsK9UWL3"
     },
     {
       "source": "/careers/:slug",
