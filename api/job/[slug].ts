@@ -57,7 +57,6 @@ export default async function handler(req, res) {
 <script type="application/ld+json">
 ${JSON.stringify(schema)}
 </script>
-<meta http-equiv="refresh" content="0;url=https://cfound.in/careers/${slug}" />
 </head>
 <body>
 <h1>${job.title}</h1>
