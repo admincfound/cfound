@@ -1,17 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/careers/(.*)",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|embedly|prerender)"
-        }
-      ],
-      "destination": "https://service.prerender.io/HmkrZMemSTznfsK9UWL3/https://www.cfound.in/careers/$1"
-    },
-    {
       "source": "/careers/:slug",
       "destination": "/api/job/:slug"
     },
