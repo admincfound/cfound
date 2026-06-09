@@ -15,6 +15,9 @@ import Internship from './pages/Internship';
 import InternshipDetails from './pages/InternshipDetails';
 import Careers from './pages/Careers';
 import CareerDetails from './pages/CareerDetails';
+
+import JobDetails from './pages/JobDetails';
+
 import AdminJobForm from './pages/AdminJobForm';
 import AdminEditJob from './pages/AdminEditJob';
 import Blog from './pages/Blog';
@@ -127,6 +130,8 @@ function AppContent() {
           <Route path="/admin/applications" element={<ProtectedRoute role="admin"><AdminLayout><ApplicationManagement /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute role="admin"><AdminLayout><UserLookup /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/api-settings" element={<ProtectedRoute role="admin"><AdminLayout><ApiSettings /></AdminLayout></ProtectedRoute>} />
+          
+          <Route path="/test-job" element={<JobDetails />} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
