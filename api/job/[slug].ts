@@ -18,7 +18,7 @@ const adminDb = getFirestore(
 
 export default async function handler(req, res) {
   try {
-    const slug = req.query.slug as string;
+    const slug = String(req.query.slug || "");
     const id = slug.split("-").pop();
 
     if (!id) {
