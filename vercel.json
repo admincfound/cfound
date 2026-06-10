@@ -9,6 +9,10 @@
       "destination": "/api/job/:slug"
     },
     {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
