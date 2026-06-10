@@ -1,3 +1,5 @@
+import { adminDb } from "../../src/lib/firebase-admin";
+
 export default async function handler(req, res) {
   try {
     const slug = req.query.slug as string;
