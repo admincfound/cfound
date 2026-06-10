@@ -23,7 +23,7 @@
 
 <script type="module">
   // 🔹 Firebase config — replace with your own
-  const firebaseConfig = {
+  const app = firebase.initializeApp({
     apiKey: "AIzaSyCWOiw2VUOuRkq07LXohR7iQGUrUXBQDQA",
     authDomain: "gen-lang-client-0509516374.firebaseapp.com",
     databaseURL: "https://gen-lang-client-0509516374-default-rtdb.firebaseio.com",
@@ -31,10 +31,9 @@
     storageBucket: "gen-lang-client-0509516374.firebasestorage.app",
     messagingSenderId: "165578101225",
     appId: "1:165578101225:web:4cb6ce5ab90af05cd9fb78"
-  };
-
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  });
+  
+  const db = firebase.firestore(app, 'ai-studio-24810410-2d44-4bca-af7d-11572783e2b5');
 
   // 🔹 Get the slug from the URL
   const path = location.pathname.split('/');
