@@ -110,7 +110,10 @@ function AppContent() {
           <Route path="/internship" element={<Internship />} />
           <Route path="/internship/:slug" element={<InternshipDetails />} />
           <Route path="/careers" element={<Careers />} />
-          <Route path="/careers/:slug" element={<CareerDetails />} />
+          <Route
+            path="/careers/:slug"
+            element={<div>ROUTE HIT</div>}
+          />
           <Route path="/admin/jobs/new" element={ <ProtectedRoute role="admin"><AdminJobForm /></ProtectedRoute>}/>
           <Route path="/admin/jobs/edit/:id" element={ <ProtectedRoute role="admin"><AdminEditJob /></ProtectedRoute>}/>
           <Route path="/blog" element={<Blog />} />
