@@ -40,6 +40,9 @@
   const path = location.pathname.split('/');
   const slug = path[path.length - 1];
 
+  console.log("PATH:", location.pathname);
+  console.log("SLUG:", slug);
+
   async function loadJob() {
     const container = document.getElementById('job-container');
 
