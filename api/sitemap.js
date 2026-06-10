@@ -22,7 +22,11 @@ export default async function handler(req, res) {
   try {
     const baseUrl = "https://www.cfound.in";
 
-    const careersSnap = await adminDb.collection("careers").get();
+    console.log("PROJECT_ID:", process.env.project_id);
+
+    const careersSnap = await adminDb.collection("careers").limit(1).get();
+
+    console.log("QUERY SUCCESS");
 
     let urls = [
       "/",
