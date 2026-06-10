@@ -1,15 +1,21 @@
-import { adminDb } from "../../src/lib/firebase-admin";
+import adminDb from "../../src/lib/firebase-admin";
 
 export default async function handler(req, res) {
   try {
+    console.log("JOB API HIT");
+    console.log("SLUG:", req.query.slug);
     const slug = req.query.slug;
 
     const id = slug.split("-").pop();
+
+    console.log("FETCHING FIRESTORE");
 
     const doc = await adminDb
       .collection("careers")
       .doc(id)
       .get();
+
+    console.log("DOC EXISTS:", doc.exists);
 
     if (!doc.exists) {
       return res.status(404).send("Job not found");
