@@ -11,7 +11,4 @@ if (!getApps().length) {
   });
 }
 
-export const adminDb = getFirestore(
-  undefined,
-  "ai-studio-24810410-2d44-4bca-af7d-11572783e2b5"
-);
+export const adminDb = getFirestore();
