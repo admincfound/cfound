@@ -30,7 +30,7 @@
     },
     {
       "source": "/careers/(.*)",
-      "destination": "/index.html"
+      "destination": "/api/jobpage/$1"
     },
     {
       "source": "/courses",
