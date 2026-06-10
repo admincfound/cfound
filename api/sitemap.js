@@ -13,7 +13,10 @@ if (!getApps().length) {
 
 const adminDb = getFirestore();
 
-const db = getFirestore();
+const db = getFirestore(
+  undefined,
+  "ai-studio-24810410-2d44-4bca-af7d-11572783e2b5"
+);
 
 export default async function handler(req, res) {
   try {
