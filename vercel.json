@@ -30,7 +30,7 @@
     },
     {
       "source": "/careers/(.*)",
-      "destination": "/api/jobpage/$1"
+      "destination": "/careers/:slug"
     },
     {
       "source": "/courses",
