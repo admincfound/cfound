@@ -3,10 +3,16 @@
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/job/(.*)",
+      "dest": "/api/job/$1"
     },
     {
-      "source": "/api/job/(.*)",
-      "destination": "/api/job/$1"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
