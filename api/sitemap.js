@@ -15,7 +15,6 @@ const db = getFirestore();
 
 export default async function handler(req, res) {
   try {
-    const baseUrl = "https://www.cfound.in";
 
     const careersSnap = await db.collection("careers").get();
 
