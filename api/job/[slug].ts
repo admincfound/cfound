@@ -9,10 +9,18 @@ export default async function handler(req, res) {
       return res.status(404).send("Job not found");
     }
 
-    const doc = await adminDb
+    const test = await adminDb
       .collection("careers")
-      .doc(id)
+      .limit(5)
       .get();
+
+    return res.status(200).json({
+      database: "ai-studio-24810410-2d44-4bca-af7d-11572783e2b5",
+      count: test.size,
+      docs: test.docs.map(d => ({
+        id: d.id
+      }))
+    });
 
     if (!doc.exists) {
       return res.status(404).send("Job not found");
