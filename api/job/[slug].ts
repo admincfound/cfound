@@ -68,6 +68,38 @@ export default async function handler(req, res) {
       "@type": "JobPosting",
       url: `https://www.cfound.in/careers/${slug}`,
       title: job.title,
+
+      datePosted: new Date(
+        job.createdAt || Date.now()
+      ).toISOString(),
+
+      validThrough: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ).toISOString(),
+
+      employmentType: job.jobType || "FULL_TIME",
+
+      jobLocation: {
+        "@type": "Place",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: job.city || "",
+          addressRegion: job.state || "",
+          addressCountry: job.country || "IN"
+        }
+      },
+
+      baseSalary: {
+        "@type": "MonetaryAmount",
+        currency: "INR",
+        value: {
+          "@type": "QuantitativeValue",
+          minValue: Number(job.minAmount || 0),
+          maxValue: Number(job.maxAmount || job.minAmount || 0),
+          unitText: "MONTH"
+        }
+      },
+
       description: [
         job.description || "",
         "Requirements:",
