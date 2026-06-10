@@ -5,10 +5,6 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/careers/:slug",
-      "destination": "/api/job/:slug"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
