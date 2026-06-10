@@ -5,8 +5,8 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/api/job/(.*)",
-      "destination": "/api/job/$1"
+      "source": "/api/job/:slug",
+      "destination": "/api/job/:slug"
     },
     {
       "source": "/(.*)",
