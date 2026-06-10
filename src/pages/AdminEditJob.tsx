@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { toast } from 'react-hot-toast';
 
@@ -543,7 +548,9 @@ export default function AdminEditJob() {
             formData.featured,
 
           status:
-            formData.status
+            formData.status,
+
+          updatedAt: serverTimestamp()
         }
       );
 

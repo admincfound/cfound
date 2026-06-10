@@ -69,13 +69,13 @@ export default async function handler(req, res) {
       url: `https://www.cfound.in/careers/${slug}`,
       title: job.title,
 
-      datePosted: new Date(
-        job.createdAt || Date.now()
-      ).toISOString(),
+      datePosted: job.createdAt?.toDate
+        ? job.createdAt.toDate().toISOString()
+        : new Date().toISOString(),
 
-      validThrough: new Date(
-        Date.now() + 30 * 24 * 60 * 60 * 1000
-      ).toISOString(),
+      validThrough: job.deadline
+        ? new Date(job.deadline).toISOString()
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
 
       employmentType: job.jobType || "FULL_TIME",
 
