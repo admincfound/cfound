@@ -1,7 +1,3 @@
-export default function handler(req, res) {
-  return res.status(200).send("API WORKING");
-}
-
 export default async function handler(req, res) {
   try {
     const slug = req.query.slug as string;
