@@ -554,6 +554,8 @@ export default function AdminEditJob() {
         }
       );
 
+      console.log("UPDATE SUCCESS");
+
       toast.success(
         'Job Updated Successfully'
       );
