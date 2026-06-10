@@ -129,7 +129,7 @@ function AppContent() {
           <Route path="/admin/api-settings" element={<ProtectedRoute role="admin"><AdminLayout><ApiSettings /></AdminLayout></ProtectedRoute>} />
           
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<div>404</div>} />
         </Routes>
       </main>
       <Footer />
