@@ -30,7 +30,7 @@
     },
     {
       "source": "/careers/(.*)",
-      "destination": "/careers/(.*)"
+      "destination": "/index.html"
     },
     {
       "source": "/courses",
