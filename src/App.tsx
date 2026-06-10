@@ -112,13 +112,7 @@ function AppContent() {
           <Route path="/careers" element={<Careers />} />
           <Route
             path="/careers/:slug"
-            element={
-              (() => {
-                window.location.href =
-                  `/api/job/${window.location.pathname.split('/').pop()}`;
-                return null;
-              })()
-            }
+            element={<div>ROUTE HIT</div>}
           />
           <Route path="/admin/jobs/new" element={ <ProtectedRoute role="admin"><AdminJobForm /></ProtectedRoute>}/>
           <Route path="/admin/jobs/edit/:id" element={ <ProtectedRoute role="admin"><AdminEditJob /></ProtectedRoute>}/>
