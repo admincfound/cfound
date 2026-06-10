@@ -385,7 +385,7 @@ export default function AdminCreateJob() {
 
           applications: 0,
           views: 0,
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         }
       );
