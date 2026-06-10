@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career Page Source</title>
+
+  <!-- Hidden from users -->
+  <style>
+    body { display: none !important; }
+  </style>
+
+  <script type="application/ld+json" id="job-jsonld">
+  {}
+  </script>
+</head>
+<body>
+<div id="job-container"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore-compat.js"></script>
+
+<script type="module">
+  // 🔹 Firebase config — replace with your own
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWOiw2VUOuRkq07LXohR7iQGUrUXBQDQA",
+    authDomain: "gen-lang-client-0509516374.firebaseapp.com",
+    databaseURL: "https://gen-lang-client-0509516374-default-rtdb.firebaseio.com",
+    projectId: "gen-lang-client-0509516374",
+    storageBucket: "gen-lang-client-0509516374.firebasestorage.app",
+    messagingSenderId: "165578101225",
+    appId: "1:165578101225:web:4cb6ce5ab90af05cd9fb78"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // 🔹 Get the slug from the URL
+  const path = location.pathname.split('/');
+  const slug = path[path.length - 1];
+
+  async function loadJob() {
+    const container = document.getElementById('job-container');
+
+    try {
+      const snapshot = await db.collection('jobs')
+        .where('slug', '==', slug)
+        .limit(1)
+        .get();
+
+      if (snapshot.empty) {
+        container.innerHTML = '<p>Job not found</p>';
+        return;
+      }
+
+      const job = snapshot.docs[0].data();
+
+      // Build JSON-LD for Google Jobs
+      const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "JobPosting",
+        "title": job.title,
+        "description": job.description,
+        "datePosted": job.createdAt ? new Date(job.createdAt.seconds * 1000).toISOString() : "",
+        "validThrough": job.deadline || "",
+        "employmentType": (job.jobType || "").toUpperCase().replace("-", "_"),
+        "hiringOrganization": {
+          "@type": "Organization",
+          "name": job.companyName
+        },
+        "jobLocation": {
+          "@type": "Place",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": job.city,
+            "addressRegion": job.state,
+            "addressCountry": job.country
+          }
+        },
+        "baseSalary": {
+          "@type": "MonetaryAmount",
+          "currency": "INR",
+          "value": {
+            "@type": "QuantitativeValue",
+            "minValue": Number(job.minAmount || 0),
+            "maxValue": Number(job.maxAmount || 0),
+            "unitText": "MONTH"
+          }
+        },
+        "industry": job.industry || "",
+        "skills": (job.skills || []).join(", "),
+        "jobBenefits": (job.jobBenefits || []).join(", ")
+      };
+
+      document.getElementById('job-jsonld').textContent = JSON.stringify(jsonLd);
+
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = '<p>Error loading job data</p>';
+    }
+  }
+
+  loadJob();
+</script>
+</body>
+</html>
