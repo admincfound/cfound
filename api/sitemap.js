@@ -1,15 +1,4 @@
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.project_id,
-      clientEmail: process.env.client_email,
-      privateKey: process.env.private_key?.replace(/\\n/g, "\n"),
-    }),
-  });
-}
+import { adminDb } from "../src/lib/firebase-admin";
 
 const db = getFirestore();
 
@@ -17,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const baseUrl = "https://www.cfound.in";
 
-    const careersSnap = await db.collection("careers").get();
+    const careersSnap = await adminDb.collection("careers").get();
 
     let urls = [
       "/",
