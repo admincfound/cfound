@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
     const job = {
       id: doc.id,
-      ...doc.data()
+      ...(doc.data() || {})
     };
 
     const formatCompensation = () => {
