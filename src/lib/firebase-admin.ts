@@ -1,18 +1,12 @@
-// src/lib/firebase-admin.ts
-import 'dotenv/config'; // ✅ Load .env automatically before anything else
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-
-// Optional: quick debug to check environment variables
-console.log('Loaded project_id:', process.env.project_id?.slice(0,10) + '...'); 
-console.log('Loaded client_email:', process.env.client_email);
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
 if (!getApps().length) {
   initializeApp({
     credential: cert({
-      projectId: process.env.project_id as string,
-      clientEmail: process.env.client_email as string,
-      privateKey: process.env.private_key?.replace(/\\n/g, '\n'),
+      projectId: process.env.project_id,
+      clientEmail: process.env.client_email,
+      privateKey: process.env.private_key?.replace(/\\n/g, "\n"),
     }),
   });
 }
