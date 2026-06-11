@@ -1,0 +1,17 @@
+<script>
+const slug = window.location.pathname.split('/').pop();
+
+fetch(`/api/jobs/${slug}`)
+  .then(res => res.json())
+  .then(job => {
+
+    document.title = job.title + " | C Found Careers";
+
+    document.getElementById("title").textContent = job.title;
+    document.getElementById("description").textContent = job.description;
+    document.getElementById("location").textContent = job.location;
+    document.getElementById("type").textContent = job.employmentType;
+    document.getElementById("experience").textContent = job.experience;
+
+  });
+</script>
