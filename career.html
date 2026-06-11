@@ -3,23 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Career</title>
-
-<style>
-body{
-  display:none;
-}
-</style>
-
-<script type="application/ld+json" id="job-jsonld">
-{}
-</script>
-
 </head>
 <body>
-
-<div id="job-container"></div>
 
 <script>
 
@@ -30,31 +16,15 @@ body{
       .split("/")
       .pop();
 
-  const id =
-    slug
-      .split("-")
-      .slice(-1)[0];
+  const response =
+    await fetch(`/api/job/${slug}`);
 
-  console.log("SLUG:", slug);
-  console.log("ID:", id);
+  const html =
+    await response.text();
 
-  try {
-
-    const response =
-      await fetch(`/api/job/${slug}`);
-
-    const html =
-      await response.text();
-
-    document.open();
-    document.write(html);
-    document.close();
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
+  document.open();
+  document.write(html);
+  document.close();
 
 })();
 
