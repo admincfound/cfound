@@ -26,7 +26,7 @@
     },
     {
       "source": "/careers",
-      "destination": "/index.html"
+      "destination": "/api/jobpage/:slug"
     },
     {
       "source": "/careers/(.*)",
