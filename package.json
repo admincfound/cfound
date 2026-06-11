@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "build": "vite build && ts-node scripts/build-jobs.ts",
+    "postbuild": "react-snap",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
@@ -41,6 +42,7 @@
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.1.14",
+    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
@@ -57,5 +59,12 @@
   "bugs": {
     "url": "https://github.com/admincfound/cfound/issues"
   },
-  "homepage": "https://github.com/admincfound/cfound#readme"
+  "homepage": "https://github.com/admincfound/cfound#readme",
+  "reactSnap": {
+    "source": "dist",
+    "inlineCss": true,
+    "puppeteerArgs": [
+      "--no-sandbox"
+    ]
+  }
 }
