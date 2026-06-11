@@ -1,12 +1,13 @@
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import 'dotenv/config';
 
 if (!getApps().length) {
   initializeApp({
     credential: cert({
-      projectId: process.env.project_id,
-      clientEmail: process.env.client_email,
-      privateKey: process.env.private_key?.replace(/\\n/g, "\n"),
+      projectId: process.env.PROJECT_ID as string,
+      clientEmail: process.env.CLIENT_EMAIL as string,
+      privateKey: process.env.PRIVATE_KEY?.replace(/\\n/g, "\n"),
     }),
   });
 }

@@ -1,74 +1,81 @@
-import fs from 'fs';
-import path from 'path';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import fs from "fs";
+import path from "path";
+import { adminDb } from "../src/lib/firebase-admin";
 
-// 🔹 Load Firebase client config from JSON
-const firebaseConfig = JSON.parse(
-  fs.readFileSync(
-    path.resolve('firebase-applet-config.json'),
-    'utf8'
-  )
-);
+function slugify(title: string, id: string) {
+  return `${title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")}-${id}`;
+}
 
-// 🔹 Initialize Firebase App
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+async function buildJobs() {
+  const snapshot = await adminDb
+    .collection("careers")
+    .get();
 
-async function buildJobPages() {
-  const jobsDir = path.resolve('dist/jobs');
+  for (const doc of snapshot.docs) {
+    const job: any = doc.data();
+    const id = doc.id;
 
-  // Remove old job pages
-  if (fs.existsSync(jobsDir)) {
-    fs.rmSync(jobsDir, { recursive: true, force: true });
-  }
-  fs.mkdirSync(jobsDir, { recursive: true });
+    const slug = slugify(
+      job.title || "job",
+      id
+    );
 
-  try {
-    // Fetch all jobs from Firestore
-    const jobsSnapshot = await getDocs(collection(db, 'careers'));
-    const jobs = jobsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const dir = path.join(
+      process.cwd(),
+      "dist",
+      "careers",
+      slug
+    );
 
-    // Generate HTML pages
-    for (const job of jobs) {
-      const slug = job.slug || job.id;
-      const jobFolder = path.join(jobsDir, slug);
-      fs.mkdirSync(jobFolder, { recursive: true });
+    fs.mkdirSync(dir, {
+      recursive: true,
+    });
 
-      const content = `
+    fs.writeFileSync(
+      path.join(dir, "index.html"),
+      `
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${job.title || 'Job'} | C Found Careers</title>
-<meta name="description" content="${(job.description || '').slice(0, 160)}" />
-<link rel="canonical" href="https://www.cfound.in/jobs/${slug}" />
-<meta name="robots" content="index,follow" />
+<meta charset="utf-8">
+
+<title>${job.title} | C Found Careers</title>
+
+<meta
+name="description"
+content="${(job.description || "")
+  .replace(/"/g, "&quot;")
+  .slice(0, 160)}">
+
+<link
+rel="canonical"
+href="https://www.cfound.in/careers/${slug}">
 </head>
+
 <body>
-  <h1>${job.title || 'Job'}</h1>
-  <p>${job.description || 'No description available'}</p>
-  <ul>
-    <li>Location: ${job.city || 'N/A'}, ${job.state || 'N/A'}</li>
-    <li>Employment Type: ${job.jobType || 'N/A'}</li>
-    <li>Experience: ${job.experience || 'Fresher'}</li>
-  </ul>
+<h1>${job.title}</h1>
+
+<div>
+${job.description || ""}
+</div>
+
+<script>
+location.replace("/careers/${slug}");
+</script>
 </body>
 </html>
-`;
+`
+    );
 
-      fs.writeFileSync(path.join(jobFolder, 'index.html'), content);
-    }
-
-    console.log(`✅ Generated ${jobsSnapshot.size} job pages in dist/jobs/`);
-  } catch (err) {
-    console.error('❌ Error fetching jobs:', err);
+    console.log("Generated:", slug);
   }
 }
 
-// 🔹 Run the build
-buildJobPages();
+buildJobs()
+  .then(() => {
+    console.log("Done");
+  })
+  .catch(console.error);
