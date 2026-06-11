@@ -43,13 +43,6 @@ export default defineConfig(({ mode }) => {
             wss://*.googleapis.com;
         `.replace(/\n/g, ' ')
       },
-
-      // ✅ SPA fallback for refresh
-      middlewareMode: true,
-      setup: ({ middlewares }) => {
-        middlewares.use(history());
-        return middlewares;
-      }
     }
   };
 });
