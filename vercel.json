@@ -7,7 +7,7 @@
     { "source": "/internship", "destination": "/index.html" },
     { "source": "/internship/(.*)", "destination": "/index.html" },
     { "source": "/careers", "destination": "/index.html" },
-    { "source": "/careers/(.*)", "destination": "/app/careers/:slug" },
+    { "source": "/careers/(.*)", "destination": "/index.html" },
     { "source": "/courses", "destination": "/index.html" },
     { "source": "/contact", "destination": "/index.html" },
     { "source": "/login", "destination": "/index.html" },
