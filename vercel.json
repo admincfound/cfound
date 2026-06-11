@@ -26,11 +26,11 @@
     },
     {
       "source": "/careers",
-      "destination": "/api/jobpage/:slug"
+      "destination": "/index.html"
     },
     {
       "source": "/careers/(.*)",
-      "destination": "/career.html"
+      "destination": "/api/jobpage/:slug"
     },
     {
       "source": "/courses",
