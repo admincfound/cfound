@@ -27,7 +27,7 @@ export default async function handler(req, res) {
 
     console.log("PROJECT_ID:", process.env.project_id);
 
-    const careersSnap = await adminDb.collection("careers").get();
+    const careersSnap = await adminDb.collection("careers").limit(1).get();
 
     console.log("QUERY SUCCESS");
 
