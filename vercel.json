@@ -14,7 +14,7 @@
     { "source": "/internship/(.*)", "destination": "/index.html" },
 
     { "source": "/careers", "destination": "/index.html" },
-    { "source": "/careers/(.*)", "destination": "/jobDetails.html" }
+    { "source": "/careers/(.*)", "destination": "/index.html" },
 
     { "source": "/login", "destination": "/index.html" },
     { "source": "/dashboard", "destination": "/index.html" },
