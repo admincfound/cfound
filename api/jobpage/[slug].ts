@@ -66,7 +66,7 @@ export default async function handler(req, res) {
     const schema = {
       "@context": "https://schema.org",
       "@type": "JobPosting",
-      url: `https://www.cfound.in/api/jobpage/${slug}`,
+      url: `https://www.cfound.in/careers/${slug}`,
       title: job.title,
 
       datePosted: job.createdAt?.toDate
@@ -149,7 +149,7 @@ export default async function handler(req, res) {
 />
 
 <link rel="canonical"
-href="https://www.cfound.in/api/jobpage/${slug}" />
+href="https://www.cfound.in/careers/${slug}" />
 
 <meta name="robots" content="index,follow" />
 

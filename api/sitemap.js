@@ -52,7 +52,7 @@ export default async function handler(req, res) {
           .replace(/[^a-z0-9\\s-]/g, "")
           .replace(/\\s+/g, "-");
 
-      urls.push(`/api/jobpage/${slug}-${doc.id}`);
+      urls.push(`/careers/${slug}-${doc.id}`);
     });
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
