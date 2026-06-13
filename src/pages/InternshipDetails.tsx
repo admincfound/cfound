@@ -281,16 +281,6 @@ return (
                 {internship.location}
               </div>
 
-              <div className="flex items-center gap-2">
-                <Users size={16} />
-                {internship.applications || 0} Candidates
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Eye size={16} />
-                {internship.views || 0} Views
-              </div>
-
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8 items-end">
