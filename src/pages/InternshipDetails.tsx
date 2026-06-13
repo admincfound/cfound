@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { auth } from '../lib/firebase';
-import { MapPin, Clock, CheckCircle2, Share2 } from 'lucide-react';
+import { MapPin, MapPin, Users, Eye, Clock, CheckCircle2, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
 import { useAuth } from '../context/AuthContext';
@@ -274,12 +274,12 @@ return (
               </div>
 
               <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} />
-                {internship.applications || 0} Applicants
+                <Users size={16} />
+                {internship.applications || 0} Candidates
               </div>
 
               <div className="flex items-center gap-2">
-                <Share2 size={16} />
+                <Eye size={16} />
                 {internship.views || 0} Views
               </div>
 
@@ -300,7 +300,7 @@ return (
                       ? `₹${internship.stipend || internship.amount}/month`
                       : internship.internshipType === 'training'
                         ? `Training Fee ₹${internship.trainingFee}`
-                        : 'Unpaid Internship'
+                        : 'Career Development Program'
                   }
 
                 </div>
@@ -418,7 +418,13 @@ return (
 
                 <div>
                   <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Type</p>
-                  <p className="font-semibold">{internship.internshipType}</p>
+                  <p className="font-semibold">
+                    {internship.internshipType === 'paid'
+                      ? 'Paid Internship'
+                      : internship.internshipType === 'training'
+                      ? 'Training Program'
+                      : 'Career Development Program'}
+                  </p>
                 </div>
 
                 <div>
@@ -447,8 +453,25 @@ return (
                 </div>
 
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Status</p>
-                  <p className="font-semibold capitalize">{internship.status}</p>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                    Status
+                  </p>
+
+                  <span
+                    className="
+                      inline-flex
+                      items-center
+                      px-3
+                      py-1.5
+                      rounded-full
+                      bg-green-100
+                      text-green-700
+                      text-sm
+                      font-semibold
+                    "
+                  >
+                    Open for Applications
+                  </span>
                 </div>
 
               </div>
