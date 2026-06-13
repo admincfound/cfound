@@ -216,12 +216,10 @@ export default function InternshipDetails() {
     );
   }
 
-  return (
+return (
   <>
     <Helmet>
-      <title>
-        {internship.title} | CFound
-      </title>
+      <title>{internship.title} | CFound</title>
 
       <meta
         name="description"
@@ -230,155 +228,230 @@ export default function InternshipDetails() {
           'Explore internship opportunities at CFound'
         }
       />
-
-      <meta
-        property="og:title"
-        content={`${internship.title} | CFound`}
-      />
-
-      <meta
-        property="og:description"
-        content={
-          internship.description?.slice(0, 200) ||
-          'Explore internship opportunities at CFound'
-        }
-      />
-
-      <meta
-        property="og:type"
-        content="website"
-      />
-
-      <meta
-        property="og:url"
-        content={`https://www.cfound.in/internship/${slug}`}
-      />
-
-      <meta
-        property="og:image"
-        content="https://www.cfound.in/og-image.png"
-      />
-
-      <meta
-        property="og:site_name"
-        content="CFound"
-      />
-
-      <meta
-        name="twitter:card"
-        content="summary_large_image"
-      />
-
-      <meta
-        name="twitter:title"
-        content={`${internship.title} | CFound`}
-      />
-
-      <meta
-        name="twitter:description"
-        content={
-          internship.description?.slice(0, 200) ||
-          'Explore internship opportunities at CFound'
-        }
-      />
-
-      <meta
-        name="twitter:image"
-        content="https://www.cfound.in/og-image.png"
-      />
     </Helmet>
 
-    <div className="pt-32 pb-32 px-6 min-h-screen bg-[var(--bg-main)]">
-      <div className="max-w-5xl mx-auto">
+    <div className="pt-28 md:pt-32 pb-24 px-4 md:px-6 min-h-screen bg-[var(--bg-main)]">
 
-        <div className="mb-10">
+      <div className="max-w-7xl mx-auto">
 
-          <div className="flex items-center gap-4 flex-wrap mb-6">
+        <div className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] border border-[var(--border-main)] bg-[var(--bg-card)] p-6 md:p-10 lg:p-14 mb-8">
 
-            <span className="px-4 py-2 rounded-xl bg-primary-500/10 text-primary-500 text-[10px] font-black uppercase tracking-widest">
-              {internship.internshipType}
-            </span>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl" />
 
-            <span className="px-4 py-2 rounded-xl border border-[var(--border-main)] text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-              <MapPin size={14} />
+          <div className="relative z-10">
 
-              {
-                internship.mode === 'Remote'
-                  ? 'Remote'
-                  : `${internship.mode} • ${internship.location}`
-              }
-            </span>
+            <div className="flex flex-wrap gap-3 mb-6">
 
-            <span className="px-4 py-2 rounded-xl border border-[var(--border-main)] text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-              <Clock size={14} />
-              {internship.duration}
-            </span>
+              <span className="px-4 py-2 rounded-xl bg-primary-500/10 text-primary-500 text-[10px] font-black uppercase tracking-widest">
+                {internship.internshipType}
+              </span>
+
+              <span className="px-4 py-2 rounded-xl border border-[var(--border-main)] text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                <MapPin size={14} />
+                {
+                  internship.mode === 'Remote'
+                    ? 'Remote'
+                    : `${internship.mode} • ${internship.location}`
+                }
+              </span>
+
+              <span className="px-4 py-2 rounded-xl border border-[var(--border-main)] text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                <Clock size={14} />
+                {internship.duration}
+              </span>
+
+            </div>
+
+            <h1 className="text-4xl md:text-6xl xl:text-7xl font-black uppercase italic leading-none mb-6">
+              {internship.title}
+            </h1>
+
+            <div className="flex flex-wrap gap-5 text-sm text-[var(--text-muted)] mb-8">
+
+              <div className="flex items-center gap-2">
+                <MapPin size={16} />
+                {internship.location}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={16} />
+                {internship.applications || 0} Applicants
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Share2 size={16} />
+                {internship.views || 0} Views
+              </div>
+
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-8 items-end">
+
+              <div>
+
+                <div className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                  Internship Type
+                </div>
+
+                <div className="text-3xl md:text-5xl font-black text-primary-600">
+
+                  {
+                    internship.internshipType === 'paid'
+                      ? `₹${internship.stipend || internship.amount}/month`
+                      : internship.internshipType === 'training'
+                        ? `Training Fee ₹${internship.trainingFee}`
+                        : 'Unpaid Internship'
+                  }
+
+                </div>
+
+              </div>
+
+              <div className="flex flex-wrap gap-3 lg:justify-end">
+
+                <Link
+                  to="/internship"
+                  className="h-12 px-6 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] flex items-center justify-center text-[10px] font-black uppercase tracking-widest"
+                >
+                  Back
+                </Link>
+
+                <button
+                  onClick={handleShare}
+                  className="h-12 px-6 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-main)] flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <Share2 size={14} />
+                  Share
+                </button>
+
+                {!user ? (
+                  <Link
+                    to="/login"
+                    className="h-12 px-8 rounded-2xl bg-primary-600 text-white flex items-center justify-center text-[10px] font-black uppercase tracking-widest"
+                  >
+                    Login To Apply
+                  </Link>
+                ) : alreadyApplied ? (
+                  <button
+                    disabled
+                    className="h-12 px-8 rounded-2xl bg-green-600 text-white text-[10px] font-black uppercase tracking-widest"
+                  >
+                    Applied
+                  </button>
+                ) : !completion.isComplete ? (
+                  <Link
+                    to="/profile"
+                    className="h-12 px-8 rounded-2xl bg-yellow-500 text-black flex items-center justify-center text-[10px] font-black uppercase tracking-widest"
+                  >
+                    Complete Profile
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleApply}
+                    disabled={applying}
+                    className="h-12 px-8 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest"
+                  >
+                    {applying ? 'Applying...' : 'Apply Now'}
+                  </button>
+                )}
+
+              </div>
+
+            </div>
 
           </div>
 
-          <h1 className="text-5xl font-black uppercase italic mb-6">
-            {internship.title}
-          </h1>
+        </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div className="grid lg:grid-cols-3 gap-8">
 
-            <div className="text-2xl font-black text-primary-500">
-              {
-                internship.internshipType === 'paid'
-                  ? `₹${internship.stipend}/month`
-                  : internship.internshipType === 'training'
-                    ? `Training Fee: ₹${internship.trainingFee}`
-                    : 'Unpaid Internship'
-              }
+          <div className="lg:col-span-2 space-y-8">
+
+            <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] p-6 md:p-8">
+
+              <h2 className="text-2xl font-black mb-5">
+                About Internship
+              </h2>
+
+              <p className="whitespace-pre-wrap leading-relaxed text-[var(--text-muted)]">
+                {internship.description}
+              </p>
+
             </div>
 
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] hover:border-primary-500 transition-all text-[10px] font-black uppercase tracking-widest"
-            >
-              <Share2 size={14} />
-              Share Opportunity
-            </button>
+            {internship.skills?.length > 0 && (
 
-            <div className="flex gap-4 flex-wrap mt-4">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] p-6 md:p-8">
 
-              <Link
-                to="/internship"
-                className="px-5 py-3 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[10px] font-black uppercase tracking-widest"
-              >
-                Back
-              </Link>
+                <h2 className="text-2xl font-black mb-5">
+                  Skills Required
+                </h2>
 
-              {!user ? (
-                <Link
-                  to="/login"
-                  className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest"
-                >
-                  Login to Apply
-                </Link>
-              ) : alreadyApplied ? (
-                <button
-                  disabled
-                  className="px-6 py-3 rounded-2xl bg-green-600 text-white text-[10px] font-black uppercase tracking-widest opacity-80 cursor-not-allowed"
-                >
-                  Applied
-                </button>
-              ) : !completion.isComplete ? (
-                <Link
-                  to="/profile"
-                  className="btn-primary flex items-center justify-center gap-2 px-6 py-3"
-                >
-                  Complete Profile
-                </Link>
-              ) : (
-                <button
-                  onClick={handleApply}
-                  disabled={applying}
-                  className="px-6 py-3 rounded-2xl bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-                >
-                  {applying ? 'Applying...' : 'Apply Now'}
-                </button>
-              )}
+                <div className="flex flex-wrap gap-3">
+
+                  {internship.skills.map((skill: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 rounded-xl bg-primary-600/10 text-primary-600 text-xs font-bold"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+
+                </div>
+
+              </div>
+
+            )}
+
+          </div>
+
+          <div className="space-y-8">
+
+            <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] p-6">
+
+              <h2 className="text-xl font-black mb-6">
+                Internship Details
+              </h2>
+
+              <div className="space-y-5">
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Type</p>
+                  <p className="font-semibold">{internship.internshipType}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Duration</p>
+                  <p className="font-semibold">{internship.duration}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Mode</p>
+                  <p className="font-semibold">{internship.mode}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Location</p>
+                  <p className="font-semibold">{internship.location}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Applications</p>
+                  <p className="font-semibold">{internship.applications || 0}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Views</p>
+                  <p className="font-semibold">{internship.views || 0}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Status</p>
+                  <p className="font-semibold capitalize">{internship.status}</p>
+                </div>
+
+              </div>
 
             </div>
 
@@ -387,7 +460,7 @@ export default function InternshipDetails() {
         </div>
 
       </div>
+
     </div>
   </>
 );
-}
