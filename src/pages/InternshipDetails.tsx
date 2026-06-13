@@ -17,7 +17,15 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { auth } from '../lib/firebase';
-import { MapPin, MapPin, Users, Eye, Clock, CheckCircle2, Share2 } from 'lucide-react';
+import {
+  MapPin,
+  Users,
+  Eye,
+  Clock,
+  Share2,
+  Briefcase,
+  BadgeCheck
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
 import { useAuth } from '../context/AuthContext';
@@ -418,64 +426,83 @@ return (
                 Internship Details
               </h2>
 
-              <div className="space-y-5">
+              <div className="space-y-6">
 
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Type</p>
-                  <p className="font-semibold">
-                    {internship.internshipType === 'paid'
-                      ? 'Paid Internship'
-                      : internship.internshipType === 'training'
-                      ? 'Training Program'
-                      : 'Career Development Program'}
-                  </p>
+                <div className="flex gap-3">
+                  <Briefcase size={18} className="text-primary-600 mt-1" />
+                  <div>
+                    <p className="font-semibold">Program Type</p>
+                    <p className="text-[var(--text-muted)]">
+                      {internship.internshipType === 'paid'
+                        ? 'Paid Internship'
+                        : internship.internshipType === 'training'
+                        ? 'Training Program'
+                        : 'Career Development Program'}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Duration</p>
-                  <p className="font-semibold">{internship.duration}</p>
+                <div className="flex gap-3">
+                  <Clock size={18} className="text-primary-600 mt-1" />
+                  <div>
+                    <p className="font-semibold">Duration</p>
+                    <p className="text-[var(--text-muted)]">
+                      {internship.duration}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Mode</p>
-                  <p className="font-semibold">{internship.mode}</p>
+                <div className="flex gap-3">
+                  <MapPin size={18} className="text-primary-600 mt-1" />
+                  <div>
+                    <p className="font-semibold">
+                      {internship.mode === 'Remote' ? 'Work Mode' : 'Location'}
+                    </p>
+                    <p className="text-[var(--text-muted)]">
+                      {internship.mode === 'Remote'
+                        ? 'Remote'
+                        : internship.location}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Location</p>
-                  <p className="font-semibold">{internship.location}</p>
+                <div className="flex gap-3">
+                  <Users size={18} className="text-primary-600 mt-1" />
+                  <div>
+                    <p className="font-semibold">Candidates</p>
+                    <p className="text-[var(--text-muted)]">
+                      {internship.applications || 0}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Applications</p>
-                  <p className="font-semibold">{internship.applications || 0}</p>
+                <div className="flex gap-3">
+                  <Eye size={18} className="text-primary-600 mt-1" />
+                  <div>
+                    <p className="font-semibold">Views</p>
+                    <p className="text-[var(--text-muted)]">
+                      {internship.views || 0}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">Views</p>
-                  <p className="font-semibold">{internship.views || 0}</p>
-                </div>
+                <div className="flex gap-3">
+                  <BadgeCheck size={18} className="text-primary-600 mt-1" />
+                  <div>
+                    <p className="font-semibold">Status</p>
 
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                    Status
-                  </p>
-
-                  <span
-                    className="
-                      inline-flex
-                      items-center
-                      px-3
-                      py-1.5
-                      rounded-full
-                      bg-green-100
-                      text-green-700
-                      text-sm
-                      font-semibold
-                    "
-                  >
-                    Open for Applications
-                  </span>
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-1 ${
+                        internship.status?.toLowerCase() === 'active'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {internship.status?.toLowerCase() === 'active'
+                        ? 'Open for Applications'
+                        : 'Applications Closed'}
+                    </span>
+                  </div>
                 </div>
 
               </div>
