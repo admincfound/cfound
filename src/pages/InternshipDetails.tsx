@@ -467,26 +467,6 @@ return (
                 </div>
 
                 <div className="flex gap-3">
-                  <Users size={18} className="text-primary-600 mt-1" />
-                  <div>
-                    <p className="font-semibold">Candidates</p>
-                    <p className="text-[var(--text-muted)]">
-                      {internship.applications || 0}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <Eye size={18} className="text-primary-600 mt-1" />
-                  <div>
-                    <p className="font-semibold">Views</p>
-                    <p className="text-[var(--text-muted)]">
-                      {internship.views || 0}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
                   <BadgeCheck size={18} className="text-primary-600 mt-1" />
                   <div>
                     <p className="font-semibold">Status</p>
