@@ -293,16 +293,24 @@ return (
                   Internship Type
                 </div>
 
-                <div className="text-3xl md:text-5xl font-black text-primary-600">
+                <div>
+                  <div className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-3">
+                    Internship Type
+                  </div>
 
-                  {
-                    internship.internshipType === 'paid'
-                      ? `₹${internship.stipend || internship.amount}/month`
-                      : internship.internshipType === 'training'
-                        ? `Training Fee ₹${internship.trainingFee}`
-                        : 'Career Development Program'
-                  }
-
+                  {internship.internshipType === 'paid' ? (
+                    <div className="text-3xl md:text-5xl font-black text-primary-600">
+                      ₹{internship.stipend || internship.amount}/month
+                    </div>
+                  ) : internship.internshipType === 'training' ? (
+                    <div className="text-3xl md:text-5xl font-black text-primary-600">
+                      Training Fee ₹{internship.trainingFee}
+                    </div>
+                  ) : (
+                    <span className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
+                      Career Development Program
+                    </span>
+                  )}
                 </div>
 
               </div>
