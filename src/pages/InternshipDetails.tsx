@@ -289,10 +289,6 @@ return (
 
               <div>
 
-                <div className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                  Internship Type
-                </div>
-
                 <div>
                   <div className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-3">
                     Internship Type
