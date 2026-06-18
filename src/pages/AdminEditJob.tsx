@@ -45,6 +45,7 @@ const Label = ({
 
 export default function AdminEditJob() {
   const navigate = useNavigate();
+
   const { id } = useParams();
 
   const [loading, setLoading] = useState(false);
