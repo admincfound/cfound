@@ -1,11 +1,31 @@
+# Dependencies
 node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build folders
 build/
 dist/
 coverage/
-.DS_Store
-*.log
+
+# Environment files
 .env*
 !.env.example
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Firebase
 serviceAccountKey.json
-.vercel
-.env*
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo

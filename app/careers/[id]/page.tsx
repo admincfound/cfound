@@ -1,0 +1,196 @@
+import CareerClient from './CareerClient';
+
+import { getCareer } from '../../lib/careers';
+
+import Script from 'next/script';
+
+export async function generateMetadata({
+ params
+}:{
+ params:Promise<{id:string}>
+}){
+
+ const { id } = await params;
+
+  const docId =
+    id.split('-').pop() || id;
+
+  const job =
+    await getCareer(docId);
+
+ if(!job){
+
+  return {
+   title:'Career Not Found'
+  };
+ }
+
+ return {
+  title: `${job.title} | C Found Careers`,
+
+    description:
+      job.description?.slice(0, 160) ||
+      `Apply for ${job.title} at ${job.companyName || 'C Found'}.`,
+
+    keywords: [
+      job.title,
+      job.companyName || 'C Found',
+      'Jobs',
+      'Careers',
+      'Hiring',
+      job.city || '',
+      job.state || '',
+    ],
+
+    alternates: {
+      canonical: `https://www.cfound.in/careers/${id}`,
+    },
+
+    openGraph: {
+      title: `${job.title} | C Found Careers`,
+
+      description:
+        job.description?.slice(0, 160),
+
+      url: `https://www.cfound.in/careers/${id}`,
+
+      siteName: 'C Found',
+
+      images: ['/logo.png'],
+
+      type: 'website',
+    },
+
+    twitter: {
+      card: 'summary_large_image',
+
+      title: `${job.title} | C Found Careers`,
+
+      description:
+        job.description?.slice(0, 160),
+
+      images: ['/logo.png'],
+    },
+  };
+}
+
+export default async function Page({
+ params
+}:{
+ params:Promise<{id:string}>
+}){
+
+ const { id } =
+ await params;
+
+ const docId =
+  id.split('-').pop() || id;
+
+ const job =
+  await getCareer(docId);
+
+ if (!job) {
+
+  return (
+   <div className="py-24 text-center">
+    Career not found
+    <br />
+    <code>{docId}</code>
+   </div>
+  );
+
+ }
+
+ return (
+  <>
+    <Script
+  id="job-posting-schema"
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+
+      "@type": "JobPosting",
+
+      title: job.title || "",
+
+      description: job.description || "",
+
+      datePosted: new Date().toISOString(),
+
+      validThrough: job.deadline
+        ? `${job.deadline}T23:59:59+05:30`
+        : undefined,
+
+      employmentType:
+        job.jobType === "full-time"
+          ? "FULL_TIME"
+          : job.jobType === "part-time"
+          ? "PART_TIME"
+          : job.jobType === "contract"
+          ? "CONTRACTOR"
+          : job.jobType === "internship"
+          ? "INTERN"
+          : "FULL_TIME",
+
+      baseSalary: {
+        "@type": "MonetaryAmount",
+
+        currency: "INR",
+
+        value: {
+          "@type": "QuantitativeValue",
+
+          minValue: Number(
+            job.minAmount || 0
+          ),
+
+          maxValue: Number(
+            job.maxAmount ||
+            job.minAmount ||
+            0
+          ),
+
+          unitText: "MONTH"
+        }
+      },
+
+      hiringOrganization: {
+        "@type": "Organization",
+
+        name:
+          job.companyName ||
+          "C Found",
+
+        sameAs:
+          "https://www.cfound.in"
+      },
+
+      jobLocation: {
+        "@type": "Place",
+
+        address: {
+          "@type": "PostalAddress",
+
+          addressLocality:
+            job.city || "",
+
+          addressRegion:
+            job.state || "",
+
+          addressCountry:
+            job.country ||
+            "India"
+        }
+      }
+    })
+  }}
+/>
+
+    <CareerClient
+      initialJob={job}
+      slug={id}
+    />
+  </>
+);
+}
