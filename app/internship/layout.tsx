@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Internships | C Found",
+  title: "Internships",
 
   description:
     "Join C Found internship programs and gain practical experience in AI, software development, game development and modern technologies.",

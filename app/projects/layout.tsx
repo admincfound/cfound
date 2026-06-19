@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Projects | C Found",
+  title: "Projects",
 
   description:
     "Explore projects built by C Found including software platforms, AI solutions, game development and digital products.",
