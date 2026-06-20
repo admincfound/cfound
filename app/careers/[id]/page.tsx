@@ -228,7 +228,9 @@ export default async function Page({
       applicantLocationRequirements:{
        "@type":"Country",
 
-       name:"India"
+       name:"India",
+
+       sameAs:"https://www.wikidata.org/wiki/Q668"
       }
     })
   }}
