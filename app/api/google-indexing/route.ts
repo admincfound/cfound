@@ -25,16 +25,10 @@ export async function POST(req: Request) {
       ],
     });
 
-    const client =
-      await auth.getClient();
-
-    const indexing =
-      google.indexing({
-
-        version: 'v3',
-
-        auth: client,
-      });
+    const indexing = google.indexing({
+      version: 'v3',
+      auth,
+    });
 
     await indexing.urlNotifications.publish({
 
