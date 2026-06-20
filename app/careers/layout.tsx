@@ -20,14 +20,6 @@ export const metadata: Metadata = {
 
     siteName: "C Found",
 
-    images: [
-      {
-        url: "/logo.png",
-        width: 1200,
-        height: 630,
-      },
-    ],
-
     type: "website",
   },
 
@@ -38,8 +30,6 @@ export const metadata: Metadata = {
 
     description:
       "Explore job opportunities at C Found. Apply for software, AI, game development and other technology roles.",
-
-    images: ["/logo.png"],
   },
 };
 

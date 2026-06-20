@@ -20,14 +20,6 @@ export const metadata: Metadata = {
 
     siteName: "C Found",
 
-    images: [
-      {
-        url: "/logo.png",
-        width: 1200,
-        height: 630,
-      },
-    ],
-
     type: "website",
   },
 
@@ -39,7 +31,6 @@ export const metadata: Metadata = {
     description:
       "Learn AI, Machine Learning, Web Development, Game Development and industry-ready technologies with C Found courses.",
 
-    images: ["/logo.png"],
   },
 };
 

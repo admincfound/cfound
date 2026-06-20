@@ -20,13 +20,6 @@ export const metadata: Metadata = {
 
     siteName: "C Found",
 
-    images: [
-      {
-        url: "/logo.png",
-        width: 1200,
-        height: 630,
-      },
-    ],
 
     type: "website",
   },
@@ -39,7 +32,6 @@ export const metadata: Metadata = {
     description:
       "Contact C Found for software development, AI solutions, game development, internships, careers, partnerships and project inquiries.",
 
-    images: ["/logo.png"],
   },
 };
 
