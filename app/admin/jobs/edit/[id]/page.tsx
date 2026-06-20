@@ -87,10 +87,6 @@ export default function AdminEditJob() {
     state: '',
     city: '',
 
-    streetAddress:'',
-
-    postalCode:'',
-
     department: '',
 
     industry: '',
@@ -194,12 +190,6 @@ export default function AdminEditJob() {
 
           city:
             data.city || '',
-
-          streetAddress:
-            data.streetAddress || '',
-
-          postalCode:
-            data.postalCode || '',
 
           officeLocation:
             data.officeLocation ||
@@ -457,12 +447,6 @@ export default function AdminEditJob() {
 
           city:
             formData.city,
-
-          streetAddress:
-            formData.streetAddress,
-
-          postalCode:
-            formData.postalCode,
 
           officeLocation:
             `${formData.city}, ${formData.state}, ${formData.country}`,
@@ -902,42 +886,6 @@ export default function AdminEditJob() {
             </div>
 
           )}
-
-          <div>
-            <Label>
-              Company Street Address
-            </Label>
-
-            <input
-              className="input-main"
-              placeholder="No. 12, Anna Salai"
-              value={formData.streetAddress}
-              onChange={(e)=>
-                setFormData({
-                  ...formData,
-                  streetAddress:e.target.value
-                })
-              }
-            />
-          </div>
-
-          <div>
-            <Label>
-              Postal Code (Pincode)
-            </Label>
-
-            <input
-              className="input-main"
-              placeholder="629001"
-              value={formData.postalCode}
-              onChange={(e)=>
-                setFormData({
-                  ...formData,
-                  postalCode:e.target.value
-                })
-              }
-            />
-          </div>
 
           <div className="grid md:grid-cols-2 gap-6">
 
