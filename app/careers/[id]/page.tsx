@@ -123,7 +123,22 @@ export default async function Page({
 
       description: job.description || "",
 
-      datePosted: new Date().toISOString(),
+      datePosted:
+        job.createdAt ||
+        job.datePosted,
+
+      url:
+       `https://www.cfound.in/careers/${id}`,
+
+      directApply: true,
+
+      identifier:{
+       "@type":"PropertyValue",
+
+       name:"C Found",
+
+       value:job.id
+      },
 
       validThrough: job.deadline
         ? `${job.deadline}T23:59:59+05:30`
@@ -162,15 +177,14 @@ export default async function Page({
         }
       },
 
-      hiringOrganization: {
-        "@type": "Organization",
+      hiringOrganization:{
 
-        name:
-          job.companyName ||
-          "C Found",
+       "@type":"Organization",
 
-        sameAs:
-          "https://www.cfound.in"
+       name:
+        job.companyName ||
+        "C Found"
+
       },
 
       jobLocation: {
