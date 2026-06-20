@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     title: "C Found",
     description:
       "Careers, internships, hiring opportunities, and talent discovery platform.",
-    images: ["/og-image.png"],
+    images: ["https://www.cfound.in/og-image.png"],
   },
 };
 

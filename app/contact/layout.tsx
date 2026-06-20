@@ -20,7 +20,6 @@ export const metadata: Metadata = {
 
     siteName: "C Found",
 
-
     type: "website",
   },
 
@@ -31,7 +30,6 @@ export const metadata: Metadata = {
 
     description:
       "Contact C Found for software development, AI solutions, game development, internships, careers, partnerships and project inquiries.",
-
   },
 };
 
