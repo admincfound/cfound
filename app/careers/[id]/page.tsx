@@ -56,7 +56,14 @@ export async function generateMetadata({
 
       siteName: 'C Found',
 
-      images: ['/logo.png'],
+      images: [
+        {
+          url: 'https://www.cfound.in/og-image.png',
+          width: 1200,
+          height: 630,
+          alt: 'C Found',
+        },
+      ],
 
       type: 'website',
     },
@@ -69,7 +76,7 @@ export async function generateMetadata({
       description:
         job.description?.slice(0, 160),
 
-      images: ['/logo.png'],
+      images: ['https://www.cfound.in/og-image.png'],
     },
   };
 }
