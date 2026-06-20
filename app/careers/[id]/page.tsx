@@ -121,7 +121,17 @@ export default async function Page({
 
       title: job.title || "",
 
-      description: job.description || "",
+      description: `
+        ${job.description || ''}
+
+        Responsibilities:
+        ${job.responsibilities || ''}
+
+        Requirements:
+        ${Array.isArray(job.requirements)
+         ? job.requirements.join('\n')
+         : ''}
+        `,
 
       datePosted:
        job.createdAt?.toDate
@@ -135,8 +145,7 @@ export default async function Page({
             job.datePosted
           ).toISOString()
 
-        : new Date()
-            .toISOString(),
+        : undefined,
 
       dateModified:
        job.updatedAt?.toDate
@@ -156,7 +165,7 @@ export default async function Page({
 
        name:"C Found",
 
-       value:job.id
+       value:job.id || docId
       },
 
       validThrough: job.deadline
@@ -173,6 +182,8 @@ export default async function Page({
           : job.jobType === "internship"
           ? "INTERN"
           : "FULL_TIME",
+      industry:
+        job.industry || undefined,
 
       baseSalary: {
         "@type": "MonetaryAmount",
@@ -222,6 +233,11 @@ export default async function Page({
             job.country ||
             "India"
         }
+      },
+      applicantLocationRequirements:{
+       "@type":"Country",
+
+       name:"India"
       }
     })
   }}
