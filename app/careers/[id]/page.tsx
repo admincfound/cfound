@@ -139,12 +139,6 @@ export default async function Page({
             .toDate()
             .toISOString()
 
-        : job.datePosted
-
-        ? new Date(
-            job.datePosted
-          ).toISOString()
-
         : undefined,
 
       dateModified:
@@ -185,27 +179,26 @@ export default async function Page({
       industry:
         job.industry || undefined,
 
-      baseSalary: {
-        "@type": "MonetaryAmount",
+      baseSalary: job.minAmount
+       ? {
+           "@type":"MonetaryAmount",
 
-        currency: "INR",
+           currency:"INR",
 
-        value: {
-          "@type": "QuantitativeValue",
+           value:{
+             "@type":"QuantitativeValue",
 
-          minValue: Number(
-            job.minAmount || 0
-          ),
+             minValue:Number(job.minAmount),
 
-          maxValue: Number(
-            job.maxAmount ||
-            job.minAmount ||
-            0
-          ),
+             maxValue:Number(
+              job.maxAmount ||
+              job.minAmount
+             ),
 
-          unitText: "MONTH"
-        }
-      },
+             unitText:"MONTH"
+           }
+         }
+       : undefined,
 
       hiringOrganization:{
 
@@ -229,9 +222,7 @@ export default async function Page({
           addressRegion:
             job.state || "",
 
-          addressCountry:
-            job.country ||
-            "India"
+          addressCountry:"IN"
         }
       },
       applicantLocationRequirements:{
