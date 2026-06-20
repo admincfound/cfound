@@ -21,6 +21,15 @@ export const metadata: Metadata = {
     siteName: "C Found",
 
     type: "website",
+
+    images: [
+      {
+        url: "https://www.cfound.in/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "C Found",
+      },
+    ],
   },
 
   twitter: {
@@ -31,6 +40,7 @@ export const metadata: Metadata = {
     description:
       "Explore C Found services including software development, AI solutions, game development, mobile applications and digital products.",
 
+    images: ["https://www.cfound.in/og-image.png"],
   },
 };
 
