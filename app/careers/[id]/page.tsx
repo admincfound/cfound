@@ -135,11 +135,18 @@ export default async function Page({
 
       datePosted:
        job.createdAt?.toDate
-        ? job.createdAt
-            .toDate()
-            .toISOString()
 
-        : undefined,
+       ? job.createdAt
+           .toDate()
+           .toISOString()
+
+       : job.createdAt?._seconds
+
+       ? new Date(
+           job.createdAt._seconds * 1000
+         ).toISOString()
+
+       : undefined,
 
       dateModified:
        job.updatedAt?.toDate
