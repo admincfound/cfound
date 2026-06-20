@@ -124,8 +124,27 @@ export default async function Page({
       description: job.description || "",
 
       datePosted:
-        job.createdAt ||
-        job.datePosted,
+       job.createdAt?.toDate
+        ? job.createdAt
+            .toDate()
+            .toISOString()
+
+        : job.datePosted
+
+        ? new Date(
+            job.datePosted
+          ).toISOString()
+
+        : new Date()
+            .toISOString(),
+
+      dateModified:
+       job.updatedAt?.toDate
+        ? job.updatedAt
+            .toDate()
+            .toISOString()
+
+        : undefined,
 
       url:
        `https://www.cfound.in/careers/${id}`,
