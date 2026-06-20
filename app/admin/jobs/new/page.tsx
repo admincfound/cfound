@@ -245,8 +245,9 @@ export default function AdminCreateJob() {
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-');
 
-      await addDoc(
-        collection(db, 'careers'),
+      const docRef =
+       await addDoc(
+        collection(db,'careers'),
         {
           slug,
           
@@ -391,6 +392,26 @@ export default function AdminCreateJob() {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         }
+      );
+
+      const url =
+       `https://www.cfound.in/careers/${slug}-${docRef.id}`;
+
+      await fetch(
+       '/api/google-indexing',
+       {
+
+        method:'POST',
+
+        headers:{
+         'Content-Type':
+         'application/json'
+        },
+
+        body:JSON.stringify({
+         url
+        })
+       }
       );
 
       toast.success('Job Created Successfully');
