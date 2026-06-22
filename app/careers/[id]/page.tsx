@@ -149,12 +149,20 @@ export default async function Page({
        : undefined,
 
       dateModified:
-       job.updatedAt?.toDate
-        ? job.updatedAt
-            .toDate()
-            .toISOString()
 
-        : undefined,
+       job.updatedAt?.toDate
+
+       ? job.updatedAt
+           .toDate()
+           .toISOString()
+
+       : job.updatedAt?._seconds
+
+       ? new Date(
+           job.updatedAt._seconds * 1000
+         ).toISOString()
+
+       : undefined,
 
       url:
        `https://www.cfound.in/careers/${id}`,
@@ -183,6 +191,15 @@ export default async function Page({
           : job.jobType === "internship"
           ? "INTERN"
           : "FULL_TIME",
+
+      jobLocationType:
+
+       job.mode === 'Remote'
+
+       ? 'TELECOMMUTE'
+
+       : 'ON_SITE',
+       
       industry:
         job.industry || undefined,
 
@@ -208,13 +225,13 @@ export default async function Page({
        : undefined,
 
       hiringOrganization:{
-
        "@type":"Organization",
 
-       name:
-        job.companyName ||
-        "C Found"
+       name: job.companyName || "C Found",
 
+       sameAs:"https://www.cfound.in",
+
+       logo:"https://www.cfound.in/og-image.png"
       },
 
       jobLocation: {
