@@ -28,9 +28,9 @@ const divisions = [
   },
   {
     icon: <BookOpen size={32} />,
-    title: "Academy",
+    title: "Courses",
     description: "Professional training courses and curriculum database featuring industry-standard learning paths taught by expert instructors.",
-    link: "/academy",
+    link: "/courses",
     tag: "ACADEMY",
   }
 ];
