@@ -29,7 +29,17 @@ export async function generateMetadata({
   title: `${job.title} | C Found Careers`,
 
     description:
-      job.description?.slice(0, 160) ||
+     `${job.title} at ${
+       job.companyName
+     }. Location: ${
+       job.city
+     }, ${
+       job.state
+     }. ${
+       job.description
+     }`
+     .replace(/\s+/g,' ')
+     .slice(0,155) ||
       `Apply for ${job.title} at ${job.companyName || 'C Found'}.`,
 
     keywords: [
@@ -199,7 +209,7 @@ export default async function Page({
        ? 'TELECOMMUTE'
 
        : 'ON_SITE',
-       
+
       industry:
         job.industry || undefined,
 
@@ -235,19 +245,26 @@ export default async function Page({
       },
 
       jobLocation: {
-        "@type": "Place",
+       "@type":"Place",
 
-        address: {
-          "@type": "PostalAddress",
+       address:{
 
-          addressLocality:
-            job.city || "",
+        "@type":"PostalAddress",
 
-          addressRegion:
-            job.state || "",
+        streetAddress:
+         job.streetAddress?.trim(),
 
-          addressCountry:"IN"
-        }
+        addressLocality:
+         job.city || "",
+
+        addressRegion:
+         job.state || "",
+
+        postalCode:
+         job.postalCode?.trim(),
+
+        addressCountry:"IN"
+       }
       },
       applicantLocationRequirements:{
        "@type":"Country",
