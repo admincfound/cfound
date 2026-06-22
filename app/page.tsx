@@ -57,7 +57,6 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-blue-600 font-bold text-xs uppercase tracking-widest">Home</span>
             <h1 className="text-6xl md:text-8xl font-black italic leading-tight mt-4 mb-8">
               Engineering
               <br />
