@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   User, Github, Linkedin, Globe, Plus, Trash2, Save, 
   ChevronDown, ChevronUp, Briefcase, BookOpen, Award, Layers,
-  Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X
+  Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X, Edit3
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
@@ -19,6 +19,10 @@ const WORK_MODES = ['Remote', 'Hybrid', 'Onsite'];
 const PROJECT_STATUS = ['Completed', 'In Progress', 'Planned'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const YEARS = Array.from({length: 40}, (_, i) => new Date().getFullYear() - i).map(String);
+
+const FieldWrapper = ({ show, children }: { show: boolean; children: React.ReactNode }) => {
+  return show ? <>{children}</> : null;
+};
 
 export default function Profile() {
   const { profile, isAdmin, loading: authLoading } = useAuth();
@@ -63,7 +67,6 @@ export default function Profile() {
         declarationAccepted: profile.declarationAccepted || false,
         signature: profile.signature || '',
         
-        // Profiles & Links
         portfolioUrl: profile.portfolioUrl || '',
         githubUrl: profile.githubUrl || profile.github || '',
         linkedinUrl: profile.linkedinUrl || profile.linkedin || '',
@@ -72,7 +75,6 @@ export default function Profile() {
         youtubeUrl: profile.youtubeUrl || '',
         otherUrl: profile.otherUrl || '',
         
-        // Arrays for modular sections
         experiences: Array.isArray(profile.experiences)
           ? profile.experiences
           : Array.isArray(profile.experience)
@@ -94,10 +96,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (!formData || !initialData) return;
-
-    setHasChanges(
-      JSON.stringify(formData) !== initialData
-    );
+    setHasChanges(JSON.stringify(formData) !== initialData);
   }, [formData, initialData]);
 
   useEffect(() => {
@@ -107,12 +106,8 @@ export default function Profile() {
         e.returnValue = '';
       }
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasChanges]);
 
   const handleUpdateProfile = async (e?: React.FormEvent) => {
@@ -182,7 +177,7 @@ export default function Profile() {
 
   if (authLoading || !formData) return (
     <div className="h-screen flex items-center justify-center bg-[var(--bg-main)]">
-      <div className="text-center font-medium text-primary-600 animate-pulse text-xl">
+      <div className="text-center font-bold text-2xl bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent animate-pulse">
         Loading Profile...
       </div>
     </div>
@@ -195,206 +190,273 @@ export default function Profile() {
       handleUpdateProfile={handleUpdateProfile}
       loading={loading}
       profile={profile}
+      isEditing={isEditing}
+      setIsEditing={setIsEditing}
     />;
   }
 
   return (
-    <div className="pt-32 pb-40 px-6 bg-[var(--bg-main)] min-h-screen">
-      <div className="max-w-4xl mx-auto">
+    <div className="pt-28 pb-40 px-4 md:px-6 bg-[var(--bg-main)] min-h-screen relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 -z-10 opacity-40 pointer-events-none">
+        <div className="absolute top-20 right-10 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 left-10 w-80 h-80 bg-primary-600/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
+      </div>
+
+      <div className="max-w-5xl mx-auto relative z-10">
         
         {/* Profile Header */}
-        <div className="flex flex-col md:flex-row items-center gap-10 mb-10">
-          <div className="w-32 h-32 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-card)] shadow-md">
-            <img 
-              src={
-                profile?.photoURL ||
-                'https://ui-avatars.com/api/?name=User'
-              } 
-              alt="Profile"
-              onError={(e) => {
-                e.currentTarget.src =
-                  'https://ui-avatars.com/api/?name=User';
-              }}
-              className="w-full h-full object-cover bg-[var(--bg-main)]"
-              referrerPolicy="no-referrer"
-            />
-          </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-16"
+        >
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="relative group"
+          >
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)] shadow-2xl">
+              <img 
+                src={
+                  profile?.photoURL ||
+                  'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160'
+                } 
+                alt="Profile"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160';
+                }}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          </motion.div>
                     
-          <div className="text-center md:text-left flex-1">
-            <h1 className="text-4xl font-bold tracking-tight text-[var(--text-main)] mb-2">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-center md:text-left flex-1"
+          >
+            <h1 className="text-5xl md:text-6xl font-black italic text-[var(--text-main)] mb-3 leading-tight">
               {formData.displayName || 'Your Name'}
             </h1>
-            <p className="text-[var(--text-muted)] text-base font-medium max-w-xl">
-              {formData.bio || 'Add a short bio or professional headline here.'}
+            {(formData.primaryRole || isEditing) && (
+              <p className="text-xl text-primary-500 font-bold mb-4">
+                {formData.primaryRole || 'Add your professional role'}
+              </p>
+            )}
+            <p className="text-[var(--text-muted)] text-lg max-w-2xl leading-relaxed">
+              {formData.bio || (isEditing ? 'Add a compelling bio...' : '')}
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Profile Completion Tracker */}
-        <div className="mb-10 lg:mb-14 p-6 md:p-8 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-[var(--border-main)] rounded-3xl shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5">
-            <CheckCircle2 size={100} />
-          </div>
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 relative z-10 gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-16 p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] via-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl shadow-2xl relative overflow-hidden group"
+        >
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary-500/10 rounded-full blur-3xl -z-10"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-600/10 rounded-full blur-3xl -z-10"></div>
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6 relative z-10">
             <div>
-              <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <h3 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
-                  <CheckCircle2 size={24} className={completion.percentage === 100 ? "text-green-500" : "text-primary-500"} />
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
+                <h3 className="text-2xl md:text-3xl font-black text-[var(--text-main)] flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl ${completion.percentage === 100 ? 'bg-green-500/20' : 'bg-primary-500/20'}`}>
+                    <CheckCircle2 size={28} className={completion.percentage === 100 ? "text-green-500" : "text-primary-500"} />
+                  </div>
                   Profile Completion
                 </h3>
-                <span className={`px-3 py-1 text-[10px] uppercase font-black tracking-widest rounded-full ${
-                  completion.strength === 'Strong' ? 'bg-green-500/10 text-green-600' :
-                  completion.strength === 'Average' ? 'bg-yellow-500/10 text-yellow-600' :
-                  'bg-red-500/10 text-red-600'
-                }`}>
+                <motion.span 
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className={`px-4 py-2 text-xs uppercase font-black tracking-widest rounded-full backdrop-blur-sm border ${
+                    completion.strength === 'Strong' ? 'bg-green-500/20 text-green-600 border-green-500/30' :
+                    completion.strength === 'Average' ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' :
+                    'bg-red-500/20 text-red-600 border-red-500/30'
+                  }`}>
                   {completion.strength} Profile
-                </span>
+                </motion.span>
               </div>
-              <p className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest opacity-60">Unlock opportunities by completing your profile</p>
+              <p className="text-sm font-semibold text-[var(--text-muted)] tracking-wide opacity-80">Complete your profile to unlock all opportunities</p>
             </div>
-            <span className="font-black text-5xl italic text-primary-600 tracking-tighter">{completion.percentage}%</span>
+            <motion.span 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="font-black text-6xl md:text-7xl italic bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent tracking-tighter"
+            >
+              {completion.percentage}%
+            </motion.span>
           </div>
-          <div className="h-4 w-full bg-[var(--bg-hover)] rounded-full overflow-hidden mb-6 border border-[var(--border-main)] relative z-10">
+
+          <div className="h-3 w-full bg-[var(--bg-hover)]/50 rounded-full overflow-hidden mb-8 border border-primary-500/20 relative z-10">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${completion.percentage}%` }}
-              className={`h-full ${completion.percentage >= 100 ? 'bg-green-500' : (completion.percentage >= 71 ? 'bg-primary-500' : (completion.percentage >= 41 ? 'bg-yellow-500' : 'bg-red-500'))}`}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className={`h-full bg-gradient-to-r ${completion.percentage >= 100 ? 'from-green-500 to-green-600' : (completion.percentage >= 71 ? 'from-primary-500 to-primary-600' : (completion.percentage >= 41 ? 'from-yellow-500 to-yellow-600' : 'from-red-500 to-red-600'))} rounded-full shadow-lg`}
             />
           </div>
+
           {!completion.isComplete && (
-            <div className="bg-red-500/5 text-red-500 border border-red-500/10 p-4 rounded-xl text-sm">
-              <div className="flex items-center gap-2 font-bold mb-2">
-                <AlertCircle size={16} /> Remaining Mandatory Requirements:
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 text-red-600 border border-red-500/30 p-5 rounded-2xl text-sm backdrop-blur-sm"
+            >
+              <div className="flex items-start gap-3">
+                <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold mb-2">Remaining Requirements:</p>
+                  <ul className="list-disc pl-5 space-y-1 opacity-90">
+                    {completion.missing.map((req: string, idx: number) => (
+                      <li key={idx} className="text-sm">{req}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <ul className="list-disc pl-5 space-y-1">
-                {completion.missing.map((req: string, idx: number) => (
-                  <li key={idx}>{req}</li>
-                ))}
-              </ul>
-            </div>
+            </motion.div>
           )}
+
           {completion.isComplete && (
-             <div className="bg-green-500/10 text-green-600 border border-green-500/20 p-4 rounded-xl text-sm font-semibold flex flex-col gap-2">
-               <div className="flex items-center gap-2">
-                 <CheckCircle2 size={16} />
-                 Your profile is complete! You can now apply to internships, jobs, and enroll in courses.
-               </div>
-             </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-green-500/15 text-green-600 border border-green-500/30 p-5 rounded-2xl text-sm font-semibold flex items-center gap-3 backdrop-blur-sm"
+            >
+              <CheckCircle2 size={20} className="flex-shrink-0" />
+              Your profile is complete! You're ready to apply and succeed. 🚀
+            </motion.div>
           )}
+
           {completion.suggestions && completion.suggestions.length > 0 && (
-            <div className="mt-4 bg-primary-500/5 text-primary-600 border border-primary-500/10 p-4 rounded-xl text-sm">
-              <div className="flex items-center gap-2 font-bold mb-2">
-                <Sparkles size={16} /> Suggestions to Stand Out:
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mt-6 bg-primary-500/15 text-primary-600 border border-primary-500/30 p-5 rounded-2xl text-sm backdrop-blur-sm"
+            >
+              <div className="flex items-start gap-3">
+                <Sparkles size={20} className="flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold mb-2">Stand Out Tips:</p>
+                  <ul className="list-disc pl-5 space-y-1 opacity-90">
+                    {completion.suggestions.map((sug: string, idx: number) => (
+                      <li key={idx} className="text-sm font-medium">{sug}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <ul className="list-disc pl-5 space-y-1">
-                {completion.suggestions.map((sug: string, idx: number) => (
-                  <li key={idx} className="font-medium">{sug}</li>
-                ))}
-              </ul>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         <form onSubmit={handleUpdateProfile} className="space-y-8">
           
           {/* 1. Personal Details */}
           <ProfileSection 
             title="Personal Details" 
-            icon={<User size={20} />} 
+            icon={<User size={24} />} 
             isCollapsed={collapsed.personal} 
             onToggle={() => toggleCollapse('personal')}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputGroup label="Full Name">
-                <input
-                  disabled={false}
-                  type="text" 
+                <EditableInput
+                  isEditing={isEditing}
                   value={formData.displayName}
-                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
+                  onChange={(v) => setFormData({ ...formData, displayName: v })}
                   placeholder="e.g. John Doe"
                 />
               </InputGroup>
 
               <InputGroup label="Email Address">
                 <input 
-                  disabled={false}
+                  disabled={true}
                   type="email" 
                   value={formData.email || profile?.email || ""}
                   readOnly
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm opacity-70 cursor-not-allowed"
+                  className="w-full bg-transparent border-none text-[var(--text-main)] rounded-lg p-3 text-sm opacity-60 cursor-not-allowed"
                   placeholder="Email Address"
                 />
               </InputGroup>
-              <InputGroup label="Phone Number">
-                <input 
-                  disabled={false}
-                  type="text" 
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
-                  placeholder="+1 234 567 890"
-                />
-              </InputGroup>
-              <InputGroup label="Country">
-                <input 
-                  disabled={false}
-                  type="text" 
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
-                  placeholder="e.g. United States"
-                />
-              </InputGroup>
-              <InputGroup label="State / Province">
-                <input 
-                  disabled={false}
-                  type="text" 
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
-                  placeholder="e.g. California"
-                />
-              </InputGroup>
-              <InputGroup label="City">
-                <input 
-                  disabled={false}
-                  type="text" 
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
-                  placeholder="e.g. San Francisco"
-                />
-              </InputGroup>
+              <FieldWrapper show={isEditing || formData.phone}>
+                <InputGroup label="Phone Number">
+                  <EditableInput
+                    isEditing={isEditing}
+                    value={formData.phone}
+                    onChange={(v) => setFormData({ ...formData, phone: v })}
+                    placeholder="+1 234 567 890"
+                  />
+                </InputGroup>
+              </FieldWrapper>
+              <FieldWrapper show={isEditing || formData.country}>
+                <InputGroup label="Country">
+                  <EditableInput
+                    isEditing={isEditing}
+                    value={formData.country}
+                    onChange={(v) => setFormData({ ...formData, country: v })}
+                    placeholder="e.g. United States"
+                  />
+                </InputGroup>
+              </FieldWrapper>
+              <FieldWrapper show={isEditing || formData.state}>
+                <InputGroup label="State / Province">
+                  <EditableInput
+                    isEditing={isEditing}
+                    value={formData.state}
+                    onChange={(v) => setFormData({ ...formData, state: v })}
+                    placeholder="e.g. California"
+                  />
+                </InputGroup>
+              </FieldWrapper>
+              <FieldWrapper show={isEditing || formData.city}>
+                <InputGroup label="City">
+                  <EditableInput
+                    isEditing={isEditing}
+                    value={formData.city}
+                    onChange={(v) => setFormData({ ...formData, city: v })}
+                    placeholder="e.g. San Francisco"
+                  />
+                </InputGroup>
+              </FieldWrapper>
             </div>
             <div className="mt-6">
-               <InputGroup label="About / Bio">
-                  <textarea 
-                    disabled={false}
+              <FieldWrapper show={isEditing || formData.bio}>
+                <InputGroup label="About / Bio">
+                  <EditableTextarea
+                    isEditing={isEditing}
                     value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[120px]"
-                    placeholder="Write a brief professional summary..."
+                    onChange={(v) => setFormData({ ...formData, bio: v })}
+                    placeholder="Write a compelling professional summary..."
+                    minHeight="min-h-[130px]"
                   />
-               </InputGroup>
+                </InputGroup>
+              </FieldWrapper>
             </div>
             
-            <div className="mt-8 pt-8 border-t border-[var(--border-main)] grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-8 pt-8 border-t border-primary-500/20 grid grid-cols-1 md:grid-cols-2 gap-6">
                <InputGroup label="Primary Role / Interest">
-                  <input 
-                    disabled={false}
-                    type="text" 
+                  <EditableInput
+                    isEditing={isEditing}
                     value={formData.primaryRole}
-                    onChange={(e) => setFormData({ ...formData, primaryRole: e.target.value })}
-                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
+                    onChange={(v) => setFormData({ ...formData, primaryRole: v })}
                     placeholder="e.g. Frontend Developer, Business Analyst"
                   />
                </InputGroup>
                <InputGroup label="Experience Level">
                    <select 
+                    disabled={!isEditing}
                     value={formData.experienceLevel}
                     onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
-                    className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all font-medium"
+                    className={`w-full rounded-xl p-3.5 text-sm transition-all font-semibold ${isEditing ? 'bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-pointer hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
                   >
                      <option value="Fresher">Fresher</option>
                      <option value="1–2 Years">1–2 Years</option>
@@ -405,53 +467,63 @@ export default function Profile() {
                </InputGroup>
                <div className="md:col-span-2">
                  <InputGroup label="Top Skills (Minimum 1)">
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       {(Array.isArray(formData.skills) ? formData.skills : []).map((skill: string, idx: number) => (
-                        <div key={idx} className="flex items-center gap-2 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] px-3 py-1.5 rounded-full text-xs font-bold">
+                        <motion.div 
+                          key={idx}
+                          layout
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="flex items-center gap-2 bg-gradient-to-r from-primary-500/20 to-primary-600/20 border border-primary-500/40 text-primary-600 px-4 py-2 rounded-full text-sm font-bold group hover:border-primary-500/60 transition-all"
+                        >
                           {skill}
-                          <button type="button" onClick={() => {
-                            const newSkills = [...formData.skills];
-                            newSkills.splice(idx, 1);
-                            setFormData({ ...formData, skills: newSkills });
-                          }} className="hover:text-red-500 transition-colors">
-                            <X size={12} />
-                          </button>
-                        </div>
+                          {isEditing && (
+                            <button type="button" onClick={() => {
+                              const newSkills = [...formData.skills];
+                              newSkills.splice(idx, 1);
+                              setFormData({ ...formData, skills: newSkills });
+                            }} className="hover:text-red-500 transition-colors ml-1 opacity-60 group-hover:opacity-100">
+                              <X size={14} />
+                            </button>
+                          )}
+                        </motion.div>
                       ))}
                     </div>
-                    <div className="flex gap-2">
-                      <input
-                        disabled={false}
-                        type="text" 
-                        value={skillInput}
-                        onChange={(e) => setSkillInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
+                    {isEditing && (
+                      <div className="flex gap-2">
+                        <input
+                          type="text" 
+                          value={skillInput}
+                          onChange={(e) => setSkillInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = skillInput.trim();
+                              if (val && !(formData.skills || []).includes(val)) {
+                                setFormData({ ...formData, skills: [...(formData.skills || []), val] });
+                                setSkillInput('');
+                              }
+                            }
+                          }}
+                          className="flex-1 bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl p-3.5 text-sm focus:outline-none focus:border-primary-500 transition-all font-medium hover:border-primary-500/50"
+                          placeholder="Type a skill and press Enter"
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
                             const val = skillInput.trim();
                             if (val && !(formData.skills || []).includes(val)) {
                               setFormData({ ...formData, skills: [...(formData.skills || []), val] });
                               setSkillInput('');
                             }
-                          }
-                        }}
-                        className="flex-1 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all font-medium"
-                        placeholder="Type a skill and press Enter or +"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          const val = skillInput.trim();
-                          if (val && !(formData.skills || []).includes(val)) {
-                            setFormData({ ...formData, skills: [...(formData.skills || []), val] });
-                            setSkillInput('');
-                          }
-                        }}
-                        className="bg-primary-600 text-white rounded-lg p-3 hover:bg-primary-700 transition-colors"
-                      >
-                        <Plus size={20} />
-                      </button>
-                    </div>
+                          }}
+                          className="bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl px-5 hover:shadow-lg hover:shadow-primary-500/30 transition-all font-bold"
+                        >
+                          <Plus size={22} />
+                        </button>
+                      </div>
+                    )}
                  </InputGroup>
                </div>
             </div>
@@ -460,7 +532,7 @@ export default function Profile() {
           {/* 2. Experience */}
           <ModularSection 
             title="Experience" 
-            icon={<Briefcase size={20} />} 
+            icon={<Briefcase size={24} />} 
             items={formData.experiences}
             isCollapsed={collapsed.experience}
             onToggle={() => toggleCollapse('experience')}
@@ -488,12 +560,13 @@ export default function Profile() {
               />
             )}
             addButtonText="Add Experience"
+            isEditing={isEditing}
           />
 
           {/* 3. Projects */}
           <ModularSection 
             title="Projects" 
-            icon={<Layers size={20} />} 
+            icon={<Layers size={24} />} 
             items={formData.projects}
             isCollapsed={collapsed.projects}
             onToggle={() => toggleCollapse('projects')}
@@ -521,35 +594,36 @@ export default function Profile() {
               />
             )}
             addButtonText="Add Project"
+            isEditing={isEditing}
           />
 
           {/* 4. Profiles & Links */}
           <ProfileSection 
             title="Profiles & Links" 
-            icon={<LinkIcon size={20} />} 
+            icon={<LinkIcon size={24} />} 
             isCollapsed={collapsed.links} 
             onToggle={() => toggleCollapse('links')}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <SocialInput
-                isEditing={isEditing} icon={<Globe size={16}/>} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v:any) => setFormData({...formData, portfolioUrl: v})} />
+                isEditing={isEditing} icon={<Globe size={18}/>} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v:any) => setFormData({...formData, portfolioUrl: v})} />
               <SocialInput
-                isEditing={isEditing} icon={<Github size={16}/>} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v:any) => setFormData({...formData, githubUrl: v})} />
+                isEditing={isEditing} icon={<Github size={18}/>} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v:any) => setFormData({...formData, githubUrl: v})} />
               <SocialInput
-                isEditing={isEditing} icon={<Linkedin size={16}/>} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v:any) => setFormData({...formData, linkedinUrl: v})} />
+                isEditing={isEditing} icon={<Linkedin size={18}/>} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v:any) => setFormData({...formData, linkedinUrl: v})} />
               <SocialInput
-                isEditing={isEditing} icon={<Layers size={16}/>} placeholder="Behance" value={formData.behanceUrl} onChange={(v:any) => setFormData({...formData, behanceUrl: v})} />
+                isEditing={isEditing} icon={<Layers size={18}/>} placeholder="Behance" value={formData.behanceUrl} onChange={(v:any) => setFormData({...formData, behanceUrl: v})} />
               <SocialInput
-                isEditing={isEditing} icon={<BookOpen size={16}/>} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v:any) => setFormData({...formData, artstationUrl: v})} />
+                isEditing={isEditing} icon={<BookOpen size={18}/>} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v:any) => setFormData({...formData, artstationUrl: v})} />
               <SocialInput
-                isEditing={isEditing} icon={<LinkIcon size={16}/>} placeholder="Other Link" value={formData.otherUrl} onChange={(v:any) => setFormData({...formData, otherUrl: v})} />
+                isEditing={isEditing} icon={<LinkIcon size={18}/>} placeholder="Other Link" value={formData.otherUrl} onChange={(v:any) => setFormData({...formData, otherUrl: v})} />
             </div>
           </ProfileSection>
 
           {/* 5. Education */}
           <ModularSection 
             title="Education" 
-            icon={<BookOpen size={20} />} 
+            icon={<BookOpen size={24} />} 
             items={formData.education}
             isCollapsed={collapsed.education}
             onToggle={() => toggleCollapse('education')}
@@ -571,12 +645,13 @@ export default function Profile() {
               />
             )}
             addButtonText="Add Education"
+            isEditing={isEditing}
           />
 
           {/* 6. Certifications */}
           <ModularSection 
             title="Certifications" 
-            icon={<Award size={20} />} 
+            icon={<Award size={24} />} 
             items={formData.certifications}
             isCollapsed={collapsed.certifications}
             onToggle={() => toggleCollapse('certifications')}
@@ -597,12 +672,13 @@ export default function Profile() {
               />
             )}
             addButtonText="Add Certification"
+            isEditing={isEditing}
           />
 
           {/* 7. Publications */}
           <ModularSection 
             title="Publications" 
-            icon={<BookMarked size={20} />} 
+            icon={<BookMarked size={24} />} 
             items={formData.publications}
             isCollapsed={collapsed.publications}
             onToggle={() => toggleCollapse('publications')}
@@ -623,82 +699,99 @@ export default function Profile() {
               />
             )}
             addButtonText="Add Publication"
+            isEditing={isEditing}
           />
 
           {/* Mandatory Agreement Section */}
-          <div className="p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl shadow-sm">
-            <h2 className="text-xl font-bold text-[var(--text-main)] mb-6 flex items-center gap-3">
-              <CheckCircle2 size={20} className="text-primary-500" /> Declaration & Consent
-            </h2>
-            <div className="space-y-6">
-              <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    disabled={false}
-                    type="checkbox" 
-                    checked={formData.declarationAccepted} 
-                    onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })} 
-                    className="mt-1 w-5 h-5 rounded border-[var(--border-main)] text-primary-600 focus:ring-primary-600 bg-[var(--bg-main)]" 
-                  />
-                 <span className="text-sm font-medium text-[var(--text-main)] leading-relaxed">
-                   I confirm that the information provided in my profile is accurate and can be used for internship applications, job hiring evaluation, course enrollments, and professional communication purposes.
-                 </span>
-               </label>
-
-               <div className="pt-4 border-t border-[var(--border-main)]">
-                 <InputGroup label="Digital Signature (Type Full Name)">
-                    <input 
-                      disabled={false}
-                      type="text" 
-                      value={formData.signature}
-                      onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
-                      className="w-full md:w-1/2 bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all font-serif italic placeholder:not-italic"
-                      placeholder="John Doe"
-                    />
-                 </InputGroup>
-               </div>
-            </div>
-          </div>
-
-          <div className="sticky bottom-0 z-50 flex justify-center pb-6 pt-8 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)] to-transparent mt-4">
-  
-          {!isEditing ? (
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="px-8 py-4 bg-primary-600 text-white rounded-full text-sm font-semibold shadow-xl hover:bg-primary-700 transition-all"
+          {isEditing && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl shadow-lg"
             >
-              Edit Profile
-            </button>
-          ) : (
-            <div className="flex gap-4">
-              
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData(JSON.parse(initialData));
-                  setHasChanges(false);
-                  setIsEditing(false);
-                }}
-                className="px-8 py-4 border border-[var(--border-main)] text-[var(--text-main)] rounded-full text-sm font-semibold"
-              >
-                Cancel
-              </button>
+              <h2 className="text-2xl font-black text-[var(--text-main)] mb-6 flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary-500/20">
+                  <CheckCircle2 size={24} className="text-primary-500" />
+                </div>
+                Declaration & Consent
+              </h2>
+              <div className="space-y-6">
+                <label className="flex items-start gap-4 cursor-pointer group">
+                    <input
+                      type="checkbox" 
+                      checked={formData.declarationAccepted} 
+                      onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })} 
+                      className="mt-1 w-6 h-6 rounded-lg border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-main)] accent-primary-600 cursor-pointer" 
+                    />
+                   <span className="text-base font-medium text-[var(--text-main)] leading-relaxed group-hover:text-primary-600 transition-colors">
+                     I confirm that the information provided in my profile is accurate and can be used for internship applications, job hiring evaluation, course enrollments, and professional communication purposes.
+                   </span>
+                 </label>
 
-              <button 
-                type="submit"
-                disabled={loading}
-                className="px-8 py-4 bg-primary-600 text-white rounded-full text-sm font-semibold flex items-center gap-3 shadow-xl hover:bg-primary-700 transition-all disabled:opacity-70"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <><Save size={18} /> Save Changes</>
-                )}
-              </button>
-
-            </div>
+                 <div className="pt-6 border-t border-primary-500/20">
+                   <InputGroup label="Digital Signature (Type Full Name)">
+                      <input 
+                        type="text" 
+                        value={formData.signature}
+                        onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
+                        className="w-full md:w-1/2 bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl p-3.5 text-sm focus:outline-none focus:border-primary-500 transition-all font-serif italic placeholder:not-italic hover:border-primary-500/50"
+                        placeholder="John Doe"
+                      />
+                   </InputGroup>
+                 </div>
+              </div>
+            </motion.div>
           )}
-        </div>
+
+          {/* Sticky Action Buttons */}
+          <div className="sticky bottom-0 z-50 flex justify-center pb-6 pt-8 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)] to-transparent mt-8">
+            {!isEditing ? (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="px-10 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl text-base font-black shadow-2xl shadow-primary-500/30 hover:shadow-primary-500/50 transition-all flex items-center gap-3"
+              >
+                <Edit3 size={20} />
+                Edit Profile
+              </motion.button>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-4 w-full md:w-auto"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={() => {
+                    setFormData(JSON.parse(initialData));
+                    setHasChanges(false);
+                    setIsEditing(false);
+                  }}
+                  className="flex-1 md:flex-none px-8 py-4 border-2 border-primary-500/30 text-[var(--text-main)] rounded-2xl text-base font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
+                >
+                  Cancel
+                </motion.button>
+
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 md:flex-none px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl text-base font-black shadow-2xl shadow-green-500/30 hover:shadow-green-500/50 transition-all disabled:opacity-70 flex items-center justify-center gap-3"
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <><Save size={20} /> Save Changes</>
+                  )}
+                </motion.button>
+              </motion.div>
+            )}
+          </div>
 
         </form>
       </div>
@@ -708,77 +801,133 @@ export default function Profile() {
 
 // --- HELPER COMPONENTS ---
 
-function AdminProfileView({ formData, setFormData, handleImageUpload, handleUpdateProfile, loading, uploadingImage, profile }: any) {
+function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading, profile, isEditing, setIsEditing }: any) {
   return (
-    <div className="pt-32 pb-40 px-6 bg-[var(--bg-main)] min-h-screen">
-      <div className="max-w-xl mx-auto p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-sm">
+    <div className="pt-28 pb-40 px-6 bg-[var(--bg-main)] min-h-screen flex items-center justify-center">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-lg w-full p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl shadow-2xl"
+      >
         
         <div className="flex flex-col items-center mb-8">
-          <div className="w-24 h-24 rounded-full overflow-hidden border border-[var(--border-main)] bg-[var(--bg-main)] mb-6">
-            <img 
-              src={
-                profile?.photoURL ||
-                'https://ui-avatars.com/api/?name=Admin'
-              }
-              alt=""
-              onError={(e) => {
-                e.currentTarget.src =
-                  'https://ui-avatars.com/api/?name=Admin';
-              }}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+          <div className="relative group mb-6">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full blur-lg opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)]">
+              <img 
+                src={
+                  profile?.photoURL ||
+                  'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
+                }
+                alt=""
+                onError={(e) => {
+                  e.currentTarget.src =
+                    'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff';
+                }}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-[var(--text-main)]">{formData.displayName}</h2>
-          <div className="px-3 py-1 mt-2 bg-primary-600/10 text-primary-600 rounded-md text-xs font-semibold">Administrator</div>
+          <h2 className="text-3xl font-black text-[var(--text-main)]">{formData.displayName}</h2>
+          <div className="px-4 py-2 mt-3 bg-gradient-to-r from-primary-500/20 to-primary-600/20 text-primary-600 rounded-lg text-xs font-bold border border-primary-500/30">Administrator</div>
         </div>
 
-        <form onSubmit={handleUpdateProfile} className="space-y-5">
+        <form onSubmit={handleUpdateProfile} className="space-y-6">
           <InputGroup label="Full Name">
-            <input  value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" />
+            <input 
+              disabled={!isEditing} 
+              value={formData.displayName} 
+              onChange={(e) => setFormData({...formData, displayName: e.target.value})} 
+              className={`w-full rounded-xl p-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`} 
+            />
           </InputGroup>
           <InputGroup label="Bio">
-            <textarea disabled={false} value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all min-h-[80px]" placeholder="Brief overview..." />
+            <textarea 
+              disabled={!isEditing} 
+              value={formData.bio} 
+              onChange={(e) => setFormData({...formData, bio: e.target.value})} 
+              className={`w-full rounded-xl p-3.5 text-sm transition-all min-h-[100px] ${isEditing ? 'bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}  
+              placeholder="Brief overview..."
+            />
           </InputGroup>
-          <button disabled={loading} className="w-full bg-primary-600 text-white rounded-xl py-4 text-sm font-semibold mt-4 flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors">
-            {loading ? "Saving..." : <><Save size={16} /> Save Changes</>}
-          </button>
+          <div className="flex gap-3 pt-2">
+            {!isEditing ? (
+              <button 
+                type="button" 
+                onClick={() => setIsEditing(true)} 
+                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl py-3.5 text-sm font-bold hover:shadow-lg hover:shadow-primary-500/30 transition-all"
+              >
+                Edit
+              </button>
+            ) : (
+              <>
+                <button 
+                  type="button" 
+                  onClick={() => setIsEditing(false)} 
+                  className="w-full bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl py-3.5 text-sm font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl py-3.5 text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/30 transition-all"
+                >
+                  {loading ? "Saving..." : <><Save size={16} /> Save</>}
+                </button>
+              </>
+            )}
+          </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
 function ProfileSection({ title, icon, children, isCollapsed, onToggle }: any) {
   return (
-    <div className={`p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl transition-all ${isCollapsed ? 'hover:border-primary-500/30' : ''}`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl transition-all hover:border-primary-500/40 group shadow-lg`}
+    >
       <button 
         type="button" 
         onClick={onToggle}
-        className="w-full flex items-center justify-between mb-6"
+        className="w-full flex items-center justify-between mb-6 group/header"
       >
         <div className="flex items-center gap-4">
-          <div className="text-[var(--text-muted)] group-hover:text-primary-500">
+          <div className="p-3 rounded-xl bg-primary-500/20 text-primary-500 group-hover/header:bg-primary-500/30 transition-colors">
             {icon}
           </div>
-          <h2 className="text-xl font-bold text-[var(--text-main)]">{title}</h2>
+          <h2 className="text-2xl font-black text-[var(--text-main)] group-hover/header:text-primary-600 transition-colors">{title}</h2>
         </div>
-        {isCollapsed ? <ChevronDown size={20} className="text-[var(--text-muted)]" /> : <ChevronUp size={20} className="text-[var(--text-muted)]" />}
+        <motion.div
+          animate={{ rotate: isCollapsed ? 0 : 180 }}
+          transition={{ duration: 0.3 }}
+          className="text-primary-500"
+        >
+          {isCollapsed ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
+        </motion.div>
       </button>
       
-      {!isCollapsed && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          {children}
-        </motion.div>
-      )}
-    </div>
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
-function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd, itemRenderer, addButtonText }: any) {
+function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd, itemRenderer, addButtonText, isEditing }: any) {
   const dataItems = Array.isArray(items) ? items : [];
   return (
     <ProfileSection title={title} icon={icon} isCollapsed={isCollapsed} onToggle={onToggle}>
@@ -787,14 +936,18 @@ function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd,
           {dataItems.map((item: any) => itemRenderer(item))}
         </AnimatePresence>
         
-        <button 
-          type="button" 
-          onClick={onAdd}
-          className="w-full py-4 border-2 border-dashed border-[var(--border-main)] bg-[var(--bg-main)]/50 rounded-xl flex items-center justify-center gap-2 text-[var(--text-muted)] hover:border-primary-500/50 hover:text-primary-500 transition-colors font-medium text-sm"
-        >
-          <Plus size={16} />
-          {addButtonText}
-        </button>
+        {isEditing && (
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button" 
+            onClick={onAdd}
+            className="w-full py-4 border-2 border-dashed border-primary-500/40 bg-primary-500/5 rounded-2xl flex items-center justify-center gap-3 text-primary-600 hover:border-primary-500/80 hover:bg-primary-500/10 transition-all font-bold text-base group"
+          >
+            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+            {addButtonText}
+          </motion.button>
+        )}
       </div>
     </ProfileSection>
   );
@@ -804,34 +957,41 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div 
       layout
-      initial={{ opacity: 0, x: -10 }}
+      initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm"
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
     >
       {isEditing && (
-        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2"><Trash2 size={16} /></button>
+        <motion.button 
+          whileHover={{ scale: 1.2 }}
+          type="button" 
+          onClick={onDelete} 
+          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2 hover:bg-red-500/10 rounded-lg"
+        >
+          <Trash2 size={18} />
+        </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Role / Position">
-          <input value={exp.role} onChange={(e) => onUpdate('role', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Software Engineer" />
+          <EditableInput isEditing={isEditing} value={exp.role} onChange={(e) => onUpdate('role', e)} placeholder="Software Engineer" />
         </InputGroup>
         <InputGroup label="Company / Organization">
-          <input value={exp.company} onChange={(e) => onUpdate('company', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Acme Inc" />
+          <EditableInput isEditing={isEditing} value={exp.company} onChange={(e) => onUpdate('company', e)} placeholder="Acme Inc" />
         </InputGroup>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
         <InputGroup label="Employment Type">
-          <select value={exp.type} onChange={(e) => onUpdate('type', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+          <select disabled={!isEditing} value={exp.type} onChange={(e) => onUpdate('type', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
             {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </InputGroup>
         <InputGroup label="Location">
-           <input value={exp.location} onChange={(e) => onUpdate('location', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="City, Country" />
+           <EditableInput isEditing={isEditing} value={exp.location} onChange={(e) => onUpdate('location', e)} placeholder="City, Country" />
         </InputGroup>
         <InputGroup label="Work Mode">
-          <select value={exp.mode} onChange={(e) => onUpdate('mode', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+          <select disabled={!isEditing} value={exp.mode} onChange={(e) => onUpdate('mode', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
             {WORK_MODES.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </InputGroup>
@@ -840,11 +1000,11 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Start Date">
           <div className="flex gap-2">
-             <select value={exp.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={exp.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select value={exp.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={exp.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -852,32 +1012,39 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
         </InputGroup>
         <InputGroup label="End Date">
           <div className="flex gap-2">
-             <select value={exp.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={exp.current}>
+             <select disabled={!isEditing || exp.current} value={exp.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'} ${!isEditing || exp.current ? 'opacity-50' : ''}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select value={exp.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={exp.current}>
+             <select disabled={!isEditing || exp.current} value={exp.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'} ${!isEditing || exp.current ? 'opacity-50' : ''}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
-          <div className="mt-2">
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)]">
-              <input type="checkbox" checked={exp.current} onChange={(e) => onUpdate('current', e.target.checked)} className="rounded text-primary-600 focus:ring-primary-600 border-[var(--border-main)] bg-[var(--bg-card)]" />
-              I currently work here
-            </label>
-          </div>
+          {isEditing && (
+            <div className="mt-2">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] group/checkbox hover:text-primary-600 transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={exp.current} 
+                  onChange={(e) => onUpdate('current', e.target.checked)} 
+                  className="w-4 h-4 rounded border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-card)] accent-primary-600 cursor-pointer group-hover/checkbox:border-primary-500" 
+                />
+                I currently work here
+              </label>
+            </div>
+          )}
         </InputGroup>
       </div>
       
       <div className="mb-5">
          <InputGroup label="Skills Used (Comma separated)">
-            <input value={exp.skills} onChange={(e) => onUpdate('skills', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="React, Node.js, TypeScript" />
+            <EditableInput isEditing={isEditing} value={exp.skills} onChange={(e) => onUpdate('skills', e)} placeholder="React, Node.js, TypeScript" />
          </InputGroup>
       </div>
 
       <InputGroup label="Description">
-        <textarea value={exp.description} onChange={(e) => onUpdate('description', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm min-h-[100px] focus:outline-none focus:border-primary-500 transition-all" placeholder="Key responsibilities and achievements..." />
+        <EditableTextarea isEditing={isEditing} value={exp.description} onChange={(e) => onUpdate('description', e)} placeholder="Key responsibilities and achievements..." minHeight="min-h-[120px]" />
       </InputGroup>
     </motion.div>
   );
@@ -887,31 +1054,38 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div 
       layout
-      initial={{ opacity: 0, x: -10 }}
+      initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm"
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
     >
       {isEditing && (
-        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2"><Trash2 size={16} /></button>
+        <motion.button 
+          whileHover={{ scale: 1.2 }}
+          type="button" 
+          onClick={onDelete} 
+          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2 hover:bg-red-500/10 rounded-lg"
+        >
+          <Trash2 size={18} />
+        </motion.button>
       )}  
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Project Title">
-          <input value={proj.title} onChange={(e) => onUpdate('title', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Project Name" />
+          <EditableInput isEditing={isEditing} value={proj.title} onChange={(e) => onUpdate('title', e)} placeholder="Project Name" />
         </InputGroup>
         <InputGroup label="Category">
-           <input value={proj.category} onChange={(e) => onUpdate('category', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Web App, Mobile App, etc." />
+           <EditableInput isEditing={isEditing} value={proj.category} onChange={(e) => onUpdate('category', e)} placeholder="Web App, Mobile App, etc." />
         </InputGroup>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Start Date">
           <div className="flex gap-2">
-             <select value={proj.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={proj.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select value={proj.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={proj.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -919,11 +1093,11 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
         </InputGroup>
         <InputGroup label="End Date">
           <div className="flex gap-2">
-             <select value={proj.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={proj.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select value={proj.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={proj.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -933,24 +1107,24 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Status">
-          <select value={proj.status} onChange={(e) => onUpdate('status', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+          <select disabled={!isEditing} value={proj.status} onChange={(e) => onUpdate('status', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
             {PROJECT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </InputGroup>
         <InputGroup label="Technologies Used">
-           <input value={proj.technologies} onChange={(e) => onUpdate('technologies', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="React, Node, MongoDB" />
+           <EditableInput isEditing={isEditing} value={proj.technologies} onChange={(e) => onUpdate('technologies', e)} placeholder="React, Node, MongoDB" />
         </InputGroup>
       </div>
 
       <InputGroup label="Description">
-        <textarea value={proj.description} onChange={(e) => onUpdate('description', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm min-h-[100px] focus:outline-none focus:border-primary-500 transition-all" placeholder="Brief project summary..." />
+        <EditableTextarea isEditing={isEditing} value={proj.description} onChange={(e) => onUpdate('description', e)} placeholder="Brief project summary..." minHeight="min-h-[120px]" />
       </InputGroup>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
         <SocialInput
-                isEditing={isEditing} icon={<Github size={14}/>} placeholder="Repository Link" value={proj.githubUrl} onChange={(v:any) => onUpdate('githubUrl', v)} />
+                isEditing={isEditing} icon={<Github size={16}/>} placeholder="Repository Link" value={proj.githubUrl} onChange={(v:any) => onUpdate('githubUrl', v)} />
         <SocialInput
-                isEditing={isEditing} icon={<Globe size={14}/>} placeholder="Demo URL" value={proj.demoUrl} onChange={(v:any) => onUpdate('demoUrl', v)} />
+                isEditing={isEditing} icon={<Globe size={16}/>} placeholder="Demo URL" value={proj.demoUrl} onChange={(v:any) => onUpdate('demoUrl', v)} />
       </div>
     </motion.div>
   );
@@ -958,39 +1132,59 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
 
 function EducationItem({ edu, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div layout className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm">
+    <motion.div 
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    >
       {isEditing && (
-        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+        <motion.button 
+          whileHover={{ scale: 1.2 }}
+          type="button" 
+          onClick={onDelete} 
+          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2 hover:bg-red-500/10 rounded-lg"
+        >
+          <Trash2 size={18} />
+        </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Institution Name">
-          <input value={edu.institution} onChange={(e) => onUpdate('institution', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="University of Technology" />
+          <EditableInput isEditing={isEditing} value={edu.institution} onChange={(e) => onUpdate('institution', e)} placeholder="University of Technology" />
         </InputGroup>
         <InputGroup label="Degree / Course">
-          <input value={edu.degree} onChange={(e) => onUpdate('degree', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Bachelor of Science" />
+          <EditableInput isEditing={isEditing} value={edu.degree} onChange={(e) => onUpdate('degree', e)} placeholder="Bachelor of Science" />
         </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <InputGroup label="Department / Major">
-           <input value={edu.department} onChange={(e) => onUpdate('department', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Computer Science" />
+           <EditableInput isEditing={isEditing} value={edu.department} onChange={(e) => onUpdate('department', e)} placeholder="Computer Science" />
         </InputGroup>
         <InputGroup label="Start Year">
-            <select value={edu.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+            <select disabled={!isEditing} value={edu.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
            </select>
         </InputGroup>
         <InputGroup label="End Year">
-            <select value={edu.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm disabled:opacity-50 focus:outline-none focus:border-primary-500 transition-all" disabled={edu.current}>
+            <select disabled={!isEditing || edu.current} value={edu.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'} ${!isEditing || edu.current ? 'opacity-50' : ''}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
            </select>
-           <div className="mt-2">
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)]">
-              <input type="checkbox" checked={edu.current} onChange={(e) => onUpdate('current', e.target.checked)} className="rounded text-primary-600 focus:ring-primary-600 border-[var(--border-main)] bg-[var(--bg-card)]" />
-              Current Student
-            </label>
-           </div>
+           {isEditing && (
+             <div className="mt-2">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] group/checkbox hover:text-primary-600 transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={edu.current} 
+                  onChange={(e) => onUpdate('current', e.target.checked)} 
+                  className="w-4 h-4 rounded border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-card)] accent-primary-600 cursor-pointer group-hover/checkbox:border-primary-500" 
+                />
+                Current Student
+              </label>
+             </div>
+           )}
         </InputGroup>
       </div>
     </motion.div>
@@ -999,33 +1193,46 @@ function EducationItem({ edu, onUpdate, onDelete, isEditing }: any) {
 
 function CertificationItem({ cert, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div layout className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm">
+    <motion.div 
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    >
       {isEditing && (
-        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+        <motion.button 
+          whileHover={{ scale: 1.2 }}
+          type="button" 
+          onClick={onDelete} 
+          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2 hover:bg-red-500/10 rounded-lg"
+        >
+          <Trash2 size={18} />
+        </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Certification Name">
-          <input value={cert.name} onChange={(e) => onUpdate('name', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="AWS Certified Architect" />
+          <EditableInput isEditing={isEditing} value={cert.name} onChange={(e) => onUpdate('name', e)} placeholder="AWS Certified Architect" />
         </InputGroup>
         <InputGroup label="Issuing Organization">
-          <input value={cert.org} onChange={(e) => onUpdate('org', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Amazon Web Services" />
+          <EditableInput isEditing={isEditing} value={cert.org} onChange={(e) => onUpdate('org', e)} placeholder="Amazon Web Services" />
         </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Issue Date">
           <div className="flex gap-2">
-             <select value={cert.issueMonth || ''} onChange={(e) => onUpdate('issueMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={cert.issueMonth || ''} onChange={(e) => onUpdate('issueMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select value={cert.issueYear || ''} onChange={(e) => onUpdate('issueYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={cert.issueYear || ''} onChange={(e) => onUpdate('issueYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </InputGroup>
         <InputGroup label="Credential URL">
-          <input value={cert.url} onChange={(e) => onUpdate('url', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="https://..." />
+          <EditableInput isEditing={isEditing} value={cert.url} onChange={(e) => onUpdate('url', e)} placeholder="https://..." />
         </InputGroup>
       </div>
     </motion.div>
@@ -1034,33 +1241,46 @@ function CertificationItem({ cert, onUpdate, onDelete, isEditing }: any) {
 
 function PublicationItem({ pub, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div layout className="p-6 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl relative group/item shadow-sm">
+    <motion.div 
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    >
       {isEditing && (
-        <button type="button" onClick={onDelete} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2"><Trash2 size={16} /></button>
+        <motion.button 
+          whileHover={{ scale: 1.2 }}
+          type="button" 
+          onClick={onDelete} 
+          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2 hover:bg-red-500/10 rounded-lg"
+        >
+          <Trash2 size={18} />
+        </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Title">
-          <input value={pub.title} onChange={(e) => onUpdate('title', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Research paper or article title" />
+          <EditableInput isEditing={isEditing} value={pub.title} onChange={(e) => onUpdate('title', e)} placeholder="Research paper or article title" />
         </InputGroup>
         <InputGroup label="Publisher">
-          <input value={pub.publisher} onChange={(e) => onUpdate('publisher', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="Journal, Medium, etc." />
+          <EditableInput isEditing={isEditing} value={pub.publisher} onChange={(e) => onUpdate('publisher', e)} placeholder="Journal, Medium, etc." />
         </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Date">
           <div className="flex gap-2">
-             <select value={pub.dateMonth || ''} onChange={(e) => onUpdate('dateMonth', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={pub.dateMonth || ''} onChange={(e) => onUpdate('dateMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select value={pub.dateYear || ''} onChange={(e) => onUpdate('dateYear', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all">
+             <select disabled={!isEditing} value={pub.dateYear || ''} onChange={(e) => onUpdate('dateYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </InputGroup>
         <InputGroup label="URL">
-          <input value={pub.url} onChange={(e) => onUpdate('url', e.target.value)} className="w-full bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg p-3 text-sm focus:outline-none focus:border-primary-500 transition-all" placeholder="https://..." />
+          <EditableInput isEditing={isEditing} value={pub.url} onChange={(e) => onUpdate('url', e)} placeholder="https://..." />
         </InputGroup>
       </div>
     </motion.div>
@@ -1070,25 +1290,50 @@ function PublicationItem({ pub, onUpdate, onDelete, isEditing }: any) {
 function InputGroup({ label, children }: any) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-[var(--text-muted)] mb-2 uppercase tracking-wider">{label}</label>
+      <label className="block text-xs font-bold text-primary-600 mb-2.5 uppercase tracking-widest">{label}</label>
       {children}
     </div>
+  );
+}
+
+function EditableInput({ isEditing, value, onChange, placeholder }: any) {
+  return (
+    <input
+      disabled={!isEditing}
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`w-full rounded-xl p-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
+    />
+  );
+}
+
+function EditableTextarea({ isEditing, value, onChange, placeholder, minHeight }: any) {
+  return (
+    <textarea
+      disabled={!isEditing}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`w-full rounded-xl p-3.5 text-sm transition-all ${minHeight} ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
+    />
   );
 }
 
 function SocialInput({ icon, value, onChange, placeholder, isEditing }: any) {
   return (
     <div className="relative group flex items-center">
-      <div className="absolute left-4 text-[var(--text-muted)]">
+      <div className="absolute left-4 text-primary-600">
         {icon}
       </div>
         <input
-          disabled={false}
+          disabled={!isEditing}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary-500 transition-all"
+          className={`w-full rounded-xl pl-12 pr-4 py-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
         />
     </div>
   );
