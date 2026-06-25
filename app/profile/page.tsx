@@ -1,6 +1,6 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { doc, setDoc } from 'firebase/firestore';
@@ -9,7 +9,8 @@ import { useAuth } from '../context/AuthContext';
 import { 
   User, Github, Linkedin, Globe, Plus, Trash2, Save, 
   ChevronDown, ChevronUp, Briefcase, BookOpen, Award, Layers,
-  Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X, Edit3
+  Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X, Edit3,
+  ArrowUp
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
@@ -24,10 +25,18 @@ const FieldWrapper = ({ show, children }: { show: boolean; children: React.React
   return show ? <>{children}</> : null;
 };
 
+interface ValidationError {
+  section: string;
+  message: string;
+}
+
 export default function Profile() {
   const { profile, isAdmin, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
   
   const [collapsed, setCollapsed] = useState({
     personal: false,
@@ -60,13 +69,9 @@ export default function Profile() {
         role: profile.role || 'user',
         primaryRole: profile.primaryRole || '',
         experienceLevel: profile.experienceLevel || 'Fresher',
-        skills: Array.isArray(profile.skills)
-          ? profile.skills
-          : [],
-          
+        skills: Array.isArray(profile.skills) ? profile.skills : [],
         declarationAccepted: profile.declarationAccepted || false,
         signature: profile.signature || '',
-        
         portfolioUrl: profile.portfolioUrl || '',
         githubUrl: profile.githubUrl || profile.github || '',
         linkedinUrl: profile.linkedinUrl || profile.linkedin || '',
@@ -74,12 +79,7 @@ export default function Profile() {
         artstationUrl: profile.artstationUrl || '',
         youtubeUrl: profile.youtubeUrl || '',
         otherUrl: profile.otherUrl || '',
-        
-        experiences: Array.isArray(profile.experiences)
-          ? profile.experiences
-          : Array.isArray(profile.experience)
-          ? profile.experience
-          : [],
+        experiences: Array.isArray(profile.experiences) ? profile.experiences : Array.isArray(profile.experience) ? profile.experience : [],
         projects: Array.isArray(profile.projects) ? profile.projects : [],
         education: Array.isArray(profile.education) ? profile.education : [],
         certifications: Array.isArray(profile.certifications) ? profile.certifications : [],
@@ -101,17 +101,66 @@ export default function Profile() {
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasChanges) {
+      if (hasChanges && isEditing) {
         e.preventDefault();
         e.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasChanges]);
+  }, [hasChanges, isEditing]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const validateForm = (): boolean => {
+    const errors: ValidationError[] = [];
+
+    if (!formData.displayName?.trim()) {
+      errors.push({ section: 'personal', message: 'Full name is required' });
+    }
+
+    if (!formData.primaryRole?.trim()) {
+      errors.push({ section: 'personal', message: 'Primary role is required' });
+    }
+
+    if (!Array.isArray(formData.skills) || formData.skills.length === 0) {
+      errors.push({ section: 'personal', message: 'At least one skill is required' });
+    }
+
+    if (isEditing && !formData.declarationAccepted) {
+      errors.push({ section: 'declaration', message: 'You must accept the declaration' });
+    }
+
+    if (isEditing && formData.declarationAccepted && !formData.signature?.trim()) {
+      errors.push({ section: 'declaration', message: 'Digital signature is required' });
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
 
   const handleUpdateProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error("Please fill in all required fields");
+      // Scroll to first error section
+      const firstErrorSection = validationErrors[0]?.section;
+      if (firstErrorSection) {
+        const element = document.querySelector(`[data-section="${firstErrorSection}"]`);
+        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
     const currentUser = profile;
 
     if (!currentUser) {
@@ -133,10 +182,11 @@ export default function Profile() {
         { merge: true }
       );
 
-      toast.success("Profile updated successfully.");
+      toast.success("Profile updated successfully! 🎉");
       setIsEditing(false);
       setHasChanges(false);
       setInitialData(JSON.stringify(formData));
+      setValidationErrors([]);
 
     } catch (err) {
       console.error(err);
@@ -198,59 +248,117 @@ export default function Profile() {
   return (
     <div className="pt-28 pb-40 px-4 md:px-6 bg-[var(--bg-main)] min-h-screen relative overflow-hidden">
       {/* Animated background elements */}
-      <div className="fixed inset-0 -z-10 opacity-40 pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-20 left-10 w-80 h-80 bg-primary-600/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
+      <div className="fixed inset-0 -z-10 opacity-30 pointer-events-none">
+        <div className="absolute top-20 right-10 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 left-10 w-80 h-80 bg-primary-600/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
       </div>
 
-      <div className="max-w-5xl mx-auto relative z-10">
+      <div className="max-w-5xl mx-auto relative z-10" ref={formRef}>
         
-        {/* Profile Header */}
+        {/* Validation Errors Alert */}
+        <AnimatePresence>
+          {validationErrors.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-8 p-6 bg-red-500/10 border border-red-500/30 rounded-2xl backdrop-blur-sm"
+            >
+              <div className="flex items-start gap-4">
+                <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="font-bold text-red-600 mb-2">Please complete required fields:</h3>
+                  <ul className="space-y-1">
+                    {validationErrors.map((err, idx) => (
+                      <li key={idx} className="text-sm text-red-600 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        {err.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Header with Edit Button */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-16"
+          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12"
         >
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            className="relative group"
-          >
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-300"></div>
-            <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)] shadow-2xl">
-              <img 
-                src={
-                  profile?.photoURL ||
-                  'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160'
-                } 
-                alt="Profile"
-                onError={(e) => {
-                  e.currentTarget.src =
-                    'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160';
-                }}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          </motion.div>
-                    
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-center md:text-left flex-1"
-          >
-            <h1 className="text-5xl md:text-6xl font-black italic text-[var(--text-main)] mb-3 leading-tight">
-              {formData.displayName || 'Your Name'}
-            </h1>
-            {(formData.primaryRole || isEditing) && (
-              <p className="text-xl text-primary-500 font-bold mb-4">
-                {formData.primaryRole || 'Add your professional role'}
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 flex-1">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-300"></div>
+              <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)] shadow-2xl">
+                <img 
+                  src={
+                    profile?.photoURL ||
+                    'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160'
+                  } 
+                  alt="Profile"
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160';
+                  }}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </motion.div>
+                      
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-center md:text-left flex-1"
+            >
+              <h1 className="text-4xl md:text-5xl font-black text-[var(--text-main)] mb-2">
+                {formData.displayName || 'Your Name'}
+              </h1>
+              {(formData.primaryRole || isEditing) && (
+                <p className="text-lg md:text-xl text-primary-500 font-bold mb-3">
+                  {formData.primaryRole || 'Add your professional role'}
+                </p>
+              )}
+              <p className="text-[var(--text-muted)] text-sm md:text-base max-w-2xl leading-relaxed">
+                {formData.bio || (isEditing ? 'Add a compelling bio...' : '')}
               </p>
-            )}
-            <p className="text-[var(--text-muted)] text-lg max-w-2xl leading-relaxed">
-              {formData.bio || (isEditing ? 'Add a compelling bio...' : '')}
-            </p>
-          </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Top Edit/Cancel Button */}
+          {!isEditing ? (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="px-8 py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-bold shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 transition-all flex items-center gap-2 whitespace-nowrap"
+            >
+              <Edit3 size={18} />
+              Edit Profile
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={() => {
+                setFormData(JSON.parse(initialData));
+                setHasChanges(false);
+                setIsEditing(false);
+                setValidationErrors([]);
+              }}
+              className="px-8 py-3.5 border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl font-bold hover:bg-primary-500/10 transition-all"
+            >
+              Cancel
+            </motion.button>
+          )}
         </motion.div>
 
         {/* Profile Completion Tracker */}
@@ -258,9 +366,8 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-16 p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] via-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl shadow-2xl relative overflow-hidden group"
+          className="mb-16 p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] via-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-2xl shadow-lg relative overflow-hidden"
         >
-          {/* Background decoration */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary-500/10 rounded-full blur-3xl -z-10"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-600/10 rounded-full blur-3xl -z-10"></div>
 
@@ -271,7 +378,7 @@ export default function Profile() {
                   <div className={`p-2.5 rounded-xl ${completion.percentage === 100 ? 'bg-green-500/20' : 'bg-primary-500/20'}`}>
                     <CheckCircle2 size={28} className={completion.percentage === 100 ? "text-green-500" : "text-primary-500"} />
                   </div>
-                  Profile Completion
+                  Profile Strength
                 </h3>
                 <motion.span 
                   initial={{ scale: 0.8 }}
@@ -281,22 +388,22 @@ export default function Profile() {
                     completion.strength === 'Average' ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' :
                     'bg-red-500/20 text-red-600 border-red-500/30'
                   }`}>
-                  {completion.strength} Profile
+                  {completion.strength}
                 </motion.span>
               </div>
-              <p className="text-sm font-semibold text-[var(--text-muted)] tracking-wide opacity-80">Complete your profile to unlock all opportunities</p>
+              <p className="text-sm font-medium text-[var(--text-muted)] opacity-80">Complete your profile to unlock opportunities</p>
             </div>
             <motion.span 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="font-black text-6xl md:text-7xl italic bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent tracking-tighter"
+              className="font-black text-5xl md:text-6xl bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent"
             >
               {completion.percentage}%
             </motion.span>
           </div>
 
-          <div className="h-3 w-full bg-[var(--bg-hover)]/50 rounded-full overflow-hidden mb-8 border border-primary-500/20 relative z-10">
+          <div className="h-3 w-full bg-[var(--bg-hover)]/50 rounded-full overflow-hidden mb-6 border border-primary-500/20 relative z-10">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${completion.percentage}%` }}
@@ -309,18 +416,15 @@ export default function Profile() {
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-500/10 text-red-600 border border-red-500/30 p-5 rounded-2xl text-sm backdrop-blur-sm"
+              className="bg-red-500/10 text-red-600 border border-red-500/30 p-4 rounded-xl text-sm backdrop-blur-sm"
             >
               <div className="flex items-start gap-3">
-                <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold mb-2">Remaining Requirements:</p>
-                  <ul className="list-disc pl-5 space-y-1 opacity-90">
-                    {completion.missing.map((req: string, idx: number) => (
-                      <li key={idx} className="text-sm">{req}</li>
-                    ))}
-                  </ul>
-                </div>
+                <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+                <ul className="space-y-1 flex-1">
+                  {completion.missing.map((req: string, idx: number) => (
+                    <li key={idx} className="text-sm">{req}</li>
+                  ))}
+                </ul>
               </div>
             </motion.div>
           )}
@@ -329,31 +433,10 @@ export default function Profile() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-green-500/15 text-green-600 border border-green-500/30 p-5 rounded-2xl text-sm font-semibold flex items-center gap-3 backdrop-blur-sm"
+              className="bg-green-500/15 text-green-600 border border-green-500/30 p-4 rounded-xl text-sm font-semibold flex items-center gap-3 backdrop-blur-sm"
             >
-              <CheckCircle2 size={20} className="flex-shrink-0" />
-              Your profile is complete! You're ready to apply and succeed. 🚀
-            </motion.div>
-          )}
-
-          {completion.suggestions && completion.suggestions.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="mt-6 bg-primary-500/15 text-primary-600 border border-primary-500/30 p-5 rounded-2xl text-sm backdrop-blur-sm"
-            >
-              <div className="flex items-start gap-3">
-                <Sparkles size={20} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold mb-2">Stand Out Tips:</p>
-                  <ul className="list-disc pl-5 space-y-1 opacity-90">
-                    {completion.suggestions.map((sug: string, idx: number) => (
-                      <li key={idx} className="text-sm font-medium">{sug}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              <CheckCircle2 size={18} className="flex-shrink-0" />
+              Your profile is complete! You're ready to apply. 🚀
             </motion.div>
           )}
         </motion.div>
@@ -366,14 +449,16 @@ export default function Profile() {
             icon={<User size={24} />} 
             isCollapsed={collapsed.personal} 
             onToggle={() => toggleCollapse('personal')}
+            sectionId="personal"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputGroup label="Full Name">
+              <InputGroup label="Full Name *" required>
                 <EditableInput
                   isEditing={isEditing}
                   value={formData.displayName}
                   onChange={(v) => setFormData({ ...formData, displayName: v })}
                   placeholder="e.g. John Doe"
+                  hasError={validationErrors.some(e => e.message.includes('Full name'))}
                 />
               </InputGroup>
 
@@ -383,7 +468,7 @@ export default function Profile() {
                   type="email" 
                   value={formData.email || profile?.email || ""}
                   readOnly
-                  className="w-full bg-transparent border-none text-[var(--text-main)] rounded-lg p-3 text-sm opacity-60 cursor-not-allowed"
+                  className="w-full bg-transparent border-none text-[var(--text-main)] rounded-xl p-3.5 text-sm opacity-60 cursor-not-allowed"
                   placeholder="Email Address"
                 />
               </InputGroup>
@@ -403,7 +488,7 @@ export default function Profile() {
                     isEditing={isEditing}
                     value={formData.country}
                     onChange={(v) => setFormData({ ...formData, country: v })}
-                    placeholder="e.g. United States"
+                    placeholder="e.g. India"
                   />
                 </InputGroup>
               </FieldWrapper>
@@ -413,7 +498,7 @@ export default function Profile() {
                     isEditing={isEditing}
                     value={formData.state}
                     onChange={(v) => setFormData({ ...formData, state: v })}
-                    placeholder="e.g. California"
+                    placeholder="e.g. Tamil Nadu"
                   />
                 </InputGroup>
               </FieldWrapper>
@@ -423,7 +508,7 @@ export default function Profile() {
                     isEditing={isEditing}
                     value={formData.city}
                     onChange={(v) => setFormData({ ...formData, city: v })}
-                    placeholder="e.g. San Francisco"
+                    placeholder="e.g. Chennai"
                   />
                 </InputGroup>
               </FieldWrapper>
@@ -436,19 +521,20 @@ export default function Profile() {
                     value={formData.bio}
                     onChange={(v) => setFormData({ ...formData, bio: v })}
                     placeholder="Write a compelling professional summary..."
-                    minHeight="min-h-[130px]"
+                    minHeight="min-h-[120px]"
                   />
                 </InputGroup>
               </FieldWrapper>
             </div>
             
             <div className="mt-8 pt-8 border-t border-primary-500/20 grid grid-cols-1 md:grid-cols-2 gap-6">
-               <InputGroup label="Primary Role / Interest">
+               <InputGroup label="Primary Role / Interest *" required>
                   <EditableInput
                     isEditing={isEditing}
                     value={formData.primaryRole}
                     onChange={(v) => setFormData({ ...formData, primaryRole: v })}
-                    placeholder="e.g. Frontend Developer, Business Analyst"
+                    placeholder="e.g. Frontend Developer"
+                    hasError={validationErrors.some(e => e.message.includes('Primary role'))}
                   />
                </InputGroup>
                <InputGroup label="Experience Level">
@@ -456,7 +542,7 @@ export default function Profile() {
                     disabled={!isEditing}
                     value={formData.experienceLevel}
                     onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
-                    className={`w-full rounded-xl p-3.5 text-sm transition-all font-semibold ${isEditing ? 'bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-pointer hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
+                    className={`w-full rounded-xl p-3.5 text-sm transition-all font-semibold ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-pointer hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
                   >
                      <option value="Fresher">Fresher</option>
                      <option value="1–2 Years">1–2 Years</option>
@@ -466,7 +552,7 @@ export default function Profile() {
                   </select>
                </InputGroup>
                <div className="md:col-span-2">
-                 <InputGroup label="Top Skills (Minimum 1)">
+                 <InputGroup label="Top Skills (Minimum 1) *" required>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {(Array.isArray(formData.skills) ? formData.skills : []).map((skill: string, idx: number) => (
                         <motion.div 
@@ -506,7 +592,7 @@ export default function Profile() {
                               }
                             }
                           }}
-                          className="flex-1 bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl p-3.5 text-sm focus:outline-none focus:border-primary-500 transition-all font-medium hover:border-primary-500/50"
+                          className="flex-1 bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl p-3.5 text-sm focus:outline-none focus:border-primary-500 transition-all font-medium hover:border-primary-500/50"
                           placeholder="Type a skill and press Enter"
                         />
                         <button 
@@ -530,184 +616,202 @@ export default function Profile() {
           </ProfileSection>
 
           {/* 2. Experience */}
-          <ModularSection 
-            title="Experience" 
-            icon={<Briefcase size={24} />} 
-            items={formData.experiences}
-            isCollapsed={collapsed.experience}
-            onToggle={() => toggleCollapse('experience')}
-            onAdd={() => addItem('experiences', {
-              role: '',
-              company: '',
-              type: 'Full-time',
-              startMonth: '',
-              startYear: '',
-              endMonth: '',
-              endYear: '',
-              current: false,
-              location: '',
-              mode: 'Onsite',
-              skills: '',
-              description: ''
-            })}
-            itemRenderer={(exp: any) => (
-              <ExperienceItem 
-                isEditing={isEditing}
-                key={exp.id} 
-                exp={exp} 
-                onUpdate={(f: any, v: any) => updateItem('experiences', exp.id, f, v)}
-                onDelete={() => removeItem('experiences', exp.id)}
-              />
-            )}
-            addButtonText="Add Experience"
-            isEditing={isEditing}
-          />
+          {(isEditing || formData.experiences?.length > 0) && (
+            <ModularSection 
+              title="Experience" 
+              icon={<Briefcase size={24} />} 
+              items={formData.experiences}
+              isCollapsed={collapsed.experience}
+              onToggle={() => toggleCollapse('experience')}
+              onAdd={() => addItem('experiences', {
+                role: '',
+                company: '',
+                type: 'Full-time',
+                startMonth: '',
+                startYear: '',
+                endMonth: '',
+                endYear: '',
+                current: false,
+                location: '',
+                mode: 'Onsite',
+                skills: '',
+                description: ''
+              })}
+              itemRenderer={(exp: any) => (
+                <ExperienceItem 
+                  isEditing={isEditing}
+                  key={exp.id} 
+                  exp={exp} 
+                  onUpdate={(f: any, v: any) => updateItem('experiences', exp.id, f, v)}
+                  onDelete={() => removeItem('experiences', exp.id)}
+                />
+              )}
+              addButtonText="Add Experience"
+              isEditing={isEditing}
+            />
+          )}
 
           {/* 3. Projects */}
-          <ModularSection 
-            title="Projects" 
-            icon={<Layers size={24} />} 
-            items={formData.projects}
-            isCollapsed={collapsed.projects}
-            onToggle={() => toggleCollapse('projects')}
-            onAdd={() => addItem('projects', {
-              title: '',
-              category: '',
-              description: '',
-              skills: '',
-              technologies: '',
-              startMonth: '',
-              startYear: '',
-              endMonth: '',
-              endYear: '',
-              status: 'Completed',
-              demoUrl: '',
-              githubUrl: ''
-            })}
-            itemRenderer={(proj: any) => (
-              <ProjectItem 
-                isEditing={isEditing}
-                key={proj.id} 
-                proj={proj}
-                onUpdate={(f: any, v: any) => updateItem('projects', proj.id, f, v)}
-                onDelete={() => removeItem('projects', proj.id)}
-              />
-            )}
-            addButtonText="Add Project"
-            isEditing={isEditing}
-          />
+          {(isEditing || formData.projects?.length > 0) && (
+            <ModularSection 
+              title="Projects" 
+              icon={<Layers size={24} />} 
+              items={formData.projects}
+              isCollapsed={collapsed.projects}
+              onToggle={() => toggleCollapse('projects')}
+              onAdd={() => addItem('projects', {
+                title: '',
+                category: '',
+                description: '',
+                skills: '',
+                technologies: '',
+                startMonth: '',
+                startYear: '',
+                endMonth: '',
+                endYear: '',
+                status: 'Completed',
+                demoUrl: '',
+                githubUrl: ''
+              })}
+              itemRenderer={(proj: any) => (
+                <ProjectItem 
+                  isEditing={isEditing}
+                  key={proj.id} 
+                  proj={proj}
+                  onUpdate={(f: any, v: any) => updateItem('projects', proj.id, f, v)}
+                  onDelete={() => removeItem('projects', proj.id)}
+                />
+              )}
+              addButtonText="Add Project"
+              isEditing={isEditing}
+            />
+          )}
 
           {/* 4. Profiles & Links */}
-          <ProfileSection 
-            title="Profiles & Links" 
-            icon={<LinkIcon size={24} />} 
-            isCollapsed={collapsed.links} 
-            onToggle={() => toggleCollapse('links')}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SocialInput
-                isEditing={isEditing} icon={<Globe size={18}/>} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v:any) => setFormData({...formData, portfolioUrl: v})} />
-              <SocialInput
-                isEditing={isEditing} icon={<Github size={18}/>} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v:any) => setFormData({...formData, githubUrl: v})} />
-              <SocialInput
-                isEditing={isEditing} icon={<Linkedin size={18}/>} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v:any) => setFormData({...formData, linkedinUrl: v})} />
-              <SocialInput
-                isEditing={isEditing} icon={<Layers size={18}/>} placeholder="Behance" value={formData.behanceUrl} onChange={(v:any) => setFormData({...formData, behanceUrl: v})} />
-              <SocialInput
-                isEditing={isEditing} icon={<BookOpen size={18}/>} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v:any) => setFormData({...formData, artstationUrl: v})} />
-              <SocialInput
-                isEditing={isEditing} icon={<LinkIcon size={18}/>} placeholder="Other Link" value={formData.otherUrl} onChange={(v:any) => setFormData({...formData, otherUrl: v})} />
-            </div>
-          </ProfileSection>
+          {(isEditing || [formData.portfolioUrl, formData.githubUrl, formData.linkedinUrl, formData.behanceUrl, formData.artstationUrl].some(url => url)) && (
+            <ProfileSection 
+              title="Profiles & Links" 
+              icon={<LinkIcon size={24} />} 
+              isCollapsed={collapsed.links} 
+              onToggle={() => toggleCollapse('links')}
+              sectionId="links"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <SocialInput
+                  isEditing={isEditing} icon={<Globe size={18}/>} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v:any) => setFormData({...formData, portfolioUrl: v})} />
+                <SocialInput
+                  isEditing={isEditing} icon={<Github size={18}/>} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v:any) => setFormData({...formData, githubUrl: v})} />
+                <SocialInput
+                  isEditing={isEditing} icon={<Linkedin size={18}/>} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v:any) => setFormData({...formData, linkedinUrl: v})} />
+                <SocialInput
+                  isEditing={isEditing} icon={<Layers size={18}/>} placeholder="Behance" value={formData.behanceUrl} onChange={(v:any) => setFormData({...formData, behanceUrl: v})} />
+                <SocialInput
+                  isEditing={isEditing} icon={<BookOpen size={18}/>} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v:any) => setFormData({...formData, artstationUrl: v})} />
+                <SocialInput
+                  isEditing={isEditing} icon={<LinkIcon size={18}/>} placeholder="Other Link" value={formData.otherUrl} onChange={(v:any) => setFormData({...formData, otherUrl: v})} />
+              </div>
+            </ProfileSection>
+          )}
 
           {/* 5. Education */}
-          <ModularSection 
-            title="Education" 
-            icon={<BookOpen size={24} />} 
-            items={formData.education}
-            isCollapsed={collapsed.education}
-            onToggle={() => toggleCollapse('education')}
-            onAdd={() => addItem('education', {
-               institution: '',
-               degree: '',
-               department: '',
-               startYear: '',
-               endYear: '',
-               current: false
-            })}
-            itemRenderer={(edu: any) => (
-              <EducationItem 
-                isEditing={isEditing}
-                key={edu.id}
-                edu={edu}
-                onUpdate={(f:any, v:any) => updateItem('education', edu.id, f, v)}
-                onDelete={() => removeItem('education', edu.id)}
-              />
-            )}
-            addButtonText="Add Education"
-            isEditing={isEditing}
-          />
+          {(isEditing || formData.education?.length > 0) && (
+            <ModularSection 
+              title="Education" 
+              icon={<BookOpen size={24} />} 
+              items={formData.education}
+              isCollapsed={collapsed.education}
+              onToggle={() => toggleCollapse('education')}
+              onAdd={() => addItem('education', {
+                institution: '',
+                degree: '',
+                department: '',
+                startYear: '',
+                endYear: '',
+                current: false
+              })}
+              itemRenderer={(edu: any) => (
+                <EducationItem 
+                  isEditing={isEditing}
+                  key={edu.id}
+                  edu={edu}
+                  onUpdate={(f:any, v:any) => updateItem('education', edu.id, f, v)}
+                  onDelete={() => removeItem('education', edu.id)}
+                />
+              )}
+              addButtonText="Add Education"
+              isEditing={isEditing}
+            />
+          )}
 
           {/* 6. Certifications */}
-          <ModularSection 
-            title="Certifications" 
-            icon={<Award size={24} />} 
-            items={formData.certifications}
-            isCollapsed={collapsed.certifications}
-            onToggle={() => toggleCollapse('certifications')}
-            onAdd={() => addItem('certifications', {
-              name: '',
-              org: '',
-              issueMonth: '',
-              issueYear: '',
-              url: ''
-            })}
-            itemRenderer={(cert: any) => (
-              <CertificationItem 
-                isEditing={isEditing}
-                key={cert.id}
-                cert={cert}
-                onUpdate={(f:any, v:any) => updateItem('certifications', cert.id, f, v)}
-                onDelete={() => removeItem('certifications', cert.id)}
-              />
-            )}
-            addButtonText="Add Certification"
-            isEditing={isEditing}
-          />
+          {(isEditing || formData.certifications?.length > 0) && (
+            <ModularSection 
+              title="Certifications" 
+              icon={<Award size={24} />} 
+              items={formData.certifications}
+              isCollapsed={collapsed.certifications}
+              onToggle={() => toggleCollapse('certifications')}
+              onAdd={() => addItem('certifications', {
+                name: '',
+                org: '',
+                issueMonth: '',
+                issueYear: '',
+                url: ''
+              })}
+              itemRenderer={(cert: any) => (
+                <CertificationItem 
+                  isEditing={isEditing}
+                  key={cert.id}
+                  cert={cert}
+                  onUpdate={(f:any, v:any) => updateItem('certifications', cert.id, f, v)}
+                  onDelete={() => removeItem('certifications', cert.id)}
+                />
+              )}
+              addButtonText="Add Certification"
+              isEditing={isEditing}
+            />
+          )}
 
           {/* 7. Publications */}
-          <ModularSection 
-            title="Publications" 
-            icon={<BookMarked size={24} />} 
-            items={formData.publications}
-            isCollapsed={collapsed.publications}
-            onToggle={() => toggleCollapse('publications')}
-            onAdd={() => addItem('publications', {
-              title: '',
-              publisher: '',
-              dateMonth: '',
-              dateYear: '',
-              url: ''
-            })}
-            itemRenderer={(pub: any) => (
-              <PublicationItem 
-                isEditing={isEditing}
-                key={pub.id}
-                pub={pub}
-                onUpdate={(f:any, v:any) => updateItem('publications', pub.id, f, v)}
-                onDelete={() => removeItem('publications', pub.id)}
-              />
-            )}
-            addButtonText="Add Publication"
-            isEditing={isEditing}
-          />
+          {(isEditing || formData.publications?.length > 0) && (
+            <ModularSection 
+              title="Publications" 
+              icon={<BookMarked size={24} />} 
+              items={formData.publications}
+              isCollapsed={collapsed.publications}
+              onToggle={() => toggleCollapse('publications')}
+              onAdd={() => addItem('publications', {
+                title: '',
+                publisher: '',
+                dateMonth: '',
+                dateYear: '',
+                url: ''
+              })}
+              itemRenderer={(pub: any) => (
+                <PublicationItem 
+                  isEditing={isEditing}
+                  key={pub.id}
+                  pub={pub}
+                  onUpdate={(f:any, v:any) => updateItem('publications', pub.id, f, v)}
+                  onDelete={() => removeItem('publications', pub.id)}
+                />
+              )}
+              addButtonText="Add Publication"
+              isEditing={isEditing}
+            />
+          )}
 
           {/* Mandatory Agreement Section */}
           {isEditing && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl shadow-lg"
+              data-section="declaration"
+              className={`p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border rounded-2xl shadow-lg ${
+                validationErrors.some(e => e.section === 'declaration') 
+                  ? 'border-red-500/50' 
+                  : 'border-primary-500/20'
+              }`}
             >
               <h2 className="text-2xl font-black text-[var(--text-main)] mb-6 flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-primary-500/20">
@@ -721,80 +825,99 @@ export default function Profile() {
                       type="checkbox" 
                       checked={formData.declarationAccepted} 
                       onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })} 
-                      className="mt-1 w-6 h-6 rounded-lg border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-main)] accent-primary-600 cursor-pointer" 
+                      className="mt-1 w-6 h-6 rounded-lg border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-card)] accent-primary-600 cursor-pointer" 
                     />
                    <span className="text-base font-medium text-[var(--text-main)] leading-relaxed group-hover:text-primary-600 transition-colors">
-                     I confirm that the information provided in my profile is accurate and can be used for internship applications, job hiring evaluation, course enrollments, and professional communication purposes.
+                     I confirm that the information provided in my profile is accurate and can be used for internship applications, job hiring evaluation, course enrollments, and professional communication purposes. *
                    </span>
                  </label>
 
-                 <div className="pt-6 border-t border-primary-500/20">
-                   <InputGroup label="Digital Signature (Type Full Name)">
-                      <input 
-                        type="text" 
-                        value={formData.signature}
-                        onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
-                        className="w-full md:w-1/2 bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl p-3.5 text-sm focus:outline-none focus:border-primary-500 transition-all font-serif italic placeholder:not-italic hover:border-primary-500/50"
-                        placeholder="John Doe"
-                      />
-                   </InputGroup>
-                 </div>
+                 {formData.declarationAccepted && (
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     className="pt-6 border-t border-primary-500/20"
+                   >
+                     <InputGroup label="Digital Signature (Type Full Name) *" required>
+                        <input 
+                          type="text" 
+                          value={formData.signature}
+                          onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
+                          className={`w-full md:w-1/2 bg-[var(--bg-card)] border-2 rounded-xl p-3.5 text-sm focus:outline-none transition-all font-serif italic placeholder:not-italic hover:border-primary-500/50 ${
+                            validationErrors.some(e => e.message.includes('signature'))
+                              ? 'border-red-500/50 focus:border-red-500'
+                              : 'border-primary-500/30 focus:border-primary-500'
+                          }`}
+                          placeholder="Your Full Name"
+                        />
+                     </InputGroup>
+                   </motion.div>
+                 )}
               </div>
             </motion.div>
           )}
 
-          {/* Sticky Action Buttons */}
-          <div className="sticky bottom-0 z-50 flex justify-center pb-6 pt-8 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)] to-transparent mt-8">
-            {!isEditing ? (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="px-10 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl text-base font-black shadow-2xl shadow-primary-500/30 hover:shadow-primary-500/50 transition-all flex items-center gap-3"
-              >
-                <Edit3 size={20} />
-                Edit Profile
-              </motion.button>
-            ) : (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-4 w-full md:w-auto"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={() => {
-                    setFormData(JSON.parse(initialData));
-                    setHasChanges(false);
-                    setIsEditing(false);
-                  }}
-                  className="flex-1 md:flex-none px-8 py-4 border-2 border-primary-500/30 text-[var(--text-main)] rounded-2xl text-base font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
-                >
-                  Cancel
-                </motion.button>
-
-                <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 md:flex-none px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl text-base font-black shadow-2xl shadow-green-500/30 hover:shadow-green-500/50 transition-all disabled:opacity-70 flex items-center justify-center gap-3"
-                >
-                  {loading ? (
-                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <><Save size={20} /> Save Changes</>
-                  )}
-                </motion.button>
-              </motion.div>
-            )}
-          </div>
-
+          {/* Bottom spacing for floating buttons */}
+          <div className="h-20"></div>
         </form>
       </div>
+
+      {/* Floating Action Buttons */}
+      <AnimatePresence>
+        {isEditing && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 flex gap-3 z-40 max-w-xs"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={() => {
+                setFormData(JSON.parse(initialData));
+                setHasChanges(false);
+                setIsEditing(false);
+                setValidationErrors([]);
+              }}
+              className="flex-1 px-6 py-3 border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
+            >
+              Cancel
+            </motion.button>
+
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="submit"
+              disabled={loading}
+              onClick={handleUpdateProfile}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-black shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <><Save size={18} /> Save</>
+              )}
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-32 right-6 p-3 bg-primary-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+          >
+            <ArrowUp size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -807,7 +930,7 @@ function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading,
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-lg w-full p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl shadow-2xl"
+        className="max-w-lg w-full p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-2xl shadow-lg"
       >
         
         <div className="flex flex-col items-center mb-8">
@@ -839,7 +962,7 @@ function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading,
               disabled={!isEditing} 
               value={formData.displayName} 
               onChange={(e) => setFormData({...formData, displayName: e.target.value})} 
-              className={`w-full rounded-xl p-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`} 
+              className={`w-full rounded-xl p-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`} 
             />
           </InputGroup>
           <InputGroup label="Bio">
@@ -847,7 +970,7 @@ function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading,
               disabled={!isEditing} 
               value={formData.bio} 
               onChange={(e) => setFormData({...formData, bio: e.target.value})} 
-              className={`w-full rounded-xl p-3.5 text-sm transition-all min-h-[100px] ${isEditing ? 'bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}  
+              className={`w-full rounded-xl p-3.5 text-sm transition-all min-h-[100px] ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}  
               placeholder="Brief overview..."
             />
           </InputGroup>
@@ -865,14 +988,14 @@ function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading,
                 <button 
                   type="button" 
                   onClick={() => setIsEditing(false)} 
-                  className="w-full bg-[var(--bg-main)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl py-3.5 text-sm font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
+                  className="w-full bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl py-3.5 text-sm font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl py-3.5 text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/30 transition-all"
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl py-3.5 text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/30 transition-all disabled:opacity-70"
                 >
                   {loading ? "Saving..." : <><Save size={16} /> Save</>}
                 </button>
@@ -885,12 +1008,13 @@ function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading,
   );
 }
 
-function ProfileSection({ title, icon, children, isCollapsed, onToggle }: any) {
+function ProfileSection({ title, icon, children, isCollapsed, onToggle, sectionId }: any) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-3xl transition-all hover:border-primary-500/40 group shadow-lg`}
+      data-section={sectionId}
+      className={`p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-2xl transition-all hover:border-primary-500/40 group shadow-lg`}
     >
       <button 
         type="button" 
@@ -901,7 +1025,7 @@ function ProfileSection({ title, icon, children, isCollapsed, onToggle }: any) {
           <div className="p-3 rounded-xl bg-primary-500/20 text-primary-500 group-hover/header:bg-primary-500/30 transition-colors">
             {icon}
           </div>
-          <h2 className="text-2xl font-black text-[var(--text-main)] group-hover/header:text-primary-600 transition-colors">{title}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-main)] group-hover/header:text-primary-600 transition-colors">{title}</h2>
         </div>
         <motion.div
           animate={{ rotate: isCollapsed ? 0 : 180 }}
@@ -953,6 +1077,7 @@ function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd,
   );
 }
 
+// Item Components (Experience, Project, Education, etc.) - Same as before
 function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
   return (
     <motion.div 
@@ -1287,16 +1412,18 @@ function PublicationItem({ pub, onUpdate, onDelete, isEditing }: any) {
   );
 }
 
-function InputGroup({ label, children }: any) {
+function InputGroup({ label, children, required }: any) {
   return (
     <div>
-      <label className="block text-xs font-bold text-primary-600 mb-2.5 uppercase tracking-widest">{label}</label>
+      <label className="block text-xs font-bold text-primary-600 mb-2.5 uppercase tracking-widest">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
       {children}
     </div>
   );
 }
 
-function EditableInput({ isEditing, value, onChange, placeholder }: any) {
+function EditableInput({ isEditing, value, onChange, placeholder, hasError }: any) {
   return (
     <input
       disabled={!isEditing}
@@ -1304,7 +1431,13 @@ function EditableInput({ isEditing, value, onChange, placeholder }: any) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className={`w-full rounded-xl p-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
+      className={`w-full rounded-xl p-3.5 text-sm transition-all ${
+        hasError
+          ? 'border-2 border-red-500/50 focus:border-red-500'
+          : isEditing 
+            ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' 
+            : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'
+      }`}
     />
   );
 }
