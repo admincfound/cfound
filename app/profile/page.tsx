@@ -294,7 +294,7 @@ export default function Profile() {
               className="relative group"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-300"></div>
-              <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)] shadow-2xl">
+              <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)] shadow-2xl">
                 <img 
                   src={
                     profile?.photoURL ||
@@ -368,7 +368,7 @@ export default function Profile() {
           transition={{ delay: 0.2 }}
           className="mb-16 p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] via-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-2xl shadow-lg relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-40 h-40 bg-primary-500/10 rounded-full blur-3xl -z-10"></div>
+          <div className="absolute top-0 right-0 w-28 h-28 md:w-32 md:h-32 bg-primary-500/10 rounded-full blur-3xl -z-10"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-600/10 rounded-full blur-3xl -z-10"></div>
 
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6 relative z-10">

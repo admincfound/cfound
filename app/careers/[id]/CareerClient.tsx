@@ -209,15 +209,15 @@ export default function CareerClient({
     try {
       const profileRef = doc(
         db,
-        'profiles',
+        'users',
         user.uid
       );
 
-      const profileSnap =
-        await getDoc(profileRef);
+      const profileSnap = await getDoc(profileRef);
 
-      const profileData =
-        profileSnap.data();
+      const profileData = profileSnap.data();
+
+      console.log("PROFILE DATA:", profileData);
 
       await addDoc(
         collection(db, 'jobApplications'),

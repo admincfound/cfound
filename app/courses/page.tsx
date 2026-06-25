@@ -71,7 +71,10 @@ export default function Courses() {
         : query(collection(db, 'courses'), where('status', '==', 'active'));
         
       const querySnapshot = await getDocs(q);
-      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = querySnapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id
+      }));
       setCourses(data);
     } catch (err) {
       console.error("Error fetching courses:", err);
@@ -89,12 +92,7 @@ export default function Courses() {
       const enrollments: Record<string, number> = {};
       snap.docs.forEach(doc => {
         const data = doc.data();
-        if (data.cooldownExpiry) {
-          const expiryTime = new Date(data.cooldownExpiry).getTime();
-          if (!enrollments[data.itemId] || expiryTime > enrollments[data.itemId]) {
-            enrollments[data.itemId] = expiryTime;
-          }
-        }
+        enrollments[data.itemId] = 1;
       });
       setUserEnrollments(enrollments);
     } catch (err) {
@@ -138,13 +136,6 @@ export default function Courses() {
       return;
     }
 
-    const now = Date.now();
-    const expiry = userEnrollments[c.id];
-    if (expiry && now < expiry) {
-      toast.error("You are already enrolled or in cooldown for this course.");
-      return;
-    }
-
     setEnrollingId(c.id);
     try {
       const cooldownExpiry = new Date();
@@ -158,6 +149,8 @@ export default function Courses() {
 
       const existingSnap = await getDocs(existingQuery);
 
+      console.log("Existing enrollments:", existingSnap.size);
+
       if (!existingSnap.empty) {
         toast.error("Already enrolled in this course.");
         setEnrollingId(null);
@@ -165,6 +158,8 @@ export default function Courses() {
       }
 
       const enrollmentId = `${user.uid}_${c.id}`;
+
+      console.log("Writing enrollment...");
 
       await setDoc(
         doc(db, 'courseEnrollments', enrollmentId),
@@ -220,9 +215,17 @@ export default function Courses() {
         );
       }
 
-    } catch (err) {
+    } catch (err: any) {
+      console.error("========== ENROLL ERROR ==========");
       console.error(err);
-      toast.error("Enrollment failed.");
+      console.log("Code:", err?.code);
+      console.log("Message:", err?.message);
+
+      alert(
+        `Code: ${err?.code}\nMessage: ${err?.message}`
+      );
+
+      toast.error(err?.message || "Enrollment failed.");
     } finally {
       setEnrollingId(null);
     }
@@ -393,7 +396,7 @@ export default function Courses() {
                       {c.title}
                     </h3>
                     
-                    <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-6 line-clamp-3 font-medium opacity-80">
+                    <p className="h-[72px] text-[var(--text-muted)] text-sm leading-relaxed mb-6 line-clamp-3 font-medium opacity-80">
                       {c.description}
                     </p>
 
@@ -405,7 +408,11 @@ export default function Courses() {
                       
                       <button 
                         onClick={() => handleEnroll(c)}
-                        disabled={enrollingId === c.id || (userEnrollments[c.id] && Date.now() < userEnrollments[c.id]) || !completion.isComplete}
+                        disabled={
+                          enrollingId === c.id ||
+                          !!userEnrollments[c.id] ||
+                          !completion.isComplete
+                        }
                         className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-all group/link ${
                           userEnrollments[c.id] && Date.now() < userEnrollments[c.id] 
                             ? 'text-green-500 opacity-60 cursor-not-allowed' 
@@ -414,7 +421,7 @@ export default function Courses() {
                               : 'text-primary-600 hover:gap-6'
                         }`}
                       >
-                        {enrollingId === c.id ? 'Processing...' : (userEnrollments[c.id] && Date.now() < userEnrollments[c.id]) ? 'Enrolled' : !completion.isComplete ? 'Profile Incomplete' : <>Enroll <PlayCircle size={14} className="group-hover/link:scale-125 transition-transform" /></>}
+                        {enrollingId === c.id ? 'Processing...' : userEnrollments[c.id] ? 'Enrolled' : !completion.isComplete ? 'Profile Incomplete' : <>Enroll <PlayCircle size={14} className="group-hover/link:scale-125 transition-transform" /></>}
                       </button>
                     </div>
                   </div>
