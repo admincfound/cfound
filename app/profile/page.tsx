@@ -10,7 +10,8 @@ import {
   User, Github, Linkedin, Globe, Plus, Trash2, Save, 
   ChevronDown, ChevronUp, Briefcase, BookOpen, Award, Layers,
   Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X, Edit3,
-  ArrowUp
+  ArrowUp, MapPin, ExternalLink, BadgeCheck, Quote, PenLine,
+  BarChart2, GraduationCap, ShieldCheck
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
@@ -68,7 +69,9 @@ export default function Profile() {
         bio: profile.bio || '',
         role: profile.role || 'user',
         primaryRole: profile.primaryRole || '',
+        secondaryRole: profile.secondaryRole || '',
         experienceLevel: profile.experienceLevel || 'Fresher',
+        openToWork: profile.openToWork ?? true,
         skills: Array.isArray(profile.skills) ? profile.skills : [],
         declarationAccepted: profile.declarationAccepted || false,
         signature: profile.signature || '',
@@ -111,46 +114,26 @@ export default function Profile() {
   }, [hasChanges, isEditing]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
+    const handleScroll = () => setShowScrollTop(window.scrollY > 500);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const validateForm = (): boolean => {
     const errors: ValidationError[] = [];
-
-    if (!formData.displayName?.trim()) {
-      errors.push({ section: 'personal', message: 'Full name is required' });
-    }
-
-    if (!formData.primaryRole?.trim()) {
-      errors.push({ section: 'personal', message: 'Primary role is required' });
-    }
-
-    if (!Array.isArray(formData.skills) || formData.skills.length === 0) {
-      errors.push({ section: 'personal', message: 'At least one skill is required' });
-    }
-
-    if (isEditing && !formData.declarationAccepted) {
-      errors.push({ section: 'declaration', message: 'You must accept the declaration' });
-    }
-
-    if (isEditing && formData.declarationAccepted && !formData.signature?.trim()) {
-      errors.push({ section: 'declaration', message: 'Digital signature is required' });
-    }
-
+    if (!formData.displayName?.trim()) errors.push({ section: 'personal', message: 'Full name is required' });
+    if (!formData.primaryRole?.trim()) errors.push({ section: 'personal', message: 'Primary role is required' });
+    if (!Array.isArray(formData.skills) || formData.skills.length === 0) errors.push({ section: 'personal', message: 'At least one skill is required' });
+    if (isEditing && !formData.declarationAccepted) errors.push({ section: 'declaration', message: 'You must accept the declaration' });
+    if (isEditing && formData.declarationAccepted && !formData.signature?.trim()) errors.push({ section: 'declaration', message: 'Digital signature is required' });
     setValidationErrors(errors);
     return errors.length === 0;
   };
 
   const handleUpdateProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-
     if (!validateForm()) {
       toast.error("Please fill in all required fields");
-      // Scroll to first error section
       const firstErrorSection = validationErrors[0]?.section;
       if (firstErrorSection) {
         const element = document.querySelector(`[data-section="${firstErrorSection}"]`);
@@ -160,34 +143,20 @@ export default function Profile() {
       }
       return;
     }
-
     const currentUser = profile;
-
-    if (!currentUser) {
-      toast.error("User not authenticated");
-      return;
-    }
-
+    if (!currentUser) { toast.error("User not authenticated"); return; }
     setLoading(true);
-
     try {
       await setDoc(
         doc(db, 'users', currentUser.uid),
-        {
-          ...formData,
-          uid: currentUser.uid,
-          email: currentUser.email || '',
-          updatedAt: new Date().toISOString(),
-        },
+        { ...formData, uid: currentUser.uid, email: currentUser.email || '', updatedAt: new Date().toISOString() },
         { merge: true }
       );
-
       toast.success("Profile updated successfully! 🎉");
       setIsEditing(false);
       setHasChanges(false);
       setInitialData(JSON.stringify(formData));
       setValidationErrors([]);
-
     } catch (err) {
       console.error(err);
       toast.error("Failed to update profile.");
@@ -197,25 +166,17 @@ export default function Profile() {
   };
 
   const addItem = (section: string, defaultObj: any) => {
-    setFormData({
-      ...formData,
-      [section]: [...formData[section], { ...defaultObj, id: crypto.randomUUID() }]
-    });
+    setFormData({ ...formData, [section]: [...formData[section], { ...defaultObj, id: crypto.randomUUID() }] });
   };
 
   const removeItem = (section: string, id: string) => {
-    setFormData({
-      ...formData,
-      [section]: formData[section].filter((item: any) => item.id !== id)
-    });
+    setFormData({ ...formData, [section]: formData[section].filter((item: any) => item.id !== id) });
   };
 
   const updateItem = (section: string, id: string, field: string, value: any) => {
     setFormData({
       ...formData,
-      [section]: formData[section].map((item: any) => 
-        item.id === id ? { ...item, [field]: value } : item
-      )
+      [section]: formData[section].map((item: any) => item.id === id ? { ...item, [field]: value } : item)
     });
   };
 
@@ -225,696 +186,702 @@ export default function Profile() {
 
   const completion = useMemo(() => getProfileCompletion(formData), [formData]);
 
+  const locationLabel = useMemo(() => {
+    if (!formData) return '';
+    return [formData.city, formData.country].filter(Boolean).join(', ');
+  }, [formData]);
+
+  const otherLinksExist = useMemo(() => {
+    if (!formData) return false;
+    return !!(formData.artstationUrl || formData.youtubeUrl || formData.otherUrl);
+  }, [formData]);
+
   if (authLoading || !formData) return (
-    <div className="h-screen flex items-center justify-center bg-[var(--bg-main)]">
-      <div className="text-center font-bold text-2xl bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent animate-pulse">
-        Loading Profile...
+    <div className="h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <div className="w-12 h-12 border-3 border-gray-200 border-t-blue-600 rounded-full mx-auto mb-4 animate-spin" />
+        <p className="text-gray-600 font-semibold">Loading Profile...</p>
       </div>
     </div>
   );
 
   if (isAdmin) {
     return <AdminProfileView 
-      formData={formData} 
-      setFormData={setFormData} 
-      handleUpdateProfile={handleUpdateProfile}
-      loading={loading}
-      profile={profile}
-      isEditing={isEditing}
-      setIsEditing={setIsEditing}
+      formData={formData} setFormData={setFormData} 
+      handleUpdateProfile={handleUpdateProfile} loading={loading}
+      profile={profile} isEditing={isEditing} setIsEditing={setIsEditing}
     />;
   }
 
   return (
-    <div className="pt-28 pb-40 px-4 md:px-6 bg-[var(--bg-main)] min-h-screen relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 -z-10 opacity-30 pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-20 left-10 w-80 h-80 bg-primary-600/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
-      </div>
+    <div className="min-h-screen bg-[#f5f6fa]">
 
-      <div className="max-w-5xl mx-auto relative z-10" ref={formRef}>
-        
-        {/* Validation Errors Alert */}
-        <AnimatePresence>
-          {validationErrors.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-8 p-6 bg-red-500/10 border border-red-500/30 rounded-2xl backdrop-blur-sm"
-            >
-              <div className="flex items-start gap-4">
-                <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <h3 className="font-bold text-red-600 mb-2">Please complete required fields:</h3>
-                  <ul className="space-y-1">
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      {/* Outer wrapper: light gray page bg, the hero card is white with a large
+          lavender blob in the bottom-right corner, matching the screenshot. */}
+      <div className="pt-24 px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="relative bg-white rounded-3xl overflow-hidden shadow-sm mb-6">
+
+          {/* Lavender blob — decorative, bottom-right, matches screenshot */}
+          <div
+            className="pointer-events-none absolute -bottom-16 -right-16 w-[420px] h-[320px] rounded-full opacity-60"
+            style={{
+              background: 'radial-gradient(ellipse at 60% 60%, #c4b5f4 0%, #a78bfa 30%, #818cf8 60%, transparent 80%)',
+              filter: 'blur(2px)',
+            }}
+          />
+          {/* Faint top-right tint */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white via-white to-indigo-50/40" />
+
+          {/* Edit Profile button — top right */}
+          {!isEditing && (
+            <div className="absolute top-6 right-6 z-30">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="px-5 py-2.5 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center gap-2 text-sm"
+              >
+                <PenLine size={15} />
+                Edit Profile
+              </motion.button>
+            </div>
+          )}
+
+          {/* Validation errors */}
+          <AnimatePresence>
+            {validationErrors.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mx-8 mt-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
+              >
+                <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-900 text-sm mb-1">Please complete required fields:</p>
+                  <ul className="space-y-0.5">
                     {validationErrors.map((err, idx) => (
-                      <li key={idx} className="text-sm text-red-600 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                        {err.message}
-                      </li>
+                      <li key={idx} className="text-xs text-red-700">{err.message}</li>
                     ))}
                   </ul>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Header with Edit Button */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12"
-        >
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 flex-1">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="relative group"
-            >
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-300"></div>
-              <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)] shadow-2xl">
-                <img 
+          {/* Hero content */}
+          <div className="relative z-10 flex gap-8 items-start px-8 py-8 md:py-10">
+
+            {/* Avatar */}
+            <div className="flex-shrink-0 relative">
+              {/* White lift shadow around avatar card */}
+              <div className="w-[220px] h-[220px] rounded-[24px] overflow-hidden bg-black shadow-xl border-4 border-white">
+                <img
                   src={
-                    profile?.photoURL ||
-                    'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160'
-                  } 
+                    formData.photoURL || profile?.photoURL ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.displayName || 'U')}&background=0052CC&color=fff&size=220`
+                  }
                   alt="Profile"
                   onError={(e) => {
-                    e.currentTarget.src =
-                      'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=160';
+                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.displayName || 'U')}&background=0052CC&color=fff&size=220`;
                   }}
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
               </div>
-            </motion.div>
-                      
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-center md:text-left flex-1"
-            >
-              <h1 className="text-4xl md:text-5xl font-black text-[var(--text-main)] mb-2">
-                {formData.displayName || 'Your Name'}
-              </h1>
-              {(formData.primaryRole || isEditing) && (
-                <p className="text-lg md:text-xl text-primary-500 font-bold mb-3">
-                  {formData.primaryRole || 'Add your professional role'}
+              {/* Open to work dot — bottom-right of avatar */}
+              {formData.openToWork && (
+                <span className="absolute bottom-3 right-3 w-5 h-5 rounded-full bg-green-500 border-2 border-white shadow-sm" />
+              )}
+            </div>
+
+            {/* Info column */}
+            <div className="flex-1 min-w-0 pt-2">
+
+              {/* Name + badge */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-[44px] leading-tight font-black text-gray-900 tracking-tight">
+                  {formData.displayName || 'Your Name'}
+                </h1>
+                <BadgeCheck size={26} className="text-blue-500 fill-blue-100 flex-shrink-0" />
+              </div>
+
+              {/* Role row */}
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                <span className="text-xl font-bold text-blue-600">{formData.primaryRole || 'Your Role'}</span>
+                {formData.secondaryRole && (
+                  <>
+                    <span className="text-gray-300 font-light text-xl">|</span>
+                    <span className="text-lg font-semibold text-gray-500">{formData.secondaryRole}</span>
+                  </>
+                )}
+              </div>
+
+              {/* Meta pills row — with pipe separators like the screenshot */}
+              <div className="mt-4 flex items-center gap-0 flex-wrap">
+                {locationLabel && (
+                  <>
+                    <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium px-0 pr-4">
+                      <MapPin size={15} className="text-gray-400 flex-shrink-0" />
+                      {locationLabel}
+                    </span>
+                    <span className="text-gray-300 pr-4">|</span>
+                  </>
+                )}
+                <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium pr-4">
+                  <Briefcase size={15} className="text-gray-400 flex-shrink-0" />
+                  {formData.experienceLevel || 'Fresher'}
+                </span>
+                <span className="text-gray-300 pr-4">|</span>
+                <span className="flex items-center gap-1.5 text-sm font-medium">
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${formData.openToWork ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  <span className={formData.openToWork ? 'text-gray-800 font-semibold' : 'text-gray-500'}>
+                    {formData.openToWork ? 'Open to Work' : 'Not looking'}
+                  </span>
+                </span>
+              </div>
+
+              {/* Open-to-work toggle when editing */}
+              {isEditing && (
+                <label className="mt-2 inline-flex items-center gap-2 cursor-pointer text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.openToWork}
+                    onChange={(e) => setFormData({ ...formData, openToWork: e.target.checked })}
+                    className="w-4 h-4 rounded border-2 border-gray-300 text-blue-600 cursor-pointer accent-blue-600"
+                  />
+                  I'm open to work
+                </label>
+              )}
+
+              {/* Social links bar — single white pill with dividers (matches screenshot) */}
+              <div className="mt-6">
+                <div className="inline-flex items-stretch bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  {[
+                    { key: 'portfolioUrl', label: 'Portfolio', icon: <GlobeIcon />, href: formData.portfolioUrl },
+                    { key: 'githubUrl', label: 'GitHub', icon: <GithubIcon />, href: formData.githubUrl },
+                    { key: 'linkedinUrl', label: 'LinkedIn', icon: <LinkedinIcon />, href: formData.linkedinUrl },
+                    { key: 'behanceUrl', label: 'Behance', icon: <BehanceIcon />, href: formData.behanceUrl },
+                    ...(otherLinksExist || isEditing ? [{ key: 'more', label: 'More', icon: <ExternalLink size={20} className="text-gray-500" />, href: formData.otherUrl || formData.artstationUrl || formData.youtubeUrl || undefined }] : []),
+                  ].map((item, idx, arr) => (
+                    <React.Fragment key={item.key}>
+                      <a
+                        href={item.href || undefined}
+                        target={item.href ? '_blank' : undefined}
+                        rel="noopener noreferrer"
+                        onClick={(e) => { if (!item.href) e.preventDefault(); }}
+                        className={`flex flex-col items-center justify-center gap-2 px-6 py-4 min-w-[90px] transition-colors group ${item.href ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default opacity-70'}`}
+                      >
+                        <span className="w-9 h-9 flex items-center justify-center rounded-full bg-white group-hover:scale-110 transition-transform">
+                          {item.icon}
+                        </span>
+                        <span className="text-xs font-medium text-gray-500 group-hover:text-gray-700 whitespace-nowrap">{item.label}</span>
+                      </a>
+                      {idx < arr.length - 1 && (
+                        <div className="w-px bg-gray-100 self-stretch my-3" />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── ABOUT ME + PROFILE COMPLETION ───────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 mb-5" ref={formRef}>
+
+          {/* About Me */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            data-section="personal"
+            className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-7"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                  <User size={18} className="text-blue-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 leading-tight">About Me</h2>
+                  {/* Blue underline accent — matches screenshot */}
+                  <div className="mt-0.5 w-8 h-[3px] rounded-full bg-blue-600" />
+                </div>
+              </div>
+              {/* Quote decoration — top right */}
+              <span className="text-blue-200 select-none" style={{ fontSize: 40, lineHeight: 1, fontFamily: 'Georgia, serif' }}>"</span>
+            </div>
+
+            <div className="mt-4">
+              {isEditing ? (
+                <EditableTextarea
+                  isEditing={isEditing}
+                  value={formData.bio}
+                  onChange={(v: string) => setFormData({ ...formData, bio: v })}
+                  placeholder="Write a professional summary..."
+                  minHeight="min-h-[100px]"
+                />
+              ) : (
+                <p className="text-gray-600 leading-7 text-[15px]">
+                  {formData.bio || 'Tell recruiters about yourself...'}
                 </p>
               )}
-              <p className="text-[var(--text-muted)] text-sm md:text-base max-w-2xl leading-relaxed">
-                {formData.bio || (isEditing ? 'Add a compelling bio...' : '')}
-              </p>
-            </motion.div>
-          </div>
+            </div>
 
-          {/* Top Edit/Cancel Button */}
-          {!isEditing ? (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="px-8 py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-bold shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 transition-all flex items-center gap-2 whitespace-nowrap"
-            >
-              <Edit3 size={18} />
-              Edit Profile
-            </motion.button>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => {
-                setFormData(JSON.parse(initialData));
-                setHasChanges(false);
-                setIsEditing(false);
-                setValidationErrors([]);
-              }}
-              className="px-8 py-3.5 border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl font-bold hover:bg-primary-500/10 transition-all"
-            >
-              Cancel
-            </motion.button>
-          )}
-        </motion.div>
+            {/* Skills */}
+            <div className="mt-5 flex flex-wrap gap-2">
+              {(Array.isArray(formData.skills) ? formData.skills : []).map((skill: string, idx: number) => (
+                <span
+                  key={idx}
+                  className="px-4 py-1.5 rounded-full bg-blue-50/60 text-blue-700 text-sm font-semibold border border-blue-100"
+                >
+                  {skill}
+                </span>
+              ))}
+              {(!formData.skills || formData.skills.length === 0) && !isEditing && (
+                <span className="text-sm text-gray-400">No skills added yet</span>
+              )}
+            </div>
 
-        {/* Profile Completion Tracker */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+            {/* Skill input in edit mode */}
+            {isEditing && (
+              <div className="mt-4 flex gap-2">
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const val = skillInput.trim();
+                      if (val && !(formData.skills || []).includes(val)) {
+                        setFormData({ ...formData, skills: [...(formData.skills || []), val] });
+                        setSkillInput('');
+                      }
+                    }
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg text-sm focus:outline-none focus:border-blue-600"
+                  placeholder="Type a skill and press Enter"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const val = skillInput.trim();
+                    if (val && !(formData.skills || []).includes(val)) {
+                      setFormData({ ...formData, skills: [...(formData.skills || []), val] });
+                      setSkillInput('');
+                    }
+                  }}
+                  className="bg-blue-600 text-white rounded-lg px-4 hover:bg-blue-700 transition-colors"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+            )}
+
+            {/* Show skill chips with remove button in edit mode */}
+            {isEditing && (formData.skills || []).length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(formData.skills || []).map((skill: string, idx: number) => (
+                  <motion.span
+                    key={idx}
+                    layout
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-blue-100 border border-blue-300 text-blue-700 text-sm font-semibold rounded-full"
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newSkills = [...formData.skills];
+                        newSkills.splice(idx, 1);
+                        setFormData({ ...formData, skills: newSkills });
+                      }}
+                      className="hover:text-red-600 transition-colors ml-0.5"
+                    >
+                      <X size={13} />
+                    </button>
+                  </motion.span>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Profile Completion */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+                  <BarChart2 size={18} className="text-purple-500" />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">Profile Completion</h2>
+              </div>
+              <span className="text-2xl font-black text-blue-600">{completion.percentage}%</span>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden mb-5">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${completion.percentage}%` }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                className={`h-full rounded-full ${
+                  completion.percentage >= 100 ? 'bg-green-500' :
+                  completion.percentage >= 71 ? 'bg-blue-600' :
+                  completion.percentage >= 41 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+              />
+            </div>
+
+            {!completion.isComplete ? (
+              <div className="flex-1 p-4 bg-blue-50/60 border border-blue-100 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <Sparkles size={16} className="text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Add more details to complete your profile and increase your visibility.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!isEditing) setIsEditing(true);
+                        const el = document.querySelector('[data-section="personal"]');
+                        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="mt-2 text-sm font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+                    >
+                      Complete Now →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+                <CheckCircle2 size={20} className="text-green-600 flex-shrink-0" />
+                <p className="text-sm font-semibold text-green-900">Your profile is complete! Ready to apply.</p>
+              </div>
+            )}
+
+            {completion.missing?.length > 0 && (
+              <ul className="mt-4 space-y-1">
+                {completion.missing.map((req: string, idx: number) => (
+                  <li key={idx} className="text-xs text-gray-400">• {req}</li>
+                ))}
+              </ul>
+            )}
+          </motion.div>
+        </div>
+
+        {/* ── STATS BAR ──────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-16 p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] via-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-2xl shadow-lg relative overflow-hidden"
+          className="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6"
         >
-          <div className="absolute top-0 right-0 w-28 h-28 md:w-32 md:h-32 bg-primary-500/10 rounded-full blur-3xl -z-10"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-600/10 rounded-full blur-3xl -z-10"></div>
-
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6 relative z-10">
-            <div>
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <h3 className="text-2xl md:text-3xl font-black text-[var(--text-main)] flex items-center gap-3">
-                  <div className={`p-2.5 rounded-xl ${completion.percentage === 100 ? 'bg-green-500/20' : 'bg-primary-500/20'}`}>
-                    <CheckCircle2 size={28} className={completion.percentage === 100 ? "text-green-500" : "text-primary-500"} />
-                  </div>
-                  Profile Strength
-                </h3>
-                <motion.span 
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  className={`px-4 py-2 text-xs uppercase font-black tracking-widest rounded-full backdrop-blur-sm border ${
-                    completion.strength === 'Strong' ? 'bg-green-500/20 text-green-600 border-green-500/30' :
-                    completion.strength === 'Average' ? 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30' :
-                    'bg-red-500/20 text-red-600 border-red-500/30'
-                  }`}>
-                  {completion.strength}
-                </motion.span>
-              </div>
-              <p className="text-sm font-medium text-[var(--text-muted)] opacity-80">Complete your profile to unlock opportunities</p>
-            </div>
-            <motion.span 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="font-black text-5xl md:text-6xl bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent"
-            >
-              {completion.percentage}%
-            </motion.span>
-          </div>
-
-          <div className="h-3 w-full bg-[var(--bg-hover)]/50 rounded-full overflow-hidden mb-6 border border-primary-500/20 relative z-10">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${completion.percentage}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className={`h-full bg-gradient-to-r ${completion.percentage >= 100 ? 'from-green-500 to-green-600' : (completion.percentage >= 71 ? 'from-primary-500 to-primary-600' : (completion.percentage >= 41 ? 'from-yellow-500 to-yellow-600' : 'from-red-500 to-red-600'))} rounded-full shadow-lg`}
-            />
-          </div>
-
-          {!completion.isComplete && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-500/10 text-red-600 border border-red-500/30 p-4 rounded-xl text-sm backdrop-blur-sm"
-            >
-              <div className="flex items-start gap-3">
-                <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
-                <ul className="space-y-1 flex-1">
-                  {completion.missing.map((req: string, idx: number) => (
-                    <li key={idx} className="text-sm">{req}</li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          )}
-
-          {completion.isComplete && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-green-500/15 text-green-600 border border-green-500/30 p-4 rounded-xl text-sm font-semibold flex items-center gap-3 backdrop-blur-sm"
-            >
-              <CheckCircle2 size={18} className="flex-shrink-0" />
-              Your profile is complete! You're ready to apply. 🚀
-            </motion.div>
-          )}
+          {/* Each stat: icon in colored bg circle + number + label */}
+          <StatPill
+            icon={<BriefcaseStatIcon />}
+            value={formData.experiences?.length || 0}
+            label="Experience"
+          />
+          <StatPill
+            icon={<LayersStatIcon />}
+            value={formData.projects?.length || 0}
+            label="Projects"
+          />
+          <StatPill
+            icon={<GraduationCap size={20} className="text-green-600" />}
+            iconBg="bg-green-50"
+            value={formData.education?.length || 0}
+            label="Education"
+          />
+          <StatPill
+            icon={<ShieldCheck size={20} className="text-orange-500" />}
+            iconBg="bg-orange-50"
+            value={formData.certifications?.length || 0}
+            label="Certifications"
+          />
         </motion.div>
 
-        <form onSubmit={handleUpdateProfile} className="space-y-8">
-          
-          {/* 1. Personal Details */}
-          <ProfileSection 
-            title="Personal Details" 
-            icon={<User size={24} />} 
-            isCollapsed={collapsed.personal} 
-            onToggle={() => toggleCollapse('personal')}
-            sectionId="personal"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputGroup label="Full Name *" required>
-                <EditableInput
-                  isEditing={isEditing}
-                  value={formData.displayName}
-                  onChange={(v) => setFormData({ ...formData, displayName: v })}
-                  placeholder="e.g. John Doe"
-                  hasError={validationErrors.some(e => e.message.includes('Full name'))}
-                />
-              </InputGroup>
+        {/* ── MAIN FORM SECTIONS ─────────────────────────────────────────── */}
+        <div className="pb-12">
+          <form onSubmit={handleUpdateProfile} className="space-y-6">
 
-              <InputGroup label="Email Address">
-                <input 
-                  disabled={true}
-                  type="email" 
-                  value={formData.email || profile?.email || ""}
-                  readOnly
-                  className="w-full bg-transparent border-none text-[var(--text-main)] rounded-xl p-3.5 text-sm opacity-60 cursor-not-allowed"
-                  placeholder="Email Address"
-                />
-              </InputGroup>
-              <FieldWrapper show={isEditing || formData.phone}>
-                <InputGroup label="Phone Number">
-                  <EditableInput
-                    isEditing={isEditing}
-                    value={formData.phone}
-                    onChange={(v) => setFormData({ ...formData, phone: v })}
-                    placeholder="+1 234 567 890"
-                  />
-                </InputGroup>
-              </FieldWrapper>
-              <FieldWrapper show={isEditing || formData.country}>
-                <InputGroup label="Country">
-                  <EditableInput
-                    isEditing={isEditing}
-                    value={formData.country}
-                    onChange={(v) => setFormData({ ...formData, country: v })}
-                    placeholder="e.g. India"
-                  />
-                </InputGroup>
-              </FieldWrapper>
-              <FieldWrapper show={isEditing || formData.state}>
-                <InputGroup label="State / Province">
-                  <EditableInput
-                    isEditing={isEditing}
-                    value={formData.state}
-                    onChange={(v) => setFormData({ ...formData, state: v })}
-                    placeholder="e.g. Tamil Nadu"
-                  />
-                </InputGroup>
-              </FieldWrapper>
-              <FieldWrapper show={isEditing || formData.city}>
-                <InputGroup label="City">
-                  <EditableInput
-                    isEditing={isEditing}
-                    value={formData.city}
-                    onChange={(v) => setFormData({ ...formData, city: v })}
-                    placeholder="e.g. Chennai"
-                  />
-                </InputGroup>
-              </FieldWrapper>
-            </div>
-            <div className="mt-6">
-              <FieldWrapper show={isEditing || formData.bio}>
-                <InputGroup label="About / Bio">
-                  <EditableTextarea
-                    isEditing={isEditing}
-                    value={formData.bio}
-                    onChange={(v) => setFormData({ ...formData, bio: v })}
-                    placeholder="Write a compelling professional summary..."
-                    minHeight="min-h-[120px]"
-                  />
-                </InputGroup>
-              </FieldWrapper>
-            </div>
-            
-            <div className="mt-8 pt-8 border-t border-primary-500/20 grid grid-cols-1 md:grid-cols-2 gap-6">
-               <InputGroup label="Primary Role / Interest *" required>
-                  <EditableInput
-                    isEditing={isEditing}
-                    value={formData.primaryRole}
-                    onChange={(v) => setFormData({ ...formData, primaryRole: v })}
-                    placeholder="e.g. Frontend Developer"
-                    hasError={validationErrors.some(e => e.message.includes('Primary role'))}
-                  />
-               </InputGroup>
-               <InputGroup label="Experience Level">
-                   <select 
-                    disabled={!isEditing}
-                    value={formData.experienceLevel}
-                    onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
-                    className={`w-full rounded-xl p-3.5 text-sm transition-all font-semibold ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-pointer hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
-                  >
-                     <option value="Fresher">Fresher</option>
-                     <option value="1–2 Years">1–2 Years</option>
-                     <option value="2–5 Years">2–5 Years</option>
-                     <option value="5–10 Years">5–10 Years</option>
-                     <option value="10+ Years">10+ Years</option>
-                  </select>
-               </InputGroup>
-               <div className="md:col-span-2">
-                 <InputGroup label="Top Skills (Minimum 1) *" required>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {(Array.isArray(formData.skills) ? formData.skills : []).map((skill: string, idx: number) => (
-                        <motion.div 
-                          key={idx}
-                          layout
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          className="flex items-center gap-2 bg-gradient-to-r from-primary-500/20 to-primary-600/20 border border-primary-500/40 text-primary-600 px-4 py-2 rounded-full text-sm font-bold group hover:border-primary-500/60 transition-all"
-                        >
-                          {skill}
-                          {isEditing && (
-                            <button type="button" onClick={() => {
-                              const newSkills = [...formData.skills];
-                              newSkills.splice(idx, 1);
-                              setFormData({ ...formData, skills: newSkills });
-                            }} className="hover:text-red-500 transition-colors ml-1 opacity-60 group-hover:opacity-100">
-                              <X size={14} />
-                            </button>
-                          )}
-                        </motion.div>
-                      ))}
-                    </div>
-                    {isEditing && (
-                      <div className="flex gap-2">
-                        <input
-                          type="text" 
-                          value={skillInput}
-                          onChange={(e) => setSkillInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const val = skillInput.trim();
-                              if (val && !(formData.skills || []).includes(val)) {
-                                setFormData({ ...formData, skills: [...(formData.skills || []), val] });
-                                setSkillInput('');
-                              }
-                            }
-                          }}
-                          className="flex-1 bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl p-3.5 text-sm focus:outline-none focus:border-primary-500 transition-all font-medium hover:border-primary-500/50"
-                          placeholder="Type a skill and press Enter"
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            const val = skillInput.trim();
-                            if (val && !(formData.skills || []).includes(val)) {
-                              setFormData({ ...formData, skills: [...(formData.skills || []), val] });
-                              setSkillInput('');
-                            }
-                          }}
-                          className="bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl px-5 hover:shadow-lg hover:shadow-primary-500/30 transition-all font-bold"
-                        >
-                          <Plus size={22} />
-                        </button>
-                      </div>
-                    )}
-                 </InputGroup>
-               </div>
-            </div>
-          </ProfileSection>
-
-          {/* 2. Experience */}
-          {(isEditing || formData.experiences?.length > 0) && (
-            <ModularSection 
-              title="Experience" 
-              icon={<Briefcase size={24} />} 
-              items={formData.experiences}
-              isCollapsed={collapsed.experience}
-              onToggle={() => toggleCollapse('experience')}
-              onAdd={() => addItem('experiences', {
-                role: '',
-                company: '',
-                type: 'Full-time',
-                startMonth: '',
-                startYear: '',
-                endMonth: '',
-                endYear: '',
-                current: false,
-                location: '',
-                mode: 'Onsite',
-                skills: '',
-                description: ''
-              })}
-              itemRenderer={(exp: any) => (
-                <ExperienceItem 
-                  isEditing={isEditing}
-                  key={exp.id} 
-                  exp={exp} 
-                  onUpdate={(f: any, v: any) => updateItem('experiences', exp.id, f, v)}
-                  onDelete={() => removeItem('experiences', exp.id)}
-                />
-              )}
-              addButtonText="Add Experience"
-              isEditing={isEditing}
-            />
-          )}
-
-          {/* 3. Projects */}
-          {(isEditing || formData.projects?.length > 0) && (
-            <ModularSection 
-              title="Projects" 
-              icon={<Layers size={24} />} 
-              items={formData.projects}
-              isCollapsed={collapsed.projects}
-              onToggle={() => toggleCollapse('projects')}
-              onAdd={() => addItem('projects', {
-                title: '',
-                category: '',
-                description: '',
-                skills: '',
-                technologies: '',
-                startMonth: '',
-                startYear: '',
-                endMonth: '',
-                endYear: '',
-                status: 'Completed',
-                demoUrl: '',
-                githubUrl: ''
-              })}
-              itemRenderer={(proj: any) => (
-                <ProjectItem 
-                  isEditing={isEditing}
-                  key={proj.id} 
-                  proj={proj}
-                  onUpdate={(f: any, v: any) => updateItem('projects', proj.id, f, v)}
-                  onDelete={() => removeItem('projects', proj.id)}
-                />
-              )}
-              addButtonText="Add Project"
-              isEditing={isEditing}
-            />
-          )}
-
-          {/* 4. Profiles & Links */}
-          {(isEditing || [formData.portfolioUrl, formData.githubUrl, formData.linkedinUrl, formData.behanceUrl, formData.artstationUrl].some(url => url)) && (
-            <ProfileSection 
-              title="Profiles & Links" 
-              icon={<LinkIcon size={24} />} 
-              isCollapsed={collapsed.links} 
-              onToggle={() => toggleCollapse('links')}
-              sectionId="links"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SocialInput
-                  isEditing={isEditing} icon={<Globe size={18}/>} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v:any) => setFormData({...formData, portfolioUrl: v})} />
-                <SocialInput
-                  isEditing={isEditing} icon={<Github size={18}/>} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v:any) => setFormData({...formData, githubUrl: v})} />
-                <SocialInput
-                  isEditing={isEditing} icon={<Linkedin size={18}/>} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v:any) => setFormData({...formData, linkedinUrl: v})} />
-                <SocialInput
-                  isEditing={isEditing} icon={<Layers size={18}/>} placeholder="Behance" value={formData.behanceUrl} onChange={(v:any) => setFormData({...formData, behanceUrl: v})} />
-                <SocialInput
-                  isEditing={isEditing} icon={<BookOpen size={18}/>} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v:any) => setFormData({...formData, artstationUrl: v})} />
-                <SocialInput
-                  isEditing={isEditing} icon={<LinkIcon size={18}/>} placeholder="Other Link" value={formData.otherUrl} onChange={(v:any) => setFormData({...formData, otherUrl: v})} />
-              </div>
-            </ProfileSection>
-          )}
-
-          {/* 5. Education */}
-          {(isEditing || formData.education?.length > 0) && (
-            <ModularSection 
-              title="Education" 
-              icon={<BookOpen size={24} />} 
-              items={formData.education}
-              isCollapsed={collapsed.education}
-              onToggle={() => toggleCollapse('education')}
-              onAdd={() => addItem('education', {
-                institution: '',
-                degree: '',
-                department: '',
-                startYear: '',
-                endYear: '',
-                current: false
-              })}
-              itemRenderer={(edu: any) => (
-                <EducationItem 
-                  isEditing={isEditing}
-                  key={edu.id}
-                  edu={edu}
-                  onUpdate={(f:any, v:any) => updateItem('education', edu.id, f, v)}
-                  onDelete={() => removeItem('education', edu.id)}
-                />
-              )}
-              addButtonText="Add Education"
-              isEditing={isEditing}
-            />
-          )}
-
-          {/* 6. Certifications */}
-          {(isEditing || formData.certifications?.length > 0) && (
-            <ModularSection 
-              title="Certifications" 
-              icon={<Award size={24} />} 
-              items={formData.certifications}
-              isCollapsed={collapsed.certifications}
-              onToggle={() => toggleCollapse('certifications')}
-              onAdd={() => addItem('certifications', {
-                name: '',
-                org: '',
-                issueMonth: '',
-                issueYear: '',
-                url: ''
-              })}
-              itemRenderer={(cert: any) => (
-                <CertificationItem 
-                  isEditing={isEditing}
-                  key={cert.id}
-                  cert={cert}
-                  onUpdate={(f:any, v:any) => updateItem('certifications', cert.id, f, v)}
-                  onDelete={() => removeItem('certifications', cert.id)}
-                />
-              )}
-              addButtonText="Add Certification"
-              isEditing={isEditing}
-            />
-          )}
-
-          {/* 7. Publications */}
-          {(isEditing || formData.publications?.length > 0) && (
-            <ModularSection 
-              title="Publications" 
-              icon={<BookMarked size={24} />} 
-              items={formData.publications}
-              isCollapsed={collapsed.publications}
-              onToggle={() => toggleCollapse('publications')}
-              onAdd={() => addItem('publications', {
-                title: '',
-                publisher: '',
-                dateMonth: '',
-                dateYear: '',
-                url: ''
-              })}
-              itemRenderer={(pub: any) => (
-                <PublicationItem 
-                  isEditing={isEditing}
-                  key={pub.id}
-                  pub={pub}
-                  onUpdate={(f:any, v:any) => updateItem('publications', pub.id, f, v)}
-                  onDelete={() => removeItem('publications', pub.id)}
-                />
-              )}
-              addButtonText="Add Publication"
-              isEditing={isEditing}
-            />
-          )}
-
-          {/* Mandatory Agreement Section */}
-          {isEditing && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              data-section="declaration"
-              className={`p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border rounded-2xl shadow-lg ${
-                validationErrors.some(e => e.section === 'declaration') 
-                  ? 'border-red-500/50' 
-                  : 'border-primary-500/20'
-              }`}
-            >
-              <h2 className="text-2xl font-black text-[var(--text-main)] mb-6 flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-primary-500/20">
-                  <CheckCircle2 size={24} className="text-primary-500" />
-                </div>
-                Declaration & Consent
-              </h2>
-              <div className="space-y-6">
-                <label className="flex items-start gap-4 cursor-pointer group">
-                    <input
-                      type="checkbox" 
-                      checked={formData.declarationAccepted} 
-                      onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })} 
-                      className="mt-1 w-6 h-6 rounded-lg border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-card)] accent-primary-600 cursor-pointer" 
+            {/* Personal Details — edit mode only */}
+            {isEditing && (
+              <ProfileSection
+                title="Personal Details"
+                icon={<User size={22} />}
+                isCollapsed={collapsed.personal}
+                onToggle={() => toggleCollapse('personal')}
+                sectionId="personal-form"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputGroup label="Full Name *" required>
+                    <EditableInput
+                      isEditing={isEditing}
+                      value={formData.displayName}
+                      onChange={(v: string) => setFormData({ ...formData, displayName: v })}
+                      placeholder="John Doe"
+                      hasError={validationErrors.some(e => e.message.includes('Full name'))}
                     />
-                   <span className="text-base font-medium text-[var(--text-main)] leading-relaxed group-hover:text-primary-600 transition-colors">
-                     I confirm that the information provided in my profile is accurate and can be used for internship applications, job hiring evaluation, course enrollments, and professional communication purposes. *
-                   </span>
-                 </label>
+                  </InputGroup>
+                  <InputGroup label="Email Address">
+                    <input
+                      disabled type="email" value={formData.email || profile?.email || ''} readOnly
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm"
+                    />
+                  </InputGroup>
+                  <InputGroup label="Profile Photo URL">
+                    <EditableInput isEditing={isEditing} value={formData.photoURL} onChange={(v: string) => setFormData({ ...formData, photoURL: v })} placeholder="https://..." />
+                  </InputGroup>
+                  <InputGroup label="Phone Number">
+                    <EditableInput isEditing={isEditing} value={formData.phone} onChange={(v: string) => setFormData({ ...formData, phone: v })} placeholder="+91 000 000 0000" />
+                  </InputGroup>
+                  <InputGroup label="Country">
+                    <EditableInput isEditing={isEditing} value={formData.country} onChange={(v: string) => setFormData({ ...formData, country: v })} placeholder="India" />
+                  </InputGroup>
+                  <InputGroup label="State / Province">
+                    <EditableInput isEditing={isEditing} value={formData.state} onChange={(v: string) => setFormData({ ...formData, state: v })} placeholder="Tamil Nadu" />
+                  </InputGroup>
+                  <InputGroup label="City">
+                    <EditableInput isEditing={isEditing} value={formData.city} onChange={(v: string) => setFormData({ ...formData, city: v })} placeholder="Chennai" />
+                  </InputGroup>
+                </div>
 
-                 {formData.declarationAccepted && (
-                   <motion.div 
-                     initial={{ opacity: 0, y: 10 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     className="pt-6 border-t border-primary-500/20"
-                   >
-                     <InputGroup label="Digital Signature (Type Full Name) *" required>
-                        <input 
-                          type="text" 
-                          value={formData.signature}
-                          onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
-                          className={`w-full md:w-1/2 bg-[var(--bg-card)] border-2 rounded-xl p-3.5 text-sm focus:outline-none transition-all font-serif italic placeholder:not-italic hover:border-primary-500/50 ${
-                            validationErrors.some(e => e.message.includes('signature'))
-                              ? 'border-red-500/50 focus:border-red-500'
-                              : 'border-primary-500/30 focus:border-primary-500'
-                          }`}
-                          placeholder="Your Full Name"
-                        />
-                     </InputGroup>
-                   </motion.div>
-                 )}
-              </div>
-            </motion.div>
-          )}
+                <div className="mt-6">
+                  <InputGroup label="About / Bio">
+                    <EditableTextarea isEditing={isEditing} value={formData.bio} onChange={(v: string) => setFormData({ ...formData, bio: v })} placeholder="Write a professional summary..." minHeight="min-h-[100px]" />
+                  </InputGroup>
+                </div>
 
-          {/* Bottom spacing for floating buttons */}
-          <div className="h-20"></div>
-        </form>
+                <div className="mt-6 pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputGroup label="Primary Role *" required>
+                    <EditableInput
+                      isEditing={isEditing} value={formData.primaryRole}
+                      onChange={(v: string) => setFormData({ ...formData, primaryRole: v })}
+                      placeholder="Frontend Developer"
+                      hasError={validationErrors.some(e => e.message.includes('Primary role'))}
+                    />
+                  </InputGroup>
+                  <InputGroup label="Secondary Role">
+                    <EditableInput isEditing={isEditing} value={formData.secondaryRole} onChange={(v: string) => setFormData({ ...formData, secondaryRole: v })} placeholder="Product Designer" />
+                  </InputGroup>
+                  <InputGroup label="Experience Level">
+                    <select
+                      disabled={!isEditing} value={formData.experienceLevel}
+                      onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 cursor-pointer"
+                    >
+                      <option value="Fresher">Fresher</option>
+                      <option value="1–2 Years">1–2 Years</option>
+                      <option value="2–5 Years">2–5 Years</option>
+                      <option value="5–10 Years">5–10 Years</option>
+                      <option value="10+ Years">10+ Years</option>
+                    </select>
+                  </InputGroup>
+                </div>
+              </ProfileSection>
+            )}
+
+            {/* Experience */}
+            {(isEditing || formData.experiences?.length > 0) && (
+              <ModularSection
+                title="Experience" icon={<Briefcase size={22} />}
+                items={formData.experiences} isCollapsed={collapsed.experience}
+                onToggle={() => toggleCollapse('experience')}
+                onAdd={() => addItem('experiences', { role: '', company: '', type: 'Full-time', startMonth: '', startYear: '', endMonth: '', endYear: '', current: false, location: '', mode: 'Onsite', skills: '', description: '' })}
+                itemRenderer={(exp: any) => (
+                  <ExperienceItem isEditing={isEditing} key={exp.id} exp={exp}
+                    onUpdate={(f: any, v: any) => updateItem('experiences', exp.id, f, v)}
+                    onDelete={() => removeItem('experiences', exp.id)} />
+                )}
+                addButtonText="Add Experience" isEditing={isEditing}
+              />
+            )}
+
+            {/* Projects */}
+            {(isEditing || formData.projects?.length > 0) && (
+              <ModularSection
+                title="Projects" icon={<Layers size={22} />}
+                items={formData.projects} isCollapsed={collapsed.projects}
+                onToggle={() => toggleCollapse('projects')}
+                onAdd={() => addItem('projects', { title: '', category: '', description: '', skills: '', technologies: '', startMonth: '', startYear: '', endMonth: '', endYear: '', status: 'Completed', demoUrl: '', githubUrl: '' })}
+                itemRenderer={(proj: any) => (
+                  <ProjectItem isEditing={isEditing} key={proj.id} proj={proj}
+                    onUpdate={(f: any, v: any) => updateItem('projects', proj.id, f, v)}
+                    onDelete={() => removeItem('projects', proj.id)} />
+                )}
+                addButtonText="Add Project" isEditing={isEditing}
+              />
+            )}
+
+            {/* Profiles & Links */}
+            {(isEditing || [formData.portfolioUrl, formData.githubUrl, formData.linkedinUrl].some(Boolean)) && (
+              <ProfileSection
+                title="Profiles & Links" icon={<LinkIcon size={22} />}
+                isCollapsed={collapsed.links} onToggle={() => toggleCollapse('links')} sectionId="links"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <SocialInput isEditing={isEditing} icon={<Globe size={16} />} placeholder="Portfolio Website" value={formData.portfolioUrl} onChange={(v: any) => setFormData({ ...formData, portfolioUrl: v })} />
+                  <SocialInput isEditing={isEditing} icon={<Github size={16} />} placeholder="GitHub Profile" value={formData.githubUrl} onChange={(v: any) => setFormData({ ...formData, githubUrl: v })} />
+                  <SocialInput isEditing={isEditing} icon={<Linkedin size={16} />} placeholder="LinkedIn Profile" value={formData.linkedinUrl} onChange={(v: any) => setFormData({ ...formData, linkedinUrl: v })} />
+                  <SocialInput isEditing={isEditing} icon={<Layers size={16} />} placeholder="Behance" value={formData.behanceUrl} onChange={(v: any) => setFormData({ ...formData, behanceUrl: v })} />
+                  <SocialInput isEditing={isEditing} icon={<Globe size={16} />} placeholder="ArtStation" value={formData.artstationUrl} onChange={(v: any) => setFormData({ ...formData, artstationUrl: v })} />
+                  <SocialInput isEditing={isEditing} icon={<Globe size={16} />} placeholder="YouTube" value={formData.youtubeUrl} onChange={(v: any) => setFormData({ ...formData, youtubeUrl: v })} />
+                  <SocialInput isEditing={isEditing} icon={<ExternalLink size={16} />} placeholder="Other Link" value={formData.otherUrl} onChange={(v: any) => setFormData({ ...formData, otherUrl: v })} />
+                </div>
+              </ProfileSection>
+            )}
+
+            {/* Education */}
+            {(isEditing || formData.education?.length > 0) && (
+              <ModularSection
+                title="Education" icon={<BookOpen size={22} />}
+                items={formData.education} isCollapsed={collapsed.education}
+                onToggle={() => toggleCollapse('education')}
+                onAdd={() => addItem('education', { institution: '', degree: '', department: '', startYear: '', endYear: '', current: false })}
+                itemRenderer={(edu: any) => (
+                  <EducationItem isEditing={isEditing} key={edu.id} edu={edu}
+                    onUpdate={(f: any, v: any) => updateItem('education', edu.id, f, v)}
+                    onDelete={() => removeItem('education', edu.id)} />
+                )}
+                addButtonText="Add Education" isEditing={isEditing}
+              />
+            )}
+
+            {/* Certifications */}
+            {(isEditing || formData.certifications?.length > 0) && (
+              <ModularSection
+                title="Certifications" icon={<Award size={22} />}
+                items={formData.certifications} isCollapsed={collapsed.certifications}
+                onToggle={() => toggleCollapse('certifications')}
+                onAdd={() => addItem('certifications', { name: '', org: '', issueMonth: '', issueYear: '', url: '' })}
+                itemRenderer={(cert: any) => (
+                  <CertificationItem isEditing={isEditing} key={cert.id} cert={cert}
+                    onUpdate={(f: any, v: any) => updateItem('certifications', cert.id, f, v)}
+                    onDelete={() => removeItem('certifications', cert.id)} />
+                )}
+                addButtonText="Add Certification" isEditing={isEditing}
+              />
+            )}
+
+            {/* Publications */}
+            {(isEditing || formData.publications?.length > 0) && (
+              <ModularSection
+                title="Publications" icon={<BookMarked size={22} />}
+                items={formData.publications} isCollapsed={collapsed.publications}
+                onToggle={() => toggleCollapse('publications')}
+                onAdd={() => addItem('publications', { title: '', publisher: '', dateMonth: '', dateYear: '', url: '' })}
+                itemRenderer={(pub: any) => (
+                  <PublicationItem isEditing={isEditing} key={pub.id} pub={pub}
+                    onUpdate={(f: any, v: any) => updateItem('publications', pub.id, f, v)}
+                    onDelete={() => removeItem('publications', pub.id)} />
+                )}
+                addButtonText="Add Publication" isEditing={isEditing}
+              />
+            )}
+
+            {/* Declaration */}
+            {isEditing && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                data-section="declaration"
+                className="p-7 bg-white rounded-2xl border border-gray-100 shadow-sm"
+              >
+                <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+                  <CheckCircle2 size={24} className="text-blue-600" />
+                  Declaration & Consent
+                </h2>
+                <label className="flex items-start gap-4 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={formData.declarationAccepted}
+                    onChange={(e) => setFormData({ ...formData, declarationAccepted: e.target.checked })}
+                    className="mt-1 w-5 h-5 rounded border-2 border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer accent-blue-600"
+                  />
+                  <span className="text-sm text-gray-600 leading-relaxed group-hover:text-gray-900 transition-colors">
+                    I confirm that the information provided is accurate and can be used for internship applications, job hiring evaluation, course enrollments, and professional communication purposes. *
+                  </span>
+                </label>
+                {formData.declarationAccepted && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pt-5 mt-5 border-t border-gray-100">
+                    <InputGroup label="Digital Signature (Type Full Name) *" required>
+                      <input
+                        type="text" value={formData.signature}
+                        onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
+                        className={`w-full md:w-1/2 px-4 py-2.5 rounded-lg text-sm font-serif italic focus:outline-none transition-all ${
+                          validationErrors.some(e => e.message.includes('signature'))
+                            ? 'border-2 border-red-500' : 'border-2 border-gray-300 focus:border-blue-600'
+                        }`}
+                        placeholder="Your Full Name"
+                      />
+                    </InputGroup>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
+            <div className="h-20" />
+          </form>
+        </div>
       </div>
 
-      {/* Floating Action Buttons */}
+      {/* ── FLOATING ACTION BAR ──────────────────────────────────────────── */}
       <AnimatePresence>
         {isEditing && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 flex gap-3 z-40 max-w-xs"
+            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 flex gap-3 z-50 max-w-xs"
           >
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               type="button"
-              onClick={() => {
-                setFormData(JSON.parse(initialData));
-                setHasChanges(false);
-                setIsEditing(false);
-                setValidationErrors([]);
-              }}
-              className="flex-1 px-6 py-3 border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
+              onClick={() => { setFormData(JSON.parse(initialData)); setHasChanges(false); setIsEditing(false); setValidationErrors([]); }}
+              className="flex-1 px-5 py-3 border-2 border-gray-300 bg-white text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-sm"
             >
               Cancel
             </motion.button>
-
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="submit"
-              disabled={loading}
-              onClick={handleUpdateProfile}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-black shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              type="button" disabled={loading} onClick={handleUpdateProfile}
+              className="flex-1 px-5 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 text-sm"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <><Save size={18} /> Save</>
-              )}
+              {loading
+                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><Save size={16} /> Save</>
+              }
             </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Scroll to Top Button */}
+      {/* Scroll to Top */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-32 right-6 p-3 bg-primary-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+            className="fixed bottom-32 right-6 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all z-40"
           >
-            <ArrowUp size={20} />
+            <ArrowUp size={18} />
           </motion.button>
         )}
       </AnimatePresence>
@@ -922,82 +889,104 @@ export default function Profile() {
   );
 }
 
-// --- HELPER COMPONENTS ---
+// ── SOCIAL ICON SVGS (matching the screenshot's brand colors) ──────────────
+
+function GlobeIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="#3B82F6" strokeWidth="1.8"/>
+      <ellipse cx="12" cy="12" rx="4" ry="10" stroke="#3B82F6" strokeWidth="1.8"/>
+      <line x1="2" y1="12" x2="22" y2="12" stroke="#3B82F6" strokeWidth="1.8"/>
+      <line x1="12" y1="2" x2="12" y2="22" stroke="#3B82F6" strokeWidth="1.8"/>
+    </svg>
+  );
+}
+
+function GithubIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#1a1a1a" xmlns="http://www.w3.org/2000/svg">
+      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+    </svg>
+  );
+}
+
+function LinkedinIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#0A66C2" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+  );
+}
+
+function BehanceIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#1769FF" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.938 4.503c.702 0 1.34.06 1.92.188.577.13 1.07.33 1.485.61.41.28.733.65.96 1.12.225.47.34 1.05.34 1.73 0 .74-.17 1.36-.507 1.86-.338.5-.837.9-1.502 1.22.906.26 1.576.72 2.022 1.37.448.66.673 1.45.673 2.37 0 .75-.13 1.4-.41 1.96-.28.56-.67 1.03-1.16 1.4-.49.38-1.064.66-1.72.84-.655.18-1.356.27-2.1.27H0V4.503h6.938zm-.43 5.477c.585 0 1.064-.14 1.44-.42.376-.28.563-.73.563-1.34 0-.34-.06-.62-.18-.845-.12-.225-.29-.4-.5-.53-.21-.13-.45-.215-.72-.255-.27-.04-.555-.06-.854-.06H3.204v3.45h3.304zm.195 5.718c.325 0 .63-.03.913-.09.284-.06.535-.16.75-.3.217-.14.39-.33.517-.57.127-.24.19-.54.19-.91 0-.73-.206-1.25-.617-1.56-.41-.31-.955-.47-1.636-.47H3.204v3.9h3.5zm8.27-7.476c.374-.41.836-.735 1.383-.975.547-.24 1.14-.36 1.778-.36.677 0 1.29.13 1.83.38.54.25.995.6 1.364 1.06.37.46.648 1.01.834 1.66.186.65.28 1.36.28 2.13v.56H14.87c.052.87.32 1.546.81 2.03.488.484 1.14.726 1.953.726.647 0 1.197-.16 1.65-.49.454-.33.74-.68.855-1.06h2.97c-.455 1.42-1.15 2.44-2.09 3.06-.94.62-2.08.93-3.42.93-.927 0-1.764-.15-2.508-.45-.744-.3-1.375-.72-1.894-1.27-.518-.55-.913-1.2-1.187-1.95-.273-.75-.41-1.58-.41-2.49 0-.87.14-1.68.42-2.43.28-.75.68-1.39 1.2-1.92l-.003-.02zm5.54 1.6c-.41-.45-.995-.675-1.756-.675-.5 0-.913.093-1.24.277-.327.186-.59.41-.79.674-.2.265-.34.548-.42.847-.08.3-.127.585-.14.86h5.09c-.12-.83-.334-1.534-.744-1.983zm-4.85-4.523h5.6v1.494h-5.6V5.3z"/>
+    </svg>
+  );
+}
+
+// ── STAT PILL ────────────────────────────────────────────────────────────────
+
+function BriefcaseStatIcon() {
+  return <Briefcase size={20} className="text-purple-500" />;
+}
+function LayersStatIcon() {
+  return <Layers size={20} className="text-blue-500" />;
+}
+
+function StatPill({ icon, iconBg, value, label }: { icon: React.ReactNode; iconBg?: string; value: number; label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg || 'bg-purple-50'}`}>
+        {icon}
+      </span>
+      <div>
+        <p className="text-xl font-black text-gray-900 leading-none">{value}</p>
+        <p className="text-sm text-gray-500 font-medium mt-0.5">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── ADMIN VIEW ───────────────────────────────────────────────────────────────
 
 function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading, profile, isEditing, setIsEditing }: any) {
   return (
-    <div className="pt-28 pb-40 px-6 bg-[var(--bg-main)] min-h-screen flex items-center justify-center">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-lg w-full p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-2xl shadow-lg"
+    <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="max-w-lg w-full p-10 bg-white rounded-2xl border border-gray-100 shadow-sm"
       >
-        
         <div className="flex flex-col items-center mb-8">
-          <div className="relative group mb-6">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full blur-lg opacity-75 group-hover:opacity-100 transition duration-300"></div>
-            <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-[var(--bg-main)] bg-[var(--bg-card)]">
-              <img 
-                src={
-                  profile?.photoURL ||
-                  'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
-                }
-                alt=""
-                onError={(e) => {
-                  e.currentTarget.src =
-                    'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff';
-                }}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          </div>
-          <h2 className="text-3xl font-black text-[var(--text-main)]">{formData.displayName}</h2>
-          <div className="px-4 py-2 mt-3 bg-gradient-to-r from-primary-500/20 to-primary-600/20 text-primary-600 rounded-lg text-xs font-bold border border-primary-500/30">Administrator</div>
-        </div>
-
-        <form onSubmit={handleUpdateProfile} className="space-y-6">
-          <InputGroup label="Full Name">
-            <input 
-              disabled={!isEditing} 
-              value={formData.displayName} 
-              onChange={(e) => setFormData({...formData, displayName: e.target.value})} 
-              className={`w-full rounded-xl p-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`} 
+          <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 mb-6 shadow-md">
+            <img
+              src={profile?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.displayName || 'A')}&background=0052CC&color=fff&size=160`}
+              alt="" onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=A&background=0052CC&color=fff&size=160'; }}
+              className="w-full h-full object-cover" referrerPolicy="no-referrer"
             />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">{formData.displayName}</h2>
+          <div className="px-4 py-2 mt-3 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100">Administrator</div>
+        </div>
+        <form onSubmit={handleUpdateProfile} className="space-y-5">
+          <InputGroup label="Full Name">
+            <input disabled={!isEditing} value={formData.displayName} onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+              className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600' : 'bg-gray-50 border border-gray-200 text-gray-600'}`} />
           </InputGroup>
           <InputGroup label="Bio">
-            <textarea 
-              disabled={!isEditing} 
-              value={formData.bio} 
-              onChange={(e) => setFormData({...formData, bio: e.target.value})} 
-              className={`w-full rounded-xl p-3.5 text-sm transition-all min-h-[100px] ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}  
-              placeholder="Brief overview..."
-            />
+            <textarea disabled={!isEditing} value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              className={`w-full px-4 py-2.5 rounded-lg text-sm min-h-[100px] ${isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600' : 'bg-gray-50 border border-gray-200 text-gray-600'}`}
+              placeholder="Brief overview..." />
           </InputGroup>
           <div className="flex gap-3 pt-2">
             {!isEditing ? (
-              <button 
-                type="button" 
-                onClick={() => setIsEditing(true)} 
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl py-3.5 text-sm font-bold hover:shadow-lg hover:shadow-primary-500/30 transition-all"
-              >
-                Edit
-              </button>
+              <button type="button" onClick={() => setIsEditing(true)} className="w-full bg-blue-600 text-white rounded-xl py-2.5 text-sm font-bold hover:bg-blue-700 transition-colors">Edit</button>
             ) : (
               <>
-                <button 
-                  type="button" 
-                  onClick={() => setIsEditing(false)} 
-                  className="w-full bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] rounded-xl py-3.5 text-sm font-bold hover:bg-primary-500/10 hover:border-primary-500/60 transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={loading} 
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl py-3.5 text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/30 transition-all disabled:opacity-70"
-                >
-                  {loading ? "Saving..." : <><Save size={16} /> Save</>}
+                <button type="button" onClick={() => setIsEditing(false)} className="w-full border-2 border-gray-300 text-gray-700 rounded-xl py-2.5 text-sm font-bold hover:bg-gray-50 transition-colors">Cancel</button>
+                <button type="submit" disabled={loading} className="w-full bg-green-600 text-white rounded-xl py-2.5 text-sm font-bold hover:bg-green-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2">
+                  {loading ? 'Saving...' : <><Save size={16} /> Save</>}
                 </button>
               </>
             )}
@@ -1008,41 +997,27 @@ function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading,
   );
 }
 
+// ── SECTION WRAPPERS ─────────────────────────────────────────────────────────
+
 function ProfileSection({ title, icon, children, isCollapsed, onToggle, sectionId }: any) {
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       data-section={sectionId}
-      className={`p-8 md:p-10 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] border border-primary-500/20 rounded-2xl transition-all hover:border-primary-500/40 group shadow-lg`}
+      className="p-7 bg-white border border-gray-100 rounded-2xl shadow-sm"
     >
-      <button 
-        type="button" 
-        onClick={onToggle}
-        className="w-full flex items-center justify-between mb-6 group/header"
-      >
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary-500/20 text-primary-500 group-hover/header:bg-primary-500/30 transition-colors">
-            {icon}
-          </div>
-          <h2 className="text-2xl font-bold text-[var(--text-main)] group-hover/header:text-primary-600 transition-colors">{title}</h2>
+      <button type="button" onClick={onToggle} className="w-full flex items-center justify-between mb-6 group">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">{icon}</div>
+          <h2 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{title}</h2>
         </div>
-        <motion.div
-          animate={{ rotate: isCollapsed ? 0 : 180 }}
-          transition={{ duration: 0.3 }}
-          className="text-primary-500"
-        >
-          {isCollapsed ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
+        <motion.div animate={{ rotate: isCollapsed ? 0 : 180 }} transition={{ duration: 0.25 }} className="text-gray-400">
+          <ChevronDown size={20} />
         </motion.div>
       </button>
-      
       <AnimatePresence>
         {!isCollapsed && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
             {children}
           </motion.div>
         )}
@@ -1055,20 +1030,15 @@ function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd,
   const dataItems = Array.isArray(items) ? items : [];
   return (
     <ProfileSection title={title} icon={icon} isCollapsed={isCollapsed} onToggle={onToggle}>
-      <div className="space-y-6">
-        <AnimatePresence>
-          {dataItems.map((item: any) => itemRenderer(item))}
-        </AnimatePresence>
-        
+      <div className="space-y-5">
+        <AnimatePresence>{dataItems.map((item: any) => itemRenderer(item))}</AnimatePresence>
         {isEditing && (
-          <motion.button 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button" 
-            onClick={onAdd}
-            className="w-full py-4 border-2 border-dashed border-primary-500/40 bg-primary-500/5 rounded-2xl flex items-center justify-center gap-3 text-primary-600 hover:border-primary-500/80 hover:bg-primary-500/10 transition-all font-bold text-base group"
+          <motion.button
+            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+            type="button" onClick={onAdd}
+            className="w-full py-4 border-2 border-dashed border-gray-200 bg-gray-50 rounded-xl flex items-center justify-center gap-2 text-gray-500 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 transition-all font-semibold text-sm group"
           >
-            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+            <Plus size={18} className="group-hover:text-blue-600" />
             {addButtonText}
           </motion.button>
         )}
@@ -1077,59 +1047,48 @@ function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd,
   );
 }
 
-// Item Components (Experience, Project, Education, etc.) - Same as before
+// ── ITEM COMPONENTS (unchanged logic, just cleaner class names) ───────────────
+
 function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
     >
       {isEditing && (
-        <motion.button 
-          whileHover={{ scale: 1.2 }}
-          type="button" 
-          onClick={onDelete} 
-          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2 hover:bg-red-500/10 rounded-lg"
-        >
-          <Trash2 size={18} />
+        <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
+          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
+          <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Role / Position">
-          <EditableInput isEditing={isEditing} value={exp.role} onChange={(e) => onUpdate('role', e)} placeholder="Software Engineer" />
-        </InputGroup>
-        <InputGroup label="Company / Organization">
-          <EditableInput isEditing={isEditing} value={exp.company} onChange={(e) => onUpdate('company', e)} placeholder="Acme Inc" />
-        </InputGroup>
+        <InputGroup label="Role / Position"><EditableInput isEditing={isEditing} value={exp.role} onChange={(e: any) => onUpdate('role', e)} placeholder="Software Engineer" /></InputGroup>
+        <InputGroup label="Company / Organization"><EditableInput isEditing={isEditing} value={exp.company} onChange={(e: any) => onUpdate('company', e)} placeholder="Company Name" /></InputGroup>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-        <InputGroup label="Employment Type">
-          <select disabled={!isEditing} value={exp.type} onChange={(e) => onUpdate('type', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
+        <InputGroup label="Type">
+          <select disabled={!isEditing} value={exp.type} onChange={(e) => onUpdate('type', e.target.value)}
+            className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
             {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </InputGroup>
-        <InputGroup label="Location">
-           <EditableInput isEditing={isEditing} value={exp.location} onChange={(e) => onUpdate('location', e)} placeholder="City, Country" />
-        </InputGroup>
-        <InputGroup label="Work Mode">
-          <select disabled={!isEditing} value={exp.mode} onChange={(e) => onUpdate('mode', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
+        <InputGroup label="Location"><EditableInput isEditing={isEditing} value={exp.location} onChange={(e: any) => onUpdate('location', e)} placeholder="City, Country" /></InputGroup>
+        <InputGroup label="Mode">
+          <select disabled={!isEditing} value={exp.mode} onChange={(e) => onUpdate('mode', e.target.value)}
+            className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600' : 'bg-gray-100 border border-gray-200 text-gray-200'}`}>
             {WORK_MODES.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </InputGroup>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Start Date">
           <div className="flex gap-2">
-             <select disabled={!isEditing} value={exp.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
+            <select disabled={!isEditing} value={exp.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select disabled={!isEditing} value={exp.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
+            <select disabled={!isEditing} value={exp.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -1137,39 +1096,30 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
         </InputGroup>
         <InputGroup label="End Date">
           <div className="flex gap-2">
-             <select disabled={!isEditing || exp.current} value={exp.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'} ${!isEditing || exp.current ? 'opacity-50' : ''}`}>
+            <select disabled={!isEditing || exp.current} value={exp.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing && !exp.current ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-500 opacity-60'}`}>
               <option value="">Month</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select disabled={!isEditing || exp.current} value={exp.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'} ${!isEditing || exp.current ? 'opacity-50' : ''}`}>
+            <select disabled={!isEditing || exp.current} value={exp.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing && !exp.current ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-500 opacity-60'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
           {isEditing && (
-            <div className="mt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] group/checkbox hover:text-primary-600 transition-colors">
-                <input 
-                  type="checkbox" 
-                  checked={exp.current} 
-                  onChange={(e) => onUpdate('current', e.target.checked)} 
-                  className="w-4 h-4 rounded border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-card)] accent-primary-600 cursor-pointer group-hover/checkbox:border-primary-500" 
-                />
-                I currently work here
-              </label>
-            </div>
+            <label className="mt-2 flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+              <input type="checkbox" checked={exp.current} onChange={(e) => onUpdate('current', e.target.checked)} className="w-4 h-4 rounded accent-blue-600" />
+              I currently work here
+            </label>
           )}
         </InputGroup>
       </div>
-      
       <div className="mb-5">
-         <InputGroup label="Skills Used (Comma separated)">
-            <EditableInput isEditing={isEditing} value={exp.skills} onChange={(e) => onUpdate('skills', e)} placeholder="React, Node.js, TypeScript" />
-         </InputGroup>
+        <InputGroup label="Skills Used"><EditableInput isEditing={isEditing} value={exp.skills} onChange={(e: any) => onUpdate('skills', e)} placeholder="React, Node.js, TypeScript" /></InputGroup>
       </div>
-
       <InputGroup label="Description">
-        <EditableTextarea isEditing={isEditing} value={exp.description} onChange={(e) => onUpdate('description', e)} placeholder="Key responsibilities and achievements..." minHeight="min-h-[120px]" />
+        <EditableTextarea isEditing={isEditing} value={exp.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Responsibilities and achievements..." minHeight="min-h-[90px]" />
       </InputGroup>
     </motion.div>
   );
@@ -1177,79 +1127,60 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
 
 function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
     >
       {isEditing && (
-        <motion.button 
-          whileHover={{ scale: 1.2 }}
-          type="button" 
-          onClick={onDelete} 
-          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100 p-2 hover:bg-red-500/10 rounded-lg"
-        >
-          <Trash2 size={18} />
+        <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
+          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
+          <Trash2 size={16} />
         </motion.button>
-      )}  
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Project Title">
-          <EditableInput isEditing={isEditing} value={proj.title} onChange={(e) => onUpdate('title', e)} placeholder="Project Name" />
-        </InputGroup>
-        <InputGroup label="Category">
-           <EditableInput isEditing={isEditing} value={proj.category} onChange={(e) => onUpdate('category', e)} placeholder="Web App, Mobile App, etc." />
-        </InputGroup>
+        <InputGroup label="Project Title"><EditableInput isEditing={isEditing} value={proj.title} onChange={(e: any) => onUpdate('title', e)} placeholder="Project Name" /></InputGroup>
+        <InputGroup label="Category"><EditableInput isEditing={isEditing} value={proj.category} onChange={(e: any) => onUpdate('category', e)} placeholder="Web App, Mobile App" /></InputGroup>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Start Date">
           <div className="flex gap-2">
-             <select disabled={!isEditing} value={proj.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Month</option>
-              {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+            <select disabled={!isEditing} value={proj.startMonth || ''} onChange={(e) => onUpdate('startMonth', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Month</option>{MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select disabled={!isEditing} value={proj.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Year</option>
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            <select disabled={!isEditing} value={proj.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </InputGroup>
         <InputGroup label="End Date">
           <div className="flex gap-2">
-             <select disabled={!isEditing} value={proj.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Month</option>
-              {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+            <select disabled={!isEditing} value={proj.endMonth || ''} onChange={(e) => onUpdate('endMonth', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Month</option>{MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select disabled={!isEditing} value={proj.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Year</option>
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            <select disabled={!isEditing} value={proj.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </InputGroup>
       </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Status">
-          <select disabled={!isEditing} value={proj.status} onChange={(e) => onUpdate('status', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
+          <select disabled={!isEditing} value={proj.status} onChange={(e) => onUpdate('status', e.target.value)}
+            className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
             {PROJECT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </InputGroup>
-        <InputGroup label="Technologies Used">
-           <EditableInput isEditing={isEditing} value={proj.technologies} onChange={(e) => onUpdate('technologies', e)} placeholder="React, Node, MongoDB" />
-        </InputGroup>
+        <InputGroup label="Technologies"><EditableInput isEditing={isEditing} value={proj.technologies} onChange={(e: any) => onUpdate('technologies', e)} placeholder="React, Node, MongoDB" /></InputGroup>
       </div>
-
       <InputGroup label="Description">
-        <EditableTextarea isEditing={isEditing} value={proj.description} onChange={(e) => onUpdate('description', e)} placeholder="Brief project summary..." minHeight="min-h-[120px]" />
+        <EditableTextarea isEditing={isEditing} value={proj.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Project summary..." minHeight="min-h-[90px]" />
       </InputGroup>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-        <SocialInput
-                isEditing={isEditing} icon={<Github size={16}/>} placeholder="Repository Link" value={proj.githubUrl} onChange={(v:any) => onUpdate('githubUrl', v)} />
-        <SocialInput
-                isEditing={isEditing} icon={<Globe size={16}/>} placeholder="Demo URL" value={proj.demoUrl} onChange={(v:any) => onUpdate('demoUrl', v)} />
+        <SocialInput isEditing={isEditing} icon={<Github size={15} />} placeholder="Repository Link" value={proj.githubUrl} onChange={(v: any) => onUpdate('githubUrl', v)} />
+        <SocialInput isEditing={isEditing} icon={<Globe size={15} />} placeholder="Demo URL" value={proj.demoUrl} onChange={(v: any) => onUpdate('demoUrl', v)} />
       </div>
     </motion.div>
   );
@@ -1257,59 +1188,38 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
 
 function EducationItem({ edu, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
     >
       {isEditing && (
-        <motion.button 
-          whileHover={{ scale: 1.2 }}
-          type="button" 
-          onClick={onDelete} 
-          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2 hover:bg-red-500/10 rounded-lg"
-        >
-          <Trash2 size={18} />
+        <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
+          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
+          <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Institution Name">
-          <EditableInput isEditing={isEditing} value={edu.institution} onChange={(e) => onUpdate('institution', e)} placeholder="University of Technology" />
-        </InputGroup>
-        <InputGroup label="Degree / Course">
-          <EditableInput isEditing={isEditing} value={edu.degree} onChange={(e) => onUpdate('degree', e)} placeholder="Bachelor of Science" />
-        </InputGroup>
+        <InputGroup label="Institution Name"><EditableInput isEditing={isEditing} value={edu.institution} onChange={(e: any) => onUpdate('institution', e)} placeholder="University Name" /></InputGroup>
+        <InputGroup label="Degree / Course"><EditableInput isEditing={isEditing} value={edu.degree} onChange={(e: any) => onUpdate('degree', e)} placeholder="Bachelor of Science" /></InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <InputGroup label="Department / Major">
-           <EditableInput isEditing={isEditing} value={edu.department} onChange={(e) => onUpdate('department', e)} placeholder="Computer Science" />
-        </InputGroup>
+        <InputGroup label="Department / Major"><EditableInput isEditing={isEditing} value={edu.department} onChange={(e: any) => onUpdate('department', e)} placeholder="Computer Science" /></InputGroup>
         <InputGroup label="Start Year">
-            <select disabled={!isEditing} value={edu.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Year</option>
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-           </select>
+          <select disabled={!isEditing} value={edu.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)}
+            className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+            <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
         </InputGroup>
         <InputGroup label="End Year">
-            <select disabled={!isEditing || edu.current} value={edu.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'} ${!isEditing || edu.current ? 'opacity-50' : ''}`}>
-              <option value="">Year</option>
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-           </select>
-           {isEditing && (
-             <div className="mt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] group/checkbox hover:text-primary-600 transition-colors">
-                <input 
-                  type="checkbox" 
-                  checked={edu.current} 
-                  onChange={(e) => onUpdate('current', e.target.checked)} 
-                  className="w-4 h-4 rounded border-2 border-primary-500/50 text-primary-600 focus:ring-primary-600 bg-[var(--bg-card)] accent-primary-600 cursor-pointer group-hover/checkbox:border-primary-500" 
-                />
-                Current Student
-              </label>
-             </div>
-           )}
+          <select disabled={!isEditing || edu.current} value={edu.endYear || ''} onChange={(e) => onUpdate('endYear', e.target.value)}
+            className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing && !edu.current ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-500 opacity-60'}`}>
+            <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          {isEditing && (
+            <label className="mt-2 flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+              <input type="checkbox" checked={edu.current} onChange={(e) => onUpdate('current', e.target.checked)} className="w-4 h-4 rounded accent-blue-600" />
+              Current Student
+            </label>
+          )}
         </InputGroup>
       </div>
     </motion.div>
@@ -1318,47 +1228,33 @@ function EducationItem({ edu, onUpdate, onDelete, isEditing }: any) {
 
 function CertificationItem({ cert, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
     >
       {isEditing && (
-        <motion.button 
-          whileHover={{ scale: 1.2 }}
-          type="button" 
-          onClick={onDelete} 
-          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2 hover:bg-red-500/10 rounded-lg"
-        >
-          <Trash2 size={18} />
+        <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
+          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
+          <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Certification Name">
-          <EditableInput isEditing={isEditing} value={cert.name} onChange={(e) => onUpdate('name', e)} placeholder="AWS Certified Architect" />
-        </InputGroup>
-        <InputGroup label="Issuing Organization">
-          <EditableInput isEditing={isEditing} value={cert.org} onChange={(e) => onUpdate('org', e)} placeholder="Amazon Web Services" />
-        </InputGroup>
+        <InputGroup label="Certification Name"><EditableInput isEditing={isEditing} value={cert.name} onChange={(e: any) => onUpdate('name', e)} placeholder="AWS Certified" /></InputGroup>
+        <InputGroup label="Organization"><EditableInput isEditing={isEditing} value={cert.org} onChange={(e: any) => onUpdate('org', e)} placeholder="Amazon" /></InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Issue Date">
           <div className="flex gap-2">
-             <select disabled={!isEditing} value={cert.issueMonth || ''} onChange={(e) => onUpdate('issueMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Month</option>
-              {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+            <select disabled={!isEditing} value={cert.issueMonth || ''} onChange={(e) => onUpdate('issueMonth', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Month</option>{MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select disabled={!isEditing} value={cert.issueYear || ''} onChange={(e) => onUpdate('issueYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Year</option>
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            <select disabled={!isEditing} value={cert.issueYear || ''} onChange={(e) => onUpdate('issueYear', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </InputGroup>
-        <InputGroup label="Credential URL">
-          <EditableInput isEditing={isEditing} value={cert.url} onChange={(e) => onUpdate('url', e)} placeholder="https://..." />
-        </InputGroup>
+        <InputGroup label="Credential URL"><EditableInput isEditing={isEditing} value={cert.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." /></InputGroup>
       </div>
     </motion.div>
   );
@@ -1366,57 +1262,45 @@ function CertificationItem({ cert, onUpdate, onDelete, isEditing }: any) {
 
 function PublicationItem({ pub, onUpdate, onDelete, isEditing }: any) {
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="p-6 bg-[var(--bg-main)] border border-primary-500/20 rounded-2xl relative group/item shadow-sm hover:border-primary-500/40 transition-all"
+    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
     >
       {isEditing && (
-        <motion.button 
-          whileHover={{ scale: 1.2 }}
-          type="button" 
-          onClick={onDelete} 
-          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-2 hover:bg-red-500/10 rounded-lg"
-        >
-          <Trash2 size={18} />
+        <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
+          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
+          <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Title">
-          <EditableInput isEditing={isEditing} value={pub.title} onChange={(e) => onUpdate('title', e)} placeholder="Research paper or article title" />
-        </InputGroup>
-        <InputGroup label="Publisher">
-          <EditableInput isEditing={isEditing} value={pub.publisher} onChange={(e) => onUpdate('publisher', e)} placeholder="Journal, Medium, etc." />
-        </InputGroup>
+        <InputGroup label="Title"><EditableInput isEditing={isEditing} value={pub.title} onChange={(e: any) => onUpdate('title', e)} placeholder="Paper Title" /></InputGroup>
+        <InputGroup label="Publisher"><EditableInput isEditing={isEditing} value={pub.publisher} onChange={(e: any) => onUpdate('publisher', e)} placeholder="Journal, Medium, etc." /></InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Date">
           <div className="flex gap-2">
-             <select disabled={!isEditing} value={pub.dateMonth || ''} onChange={(e) => onUpdate('dateMonth', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Month</option>
-              {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+            <select disabled={!isEditing} value={pub.dateMonth || ''} onChange={(e) => onUpdate('dateMonth', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Month</option>{MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-             <select disabled={!isEditing} value={pub.dateYear || ''} onChange={(e) => onUpdate('dateYear', e.target.value)} className={`w-full rounded-xl p-3 text-sm transition-all font-medium ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] opacity-70'}`}>
-              <option value="">Year</option>
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            <select disabled={!isEditing} value={pub.dateYear || ''} onChange={(e) => onUpdate('dateYear', e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </InputGroup>
-        <InputGroup label="URL">
-          <EditableInput isEditing={isEditing} value={pub.url} onChange={(e) => onUpdate('url', e)} placeholder="https://..." />
-        </InputGroup>
+        <InputGroup label="URL"><EditableInput isEditing={isEditing} value={pub.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." /></InputGroup>
       </div>
     </motion.div>
   );
 }
 
+// ── PRIMITIVE FORM COMPONENTS ─────────────────────────────────────────────────
+
 function InputGroup({ label, children, required }: any) {
   return (
     <div>
-      <label className="block text-xs font-bold text-primary-600 mb-2.5 uppercase tracking-widest">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="block text-[11px] font-bold text-blue-600 mb-2 uppercase tracking-wider">
+        {label}{required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {children}
     </div>
@@ -1426,17 +1310,12 @@ function InputGroup({ label, children, required }: any) {
 function EditableInput({ isEditing, value, onChange, placeholder, hasError }: any) {
   return (
     <input
-      disabled={!isEditing}
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className={`w-full rounded-xl p-3.5 text-sm transition-all ${
-        hasError
-          ? 'border-2 border-red-500/50 focus:border-red-500'
-          : isEditing 
-            ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' 
-            : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'
+      disabled={!isEditing} type="text" value={value || ''}
+      onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+      className={`w-full px-4 py-2.5 rounded-lg text-sm transition-all ${
+        hasError ? 'border-2 border-red-500 focus:border-red-500' :
+        isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 hover:border-gray-400' :
+        'bg-transparent border-0 text-gray-700 cursor-default p-0'
       }`}
     />
   );
@@ -1445,29 +1324,26 @@ function EditableInput({ isEditing, value, onChange, placeholder, hasError }: an
 function EditableTextarea({ isEditing, value, onChange, placeholder, minHeight }: any) {
   return (
     <textarea
-      disabled={!isEditing}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className={`w-full rounded-xl p-3.5 text-sm transition-all ${minHeight} ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
+      disabled={!isEditing} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+      className={`w-full px-4 py-2.5 rounded-lg text-sm transition-all resize-none ${minHeight} ${
+        isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 hover:border-gray-400' :
+        'bg-transparent border-0 text-gray-600 cursor-default p-0'
+      }`}
     />
   );
 }
 
 function SocialInput({ icon, value, onChange, placeholder, isEditing }: any) {
   return (
-    <div className="relative group flex items-center">
-      <div className="absolute left-4 text-primary-600">
-        {icon}
-      </div>
-        <input
-          disabled={!isEditing}
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={`w-full rounded-xl pl-12 pr-4 py-3.5 text-sm transition-all ${isEditing ? 'bg-[var(--bg-card)] border-2 border-primary-500/30 text-[var(--text-main)] focus:outline-none focus:border-primary-500 cursor-text hover:border-primary-500/50' : 'bg-transparent border-none text-[var(--text-main)] cursor-default opacity-70'}`}
-        />
+    <div className="relative flex items-center">
+      <div className="absolute left-3.5 text-blue-500">{icon}</div>
+      <input
+        disabled={!isEditing} type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+        className={`w-full pl-10 pr-4 py-2.5 rounded-lg text-sm transition-all ${
+          isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 hover:border-gray-400' :
+          'bg-gray-50 border border-gray-200 text-gray-600'
+        }`}
+      />
     </div>
   );
 }
