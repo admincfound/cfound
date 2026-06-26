@@ -49,6 +49,7 @@ export interface UserProfile {
   city?: string;
 
   primaryRole?: string;
+  secondaryRole?: string;
   experienceLevel?: string;
 
   declarationAccepted?: boolean;
