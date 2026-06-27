@@ -51,6 +51,7 @@ export interface UserProfile {
   primaryRole?: string;
   secondaryRole?: string;
   experienceLevel?: string;
+  openToWork?: boolean;
 
   declarationAccepted?: boolean;
   signature?: string;
