@@ -3,15 +3,26 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Download, FileText, FileCode2, ChevronDown, Loader2 } from 'lucide-react';
+import { Download, FileText, FileCode2, ChevronDown, Loader2, Lock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import type { ProfileData } from '.../lib/resumeBuilder';
 
 interface DownloadDropdownProps {
   profileData: ProfileData;
+  /** Profile is 100% complete (all required sections filled in). */
+  isProfileComplete: boolean;
+  /** A custom photo has been uploaded (not the Google/default avatar). */
+  hasCustomPhoto: boolean;
+  /** Stretch to fill its container — used in the mobile action bar. */
+  fullWidth?: boolean;
 }
 
-export default function DownloadDropdown({ profileData }: DownloadDropdownProps) {
+export default function DownloadDropdown({
+  profileData,
+  isProfileComplete,
+  hasCustomPhoto,
+  fullWidth = false,
+}: DownloadDropdownProps) {
   const [open, setOpen] = useState(false);
   const [generating, setGenerating] = useState<'pdf' | 'docx' | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -25,48 +36,89 @@ export default function DownloadDropdown({ profileData }: DownloadDropdownProps)
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const isLoading = generating !== null;
+  const isEligible = isProfileComplete && hasCustomPhoto;
+
+  // Reason shown as a tooltip (desktop hover) and as a toast (any tap while gated).
+  // Photo check takes priority since it's the quicker fix, then completion.
+  const blockedReason = !hasCustomPhoto
+    ? 'Upload a profile photo to enable resume download.'
+    : !isProfileComplete
+    ? 'Complete your profile to enable resume download.'
+    : '';
+
+  const handleTriggerClick = () => {
+    if (isLoading) return;
+
+    if (!isEligible) {
+      if (!hasCustomPhoto) {
+        toast('📷 Upload a profile photo to download your C Found Resume.');
+      } else {
+        toast('⚠️ Complete your C Found Resume profile to download your resume.');
+      }
+      return;
+    }
+
+    setOpen((o) => !o);
+  };
+
   const handleDownload = async (type: 'pdf' | 'docx') => {
     if (generating) return;
+
+    // Defensive re-check in case state changed between opening the menu and clicking an option.
+    if (!isEligible) {
+      setOpen(false);
+      if (!hasCustomPhoto) {
+        toast('📷 Upload a profile photo to download your C Found Resume.');
+      } else {
+        toast('⚠️ Complete your C Found Resume profile to download your resume.');
+      }
+      return;
+    }
+
     setOpen(false);
     setGenerating(type);
+    toast.success('✅ Resume ready to download.');
 
     try {
       if (type === 'pdf') {
         const { generatePDF } = await import('../lib/resumeBuilder');
         await generatePDF(profileData);
-        toast.success('PDF resume downloaded!');
       } else {
         const { generateDOCX } = await import('../lib/resumeBuilder');
         await generateDOCX(profileData);
-        toast.success('Word resume downloaded!');
       }
     } catch (err) {
       console.error('Resume generation failed:', err);
-      toast.error(`Failed to generate ${type.toUpperCase()}. Please try again.`);
+      toast.error("❌ Couldn't generate your resume. Please try again.");
     } finally {
       setGenerating(null);
     }
   };
 
-  const isLoading = generating !== null;
-
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={`relative ${fullWidth ? 'flex-1' : ''}`}>
       {/* Trigger button */}
       <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: isLoading ? 1 : 1.02 }}
+        whileTap={{ scale: isLoading ? 1 : 0.98 }}
         type="button"
-        onClick={() => !isLoading && setOpen((o) => !o)}
+        onClick={handleTriggerClick}
         disabled={isLoading}
-        className="px-5 py-2.5 bg-blue-600 text-white rounded-2xl font-semibold shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-70"
+        title={!isEligible && !isLoading ? blockedReason : undefined}
+        aria-disabled={!isEligible}
+        className={`${fullWidth ? 'w-full' : ''} px-5 py-2.5 lg:py-2.5 rounded-2xl font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-70 ${
+          isEligible
+            ? 'bg-blue-600 text-white hover:bg-blue-700'
+            : 'bg-blue-50 text-blue-400 hover:bg-blue-100 cursor-not-allowed'
+        }`}
       >
         {isLoading ? (
           <>
             <Loader2 size={15} className="animate-spin" />
             Generating {generating?.toUpperCase()}...
           </>
-        ) : (
+        ) : isEligible ? (
           <>
             <Download size={15} />
             Download Resume
@@ -75,18 +127,30 @@ export default function DownloadDropdown({ profileData }: DownloadDropdownProps)
               className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             />
           </>
+        ) : (
+          <>
+            <Lock size={14} />
+            Download Resume
+          </>
         )}
       </motion.button>
 
+      {/* Helper text when gated — only needed where there's no hover tooltip to rely on (mobile) */}
+      {!isEligible && !isLoading && fullWidth && (
+        <p className="mt-1.5 text-[11px] text-gray-400 text-center px-1 leading-tight">
+          {blockedReason}
+        </p>
+      )}
+
       {/* Dropdown */}
       <AnimatePresence>
-        {open && (
+        {open && isEligible && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50"
+            className={`absolute ${fullWidth ? 'left-0 right-0' : 'right-0 w-52'} top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50`}
             style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)' }}
           >
             <div className="p-1.5">

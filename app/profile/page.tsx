@@ -319,6 +319,8 @@ export default function Profile() {
 
   const completion = useMemo(() => getProfileCompletion(formData), [formData]);
 
+  const hasCustomPhoto = useMemo(() => isImageKitPhoto(formData?.photoURL), [formData]);
+
   const locationLabel = useMemo(() => {
     if (!formData) return '';
     return [formData.city, formData.country].filter(Boolean).join(', ');
@@ -382,12 +384,16 @@ export default function Profile() {
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white via-white to-indigo-50/40" />
 
-          {/* Action buttons row — Edit Profile + Download Resume */}
+          {/* Action buttons row — Edit Profile + Download Resume (DESKTOP ONLY, unchanged) */}
           {!isEditing && (
-            <div className="relative lg:absolute top-0 lg:top-6 right-0 lg:right-6 z-30 flex flex-wrap items-center justify-end gap-2 lg:gap-3 px-4 pt-4 lg:px-0 lg:pt-0">
+            <div className="hidden lg:flex absolute top-6 right-6 z-30 items-center gap-3">
               {/* Download Resume — lazy loaded, only renders when profile is loaded */}
               <Suspense fallback={null}>
-                <DownloadDropdown profileData={formData} />
+                <DownloadDropdown
+                  profileData={formData}
+                  isProfileComplete={completion.isComplete}
+                  hasCustomPhoto={hasCustomPhoto}
+                />
               </Suspense>
 
               <motion.button
@@ -398,7 +404,7 @@ export default function Profile() {
                   setPhotoURLAtEditStart(formData.photoURL || '');
                   setIsEditing(true);
                 }}
-                className="px-4 lg:px-5 py-2 lg:py-2.5 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
+                className="px-5 py-2.5 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
               >
                 <PenLine size={15} />
                 Edit Profile
@@ -534,6 +540,34 @@ export default function Profile() {
             </div>
           </div>
         </div>
+
+        {/* ── MOBILE ACTION BAR — Edit Profile + Download Resume (mobile/tablet only) ── */}
+        {!isEditing && (
+          <div className="flex lg:hidden items-stretch gap-3 mb-6">
+            <Suspense fallback={null}>
+              <DownloadDropdown
+                profileData={formData}
+                isProfileComplete={completion.isComplete}
+                hasCustomPhoto={hasCustomPhoto}
+                fullWidth
+              />
+            </Suspense>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={() => {
+                setPhotoURLAtEditStart(formData.photoURL || '');
+                setIsEditing(true);
+              }}
+              className="flex-1 px-5 py-3 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+            >
+              <PenLine size={15} />
+              Edit Profile
+            </motion.button>
+          </div>
+        )}
 
         {/* ── ABOUT ME + PROFILE COMPLETION ───────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 mb-5" ref={formRef}>
