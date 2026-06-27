@@ -728,7 +728,7 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
 
   // ── Build document ────────────────────────────────────────────────────────
 
-  const document = new Document({
+  const docxDocument = new Document({
     styles: {
       default: {
         document: { run: { font: 'Calibri', size: 18 } },
@@ -747,12 +747,12 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
     ],
   });
 
-  const buffer = await Packer.toBuffer(document);
+  const buffer = await Packer.toBuffer(docxDocument);
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement?.('a') || Object.assign(globalThis.document.createElement('a'), {});
+
   // Use native DOM
   const anchor = window.document.createElement('a');
   anchor.href = url;
