@@ -5,7 +5,7 @@ import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, RotateCcw, RotateCw, RefreshCw, ZoomIn, ZoomOut, Crop } from 'lucide-react';
-import type { CropArea } from './cropUtils';
+import type { CropArea } from '../lib/cropUtils';
 
 interface CropModalProps {
   imageSrc: string;
