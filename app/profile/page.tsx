@@ -370,11 +370,11 @@ export default function Profile() {
       </Suspense>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <div className="pt-24 px-4 md:px-8 max-w-7xl mx-auto">
-        <div className="relative bg-white rounded-3xl overflow-hidden shadow-sm mb-6">
+      <div className="pt-24 px-4 lg:px-8 max-w-7xl mx-auto overflow-x-hidden lg:overflow-x-visible">
+        <div className="relative bg-white rounded-2xl lg:rounded-3xl overflow-hidden shadow-sm mb-6">
 
           <div
-            className="pointer-events-none absolute -bottom-16 -right-16 w-[420px] h-[320px] rounded-full opacity-60"
+            className="pointer-events-none absolute -bottom-16 -right-16 w-[260px] h-[200px] lg:w-[420px] lg:h-[320px] rounded-full opacity-60"
             style={{
               background: 'radial-gradient(ellipse at 60% 60%, #c4b5f4 0%, #a78bfa 30%, #818cf8 60%, transparent 80%)',
               filter: 'blur(2px)',
@@ -384,7 +384,7 @@ export default function Profile() {
 
           {/* Action buttons row — Edit Profile + Download Resume */}
           {!isEditing && (
-            <div className="absolute top-6 right-6 z-30 flex items-center gap-3">
+            <div className="relative lg:absolute top-0 lg:top-6 right-0 lg:right-6 z-30 flex flex-wrap items-center justify-end gap-2 lg:gap-3 px-4 pt-4 lg:px-0 lg:pt-0">
               {/* Download Resume — lazy loaded, only renders when profile is loaded */}
               <Suspense fallback={null}>
                 <DownloadDropdown profileData={formData} />
@@ -398,7 +398,7 @@ export default function Profile() {
                   setPhotoURLAtEditStart(formData.photoURL || '');
                   setIsEditing(true);
                 }}
-                className="px-5 py-2.5 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center gap-2 text-sm"
+                className="px-4 lg:px-5 py-2 lg:py-2.5 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
               >
                 <PenLine size={15} />
                 Edit Profile
@@ -413,14 +413,14 @@ export default function Profile() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mx-8 mt-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
+                className="mx-4 lg:mx-8 mt-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 max-w-full"
               >
                 <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
+                <div className="min-w-0">
                   <p className="font-semibold text-red-900 text-sm mb-1">Please complete required fields:</p>
                   <ul className="space-y-0.5">
                     {validationErrors.map((err, idx) => (
-                      <li key={idx} className="text-xs text-red-700">{err.message}</li>
+                      <li key={idx} className="text-xs text-red-700 break-words">{err.message}</li>
                     ))}
                   </ul>
                 </div>
@@ -429,11 +429,11 @@ export default function Profile() {
           </AnimatePresence>
 
           {/* Hero content */}
-          <div className="relative z-10 flex gap-8 items-start px-8 py-8 md:py-10">
+          <div className="relative z-10 flex flex-col lg:flex-row gap-6 lg:gap-8 items-center lg:items-start px-4 sm:px-6 lg:px-8 py-8 lg:py-10 text-center lg:text-left">
 
             {/* Avatar */}
             <div className="flex-shrink-0 relative">
-              <div className="w-[220px] h-[220px] overflow-hidden rounded-[24px]">
+              <div className="w-[140px] h-[140px] sm:w-[170px] sm:h-[170px] lg:w-[220px] lg:h-[220px] overflow-hidden rounded-[20px] lg:rounded-[24px]">
                 <img
                   src={heroPhoto}
                   alt="Profile"
@@ -447,40 +447,40 @@ export default function Profile() {
             </div>
 
             {/* Info column */}
-            <div className="flex-1 min-w-0 pt-2">
+            <div className="flex-1 min-w-0 w-full pt-0 lg:pt-2">
 
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-[44px] leading-tight font-black text-gray-900 tracking-tight">
+              <div className="flex items-center justify-center lg:justify-start gap-2 lg:gap-3 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl lg:text-[44px] leading-tight font-black text-gray-900 tracking-tight break-words max-w-full">
                   {formData.displayName || 'Your Name'}
                 </h1>
-                <BadgeCheck size={26} className="text-blue-500 fill-blue-100 flex-shrink-0" />
+                <BadgeCheck size={22} className="lg:w-[26px] lg:h-[26px] text-blue-500 fill-blue-100 flex-shrink-0" />
               </div>
 
-              <div className="flex items-center gap-3 mt-1 flex-wrap">
-                <span className="text-xl font-bold text-blue-600">{formData.primaryRole || 'Your Role'}</span>
+              <div className="flex items-center justify-center lg:justify-start gap-2 lg:gap-3 mt-1 flex-wrap">
+                <span className="text-lg lg:text-xl font-bold text-blue-600 break-words">{formData.primaryRole || 'Your Role'}</span>
                 {formData.secondaryRole && (
                   <>
-                    <span className="text-gray-300 font-light text-xl">|</span>
-                    <span className="text-lg font-semibold text-gray-500">{formData.secondaryRole}</span>
+                    <span className="text-gray-300 font-light text-lg lg:text-xl hidden sm:inline">|</span>
+                    <span className="text-base lg:text-lg font-semibold text-gray-500 break-words">{formData.secondaryRole}</span>
                   </>
                 )}
               </div>
 
-              <div className="mt-4 flex items-center gap-0 flex-wrap">
+              <div className="mt-4 flex items-center justify-center lg:justify-start gap-x-3 lg:gap-x-0 gap-y-2 flex-wrap">
                 {locationLabel && (
                   <>
-                    <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium px-0 pr-4">
+                    <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium lg:pr-4">
                       <MapPin size={15} className="text-gray-400 flex-shrink-0" />
                       {locationLabel}
                     </span>
-                    <span className="text-gray-300 pr-4">|</span>
+                    <span className="text-gray-300 lg:pr-4 hidden sm:inline">|</span>
                   </>
                 )}
-                <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium pr-4">
+                <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium lg:pr-4">
                   <Briefcase size={15} className="text-gray-400 flex-shrink-0" />
                   {formData.experienceLevel || 'Fresher'}
                 </span>
-                <span className="text-gray-300 pr-4">|</span>
+                <span className="text-gray-300 lg:pr-4 hidden sm:inline">|</span>
                 <span className="flex items-center gap-1.5 text-sm font-medium">
                   <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${formData.openToWork ? 'bg-green-500' : 'bg-gray-400'}`} />
                   <span className={formData.openToWork ? 'text-gray-800 font-semibold' : 'text-gray-500'}>
@@ -502,8 +502,8 @@ export default function Profile() {
               )}
 
               {/* Social links bar */}
-              <div className="mt-6">
-                <div className="inline-flex items-stretch bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="mt-6 w-full flex justify-center lg:justify-start">
+                <div className="inline-flex items-stretch bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden max-w-full overflow-x-auto">
                   {[
                     { key: 'portfolioUrl', label: 'Portfolio', icon: <GlobeIcon />, href: formData.portfolioUrl },
                     { key: 'githubUrl', label: 'GitHub', icon: <GithubIcon />, href: formData.githubUrl },
@@ -517,7 +517,7 @@ export default function Profile() {
                         target={item.href ? '_blank' : undefined}
                         rel="noopener noreferrer"
                         onClick={(e) => { if (!item.href) e.preventDefault(); }}
-                        className={`flex flex-col items-center justify-center gap-2 px-6 py-4 min-w-[90px] transition-colors group ${item.href ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default opacity-70'}`}
+                        className={`flex flex-col items-center justify-center gap-2 px-3 sm:px-5 lg:px-6 py-3 lg:py-4 min-w-[64px] sm:min-w-[80px] lg:min-w-[90px] flex-shrink-0 transition-colors group ${item.href ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default opacity-70'}`}
                       >
                         <span className="w-9 h-9 flex items-center justify-center rounded-full bg-white group-hover:scale-110 transition-transform">
                           {item.icon}
@@ -525,7 +525,7 @@ export default function Profile() {
                         <span className="text-xs font-medium text-gray-500 group-hover:text-gray-700 whitespace-nowrap">{item.label}</span>
                       </a>
                       {idx < arr.length - 1 && (
-                        <div className="w-px bg-gray-100 self-stretch my-3" />
+                        <div className="w-px bg-gray-100 self-stretch my-3 flex-shrink-0" />
                       )}
                     </React.Fragment>
                   ))}
@@ -536,7 +536,7 @@ export default function Profile() {
         </div>
 
         {/* ── ABOUT ME + PROFILE COMPLETION ───────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 mb-5" ref={formRef}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 mb-5" ref={formRef}>
 
           {/* About Me */}
           <motion.div
@@ -544,7 +544,7 @@ export default function Profile() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             data-section="personal"
-            className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-7"
+            className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:p-7"
           >
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-3">
@@ -661,7 +661,7 @@ export default function Profile() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col"
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:p-7 flex flex-col"
           >
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
@@ -735,7 +735,7 @@ export default function Profile() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6"
+          className="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm px-4 sm:px-6 py-5 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
         >
           <StatPill icon={<BriefcaseStatIcon />} value={formData.experiences?.length || 0} label="Experience" />
           <StatPill icon={<LayersStatIcon />} value={formData.projects?.length || 0} label="Projects" />
@@ -966,7 +966,7 @@ export default function Profile() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 data-section="declaration"
-                className="p-7 bg-white rounded-2xl border border-gray-100 shadow-sm"
+                className="p-5 lg:p-7 bg-white rounded-2xl border border-gray-100 shadow-sm"
               >
                 <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
                   <CheckCircle2 size={24} className="text-blue-600" />
@@ -989,7 +989,7 @@ export default function Profile() {
                       <input
                         type="text" value={formData.signature}
                         onChange={(e) => setFormData({ ...formData, signature: e.target.value })}
-                        className={`w-full md:w-1/2 px-4 py-2.5 rounded-lg text-sm font-serif italic focus:outline-none transition-all ${
+                        className={`w-full lg:w-1/2 px-4 py-2.5 rounded-lg text-sm font-serif italic focus:outline-none transition-all ${
                           validationErrors.some(e => e.message.includes('signature'))
                             ? 'border-2 border-red-500' : 'border-2 border-gray-300 focus:border-blue-600'
                         }`}
@@ -1013,7 +1013,7 @@ export default function Profile() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 flex gap-3 z-50 max-w-xs"
+            className="fixed bottom-4 left-4 right-4 lg:bottom-6 lg:left-auto lg:right-6 flex gap-3 z-50 lg:max-w-xs"
           >
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -1065,12 +1065,12 @@ export default function Profile() {
 
 function ProfileLoadingScreen() {
   return (
-    <div className="min-h-screen bg-[#f5f6fa] flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[#f5f6fa] flex flex-col items-center justify-center px-4">
       <motion.div
         initial={{ opacity: 0, y: 12, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="bg-white rounded-3xl shadow-sm border border-gray-100 px-10 py-10 flex flex-col items-center w-[340px]"
+        className="bg-white rounded-3xl shadow-sm border border-gray-100 px-6 sm:px-10 py-10 flex flex-col items-center w-full max-w-[340px]"
       >
         <div className="relative mb-7">
           <motion.div
@@ -1104,15 +1104,15 @@ function ProfileLoadingScreen() {
         transition={{ delay: 0.2, duration: 0.5 }}
         className="mt-6 w-full max-w-4xl px-4"
       >
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex gap-8 items-start overflow-hidden">
-          <div className="w-[160px] h-[160px] rounded-[20px] bg-gray-100 flex-shrink-0 relative overflow-hidden">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center sm:items-start overflow-hidden">
+          <div className="w-[110px] h-[110px] sm:w-[160px] sm:h-[160px] rounded-2xl sm:rounded-[20px] bg-gray-100 flex-shrink-0 relative overflow-hidden">
             <SkeletonShimmer />
           </div>
-          <div className="flex-1 pt-2 space-y-3">
-            <div className="h-9 w-56 bg-gray-100 rounded-xl relative overflow-hidden"><SkeletonShimmer /></div>
-            <div className="h-5 w-36 bg-gray-100 rounded-lg relative overflow-hidden"><SkeletonShimmer /></div>
-            <div className="h-4 w-48 bg-gray-100 rounded-lg relative overflow-hidden mt-4"><SkeletonShimmer /></div>
-            <div className="mt-5 flex gap-2">
+          <div className="flex-1 w-full pt-0 sm:pt-2 space-y-3">
+            <div className="h-9 w-full max-w-56 mx-auto sm:mx-0 bg-gray-100 rounded-xl relative overflow-hidden"><SkeletonShimmer /></div>
+            <div className="h-5 w-36 max-w-full mx-auto sm:mx-0 bg-gray-100 rounded-lg relative overflow-hidden"><SkeletonShimmer /></div>
+            <div className="h-4 w-48 max-w-full mx-auto sm:mx-0 bg-gray-100 rounded-lg relative overflow-hidden mt-4"><SkeletonShimmer /></div>
+            <div className="mt-5 flex gap-2 justify-center sm:justify-start flex-wrap">
               {[80, 64, 96, 72].map((w, i) => (
                 <div key={i} style={{ width: w }} className="h-9 bg-gray-100 rounded-xl relative overflow-hidden">
                   <SkeletonShimmer />
@@ -1354,13 +1354,13 @@ function LayersStatIcon() { return <Layers size={20} className="text-blue-500" /
 
 function StatPill({ icon, iconBg, value, label }: { icon: React.ReactNode; iconBg?: string; value: number; label: string }) {
   return (
-    <div className="flex items-center gap-3">
-      <span className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg || 'bg-purple-50'}`}>
+    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <span className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg || 'bg-purple-50'}`}>
         {icon}
       </span>
-      <div>
-        <p className="text-xl font-black text-gray-900 leading-none">{value}</p>
-        <p className="text-sm text-gray-500 font-medium mt-0.5">{label}</p>
+      <div className="min-w-0">
+        <p className="text-lg sm:text-xl font-black text-gray-900 leading-none">{value}</p>
+        <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5 truncate">{label}</p>
       </div>
     </div>
   );
@@ -1370,20 +1370,20 @@ function StatPill({ icon, iconBg, value, label }: { icon: React.ReactNode; iconB
 
 function AdminProfileView({ formData, setFormData, handleUpdateProfile, loading, profile, isEditing, setIsEditing }: any) {
   return (
-    <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center">
+    <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center px-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="max-w-lg w-full p-10 bg-white rounded-2xl border border-gray-100 shadow-sm"
+        className="max-w-lg w-full p-6 sm:p-10 bg-white rounded-2xl border border-gray-100 shadow-sm"
       >
         <div className="flex flex-col items-center mb-8">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 mb-6 shadow-md">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 mb-6 shadow-md flex-shrink-0">
             <img
               src={profile?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.displayName || 'A')}&background=0052CC&color=fff&size=160`}
               alt="" onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=A&background=0052CC&color=fff&size=160'; }}
               className="w-full h-full object-cover" referrerPolicy="no-referrer"
             />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">{formData.displayName}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-center break-words max-w-full">{formData.displayName}</h2>
           <div className="px-4 py-2 mt-3 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100">Administrator</div>
         </div>
         <form onSubmit={handleUpdateProfile} className="space-y-5">
@@ -1421,20 +1421,20 @@ function ProfileSection({ title, icon, children, isCollapsed, onToggle, sectionI
     <motion.div
       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       data-section={sectionId}
-      className="p-7 bg-white border border-gray-100 rounded-2xl shadow-sm"
+      className="p-4 sm:p-5 lg:p-7 bg-white border border-gray-100 rounded-2xl shadow-sm max-w-full overflow-hidden"
     >
-      <button type="button" onClick={onToggle} className="w-full flex items-center justify-between mb-6 group">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">{icon}</div>
-          <h2 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{title}</h2>
+      <button type="button" onClick={onToggle} className="w-full flex items-center justify-between gap-3 mb-6 group">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">{icon}</div>
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate text-left">{title}</h2>
         </div>
-        <motion.div animate={{ rotate: isCollapsed ? 0 : 180 }} transition={{ duration: 0.25 }} className="text-gray-400">
+        <motion.div animate={{ rotate: isCollapsed ? 0 : 180 }} transition={{ duration: 0.25 }} className="text-gray-400 flex-shrink-0">
           <ChevronDown size={20} />
         </motion.div>
       </button>
       <AnimatePresence>
         {!isCollapsed && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="max-w-full">
             {children}
           </motion.div>
         )}
@@ -1474,13 +1474,13 @@ function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd,
 
 function IncompleteCardBanner({ missingFields, onDelete }: { missingFields: string[]; onDelete: () => void }) {
   return (
-    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start justify-between gap-3">
-      <div className="flex items-start gap-2">
+    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col sm:flex-row items-start sm:justify-between gap-3 max-w-full">
+      <div className="flex items-start gap-2 min-w-0">
         <AlertCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs font-bold text-red-700">This section is incomplete. Complete all required fields or delete this card.</p>
+        <div className="min-w-0">
+          <p className="text-xs font-bold text-red-700 break-words">This section is incomplete. Complete all required fields or delete this card.</p>
           {missingFields.length > 0 && (
-            <p className="text-xs text-red-500 mt-0.5">Missing: {missingFields.join(', ')}</p>
+            <p className="text-xs text-red-500 mt-0.5 break-words">Missing: {missingFields.join(', ')}</p>
           )}
         </div>
       </div>
@@ -1503,7 +1503,7 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing, isIncomplete, miss
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={exp.id}
-      className={`p-6 rounded-xl relative group transition-all ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -1598,7 +1598,7 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing, isIncomplete, missin
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={proj.id}
-      className={`p-6 rounded-xl relative group transition-all ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -1676,7 +1676,7 @@ function EducationItem({ edu, onUpdate, onDelete, isEditing, isIncomplete, missi
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={edu.id}
-      className={`p-6 rounded-xl relative group transition-all ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -1733,7 +1733,7 @@ function CertificationItem({ cert, onUpdate, onDelete, isEditing, isIncomplete, 
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={cert.id}
-      className={`p-6 rounded-xl relative group transition-all ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -1784,7 +1784,7 @@ function PublicationItem({ pub, onUpdate, onDelete, isEditing, isIncomplete, mis
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={pub.id}
-      className={`p-6 rounded-xl relative group transition-all ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
