@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Download, FileText, FileCode2, ChevronDown, Loader2, Lock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import type { ProfileData } from '.../lib/resumeBuilder';
+import type { ProfileData } from '../lib/resumeBuilder';
 
 interface DownloadDropdownProps {
   profileData: ProfileData;
