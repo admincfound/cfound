@@ -1,26 +1,87 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { uploadToImageKit, deleteFromImageKit } from '../lib/imagekitUpload';
 import { useAuth } from '../context/AuthContext';
 import { 
   User, Github, Linkedin, Globe, Plus, Trash2, Save, 
   ChevronDown, ChevronUp, Briefcase, BookOpen, Award, Layers,
   Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X, Edit3,
   ArrowUp, MapPin, ExternalLink, BadgeCheck, Quote, PenLine,
-  BarChart2, GraduationCap, ShieldCheck
+  BarChart2, GraduationCap, ShieldCheck, Camera, ImageOff, Upload
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
+
+// ── Lazy-loaded premium feature components ───────────────────────────────────
+// These are code-split so they don't increase initial bundle size.
+const CropModal = lazy(() => import('./CropModal'));
+const DownloadDropdown = lazy(() => import('./DownloadDropdown'));
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Internship', 'Freelance', 'Personal Project', 'Team Project', 'Volunteer', 'Other'];
 const WORK_MODES = ['Remote', 'Hybrid', 'Onsite'];
 const PROJECT_STATUS = ['Completed', 'In Progress', 'Planned'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const YEARS = Array.from({length: 40}, (_, i) => new Date().getFullYear() - i).map(String);
+
+// ── IMAGEKIT DETECTION ────────────────────────────────────────────────────────
+
+/**
+ * Single source of truth: returns true only when `url` is a photo that was
+ * uploaded to ImageKit by this app (i.e. stored under our URL endpoint).
+ * Uses the env var so there is no hardcoded domain anywhere.
+ */
+function isImageKitPhoto(url: string | undefined | null): boolean {
+  if (!url) return false;
+  const endpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+  if (!endpoint) return false;
+  return url.startsWith(endpoint);
+}
+
+// ── REQUIRED FIELDS per card type ────────────────────────────────────────────
+
+const CARD_REQUIRED: Record<string, { field: string; label: string }[]> = {
+  experiences: [
+    { field: 'role', label: 'Role / Position' },
+    { field: 'company', label: 'Company / Organization' },
+    { field: 'startYear', label: 'Start Year' },
+  ],
+  projects: [
+    { field: 'title', label: 'Project Title' },
+    { field: 'description', label: 'Description' },
+  ],
+  education: [
+    { field: 'institution', label: 'Institution Name' },
+    { field: 'degree', label: 'Degree / Course' },
+    { field: 'startYear', label: 'Start Year' },
+  ],
+  certifications: [
+    { field: 'name', label: 'Certification Name' },
+    { field: 'org', label: 'Organization' },
+  ],
+  publications: [
+    { field: 'title', label: 'Title' },
+    { field: 'publisher', label: 'Publisher' },
+  ],
+};
+
+function isCardComplete(section: string, item: any): boolean {
+  const required = CARD_REQUIRED[section] || [];
+  return required.every(r => item[r.field]?.toString().trim());
+}
+
+function getMissingFields(section: string, item: any): string[] {
+  const required = CARD_REQUIRED[section] || [];
+  return required.filter(r => !item[r.field]?.toString().trim()).map(r => r.label);
+}
+
+const EXPERIENCE_LEVELS_REQUIRING_EXP = ['1–2 Years', '2–5 Years', '5–10 Years', '10+ Years'];
+
+// ── FIELD WRAPPER ─────────────────────────────────────────────────────────────
 
 const FieldWrapper = ({ show, children }: { show: boolean; children: React.ReactNode }) => {
   return show ? <>{children}</> : null;
@@ -37,6 +98,21 @@ export default function Profile() {
   const [formData, setFormData] = useState<any>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  // Track which cards have been "touched" (added in this session) — keyed by id
+  const [touchedCards, setTouchedCards] = useState<Set<string>>(new Set());
+
+  // ── PHOTO STATE ───────────────────────────────────────────────────────────
+  const [photoURLAtEditStart, setPhotoURLAtEditStart] = useState<string>('');
+  const [pendingPhotoRemoval, setPendingPhotoRemoval] = useState(false);
+
+  // ── CROP STATE ────────────────────────────────────────────────────────────
+  // When set, a crop modal is shown for the selected raw image src
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  // UID passed down so PhotoUpload doesn't need extra context
+  const [pendingUploadUID, setPendingUploadUID] = useState<string | undefined>(undefined);
+  // Callback stored so CropModal can trigger the actual upload
+  const cropUploadCallback = useRef<((blob: Blob) => Promise<void>) | null>(null);
+
   const formRef = useRef<HTMLDivElement>(null);
   
   const [collapsed, setCollapsed] = useState({
@@ -119,6 +195,25 @@ export default function Profile() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // ── INCOMPLETE CARDS (computed) ───────────────────────────────────────────
+
+  const incompleteCards = useMemo(() => {
+    if (!formData) return new Map<string, { section: string; missing: string[] }>();
+    const result = new Map<string, { section: string; missing: string[] }>();
+    const sections = ['experiences', 'projects', 'education', 'certifications', 'publications'];
+    for (const section of sections) {
+      const items = formData[section] || [];
+      for (const item of items) {
+        if (!isCardComplete(section, item)) {
+          result.set(item.id, { section, missing: getMissingFields(section, item) });
+        }
+      }
+    }
+    return result;
+  }, [formData]);
+
+  // ── VALIDATE ─────────────────────────────────────────────────────────────
+
   const validateForm = (): boolean => {
     const errors: ValidationError[] = [];
     if (!formData.displayName?.trim()) errors.push({ section: 'personal', message: 'Full name is required' });
@@ -126,12 +221,36 @@ export default function Profile() {
     if (!Array.isArray(formData.skills) || formData.skills.length === 0) errors.push({ section: 'personal', message: 'At least one skill is required' });
     if (isEditing && !formData.declarationAccepted) errors.push({ section: 'declaration', message: 'You must accept the declaration' });
     if (isEditing && formData.declarationAccepted && !formData.signature?.trim()) errors.push({ section: 'declaration', message: 'Digital signature is required' });
+
+    if (EXPERIENCE_LEVELS_REQUIRING_EXP.includes(formData.experienceLevel)) {
+      const completedExp = (formData.experiences || []).filter((e: any) => isCardComplete('experiences', e));
+      if (completedExp.length === 0) {
+        errors.push({ section: 'experience', message: `At least one completed experience entry is required for "${formData.experienceLevel}" level` });
+      }
+    }
+
     setValidationErrors(errors);
+    if (incompleteCards.size > 0) return false;
     return errors.length === 0;
   };
 
   const handleUpdateProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
+    if (incompleteCards.size > 0) {
+      toast.error("Complete or delete the highlighted section before saving.");
+      const firstId = Array.from(incompleteCards.keys())[0];
+      const el = document.querySelector(`[data-card-id="${firstId}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+          const firstInput = el.querySelector('input:not([disabled]), textarea:not([disabled]), select:not([disabled])') as HTMLElement;
+          firstInput?.focus();
+        }, 400);
+      }
+      return;
+    }
+
     if (!validateForm()) {
       toast.error("Please fill in all required fields");
       const firstErrorSection = validationErrors[0]?.section;
@@ -143,6 +262,7 @@ export default function Profile() {
       }
       return;
     }
+
     const currentUser = profile;
     if (!currentUser) { toast.error("User not authenticated"); return; }
     setLoading(true);
@@ -152,11 +272,21 @@ export default function Profile() {
         { ...formData, uid: currentUser.uid, email: currentUser.email || '', updatedAt: new Date().toISOString() },
         { merge: true }
       );
+
+      if (photoURLAtEditStart && isImageKitPhoto(photoURLAtEditStart)) {
+        if (pendingPhotoRemoval || (formData.photoURL && formData.photoURL !== photoURLAtEditStart)) {
+          deleteFromImageKit(photoURLAtEditStart).catch(() => {});
+        }
+      }
+
       toast.success("Profile updated successfully! 🎉");
       setIsEditing(false);
       setHasChanges(false);
       setInitialData(JSON.stringify(formData));
       setValidationErrors([]);
+      setTouchedCards(new Set());
+      setPendingPhotoRemoval(false);
+      setPhotoURLAtEditStart('');
     } catch (err) {
       console.error(err);
       toast.error("Failed to update profile.");
@@ -166,11 +296,14 @@ export default function Profile() {
   };
 
   const addItem = (section: string, defaultObj: any) => {
-    setFormData({ ...formData, [section]: [...formData[section], { ...defaultObj, id: crypto.randomUUID() }] });
+    const newId = crypto.randomUUID();
+    setFormData({ ...formData, [section]: [...formData[section], { ...defaultObj, id: newId }] });
+    setTouchedCards(prev => new Set(prev).add(newId));
   };
 
   const removeItem = (section: string, id: string) => {
     setFormData({ ...formData, [section]: formData[section].filter((item: any) => item.id !== id) });
+    setTouchedCards(prev => { const s = new Set(prev); s.delete(id); return s; });
   };
 
   const updateItem = (section: string, id: string, field: string, value: any) => {
@@ -196,14 +329,14 @@ export default function Profile() {
     return !!(formData.artstationUrl || formData.youtubeUrl || formData.otherUrl);
   }, [formData]);
 
-  if (authLoading || !formData) return (
-    <div className="h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <div className="w-12 h-12 border-3 border-gray-200 border-t-blue-600 rounded-full mx-auto mb-4 animate-spin" />
-        <p className="text-gray-600 font-semibold">Loading Profile...</p>
-      </div>
-    </div>
-  );
+  const heroPhoto =
+    formData?.photoURL ||
+    profile?.photoURL ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      formData?.displayName || "U"
+    )}&background=0052CC&color=fff&size=800`;
+
+  if (authLoading || !formData) return <ProfileLoadingScreen />;
 
   if (isAdmin) {
     return <AdminProfileView 
@@ -216,13 +349,30 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#f5f6fa]">
 
+      {/* ── CROP MODAL (lazy, only renders when a file is selected) ──────── */}
+      <Suspense fallback={null}>
+        {cropImageSrc && (
+          <CropModal
+            imageSrc={cropImageSrc}
+            onCancel={() => {
+              setCropImageSrc(null);
+              cropUploadCallback.current = null;
+            }}
+            onCropComplete={async (blob: Blob) => {
+              setCropImageSrc(null);
+              if (cropUploadCallback.current) {
+                await cropUploadCallback.current(blob);
+              }
+              cropUploadCallback.current = null;
+            }}
+          />
+        )}
+      </Suspense>
+
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      {/* Outer wrapper: light gray page bg, the hero card is white with a large
-          lavender blob in the bottom-right corner, matching the screenshot. */}
       <div className="pt-24 px-4 md:px-8 max-w-7xl mx-auto">
         <div className="relative bg-white rounded-3xl overflow-hidden shadow-sm mb-6">
 
-          {/* Lavender blob — decorative, bottom-right, matches screenshot */}
           <div
             className="pointer-events-none absolute -bottom-16 -right-16 w-[420px] h-[320px] rounded-full opacity-60"
             style={{
@@ -230,17 +380,24 @@ export default function Profile() {
               filter: 'blur(2px)',
             }}
           />
-          {/* Faint top-right tint */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white via-white to-indigo-50/40" />
 
-          {/* Edit Profile button — top right */}
+          {/* Action buttons row — Edit Profile + Download Resume */}
           {!isEditing && (
-            <div className="absolute top-6 right-6 z-30">
+            <div className="absolute top-6 right-6 z-30 flex items-center gap-3">
+              {/* Download Resume — lazy loaded, only renders when profile is loaded */}
+              <Suspense fallback={null}>
+                <DownloadDropdown profileData={formData} />
+              </Suspense>
+
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="button"
-                onClick={() => setIsEditing(true)}
+                onClick={() => {
+                  setPhotoURLAtEditStart(formData.photoURL || '');
+                  setIsEditing(true);
+                }}
                 className="px-5 py-2.5 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center gap-2 text-sm"
               >
                 <PenLine size={15} />
@@ -276,22 +433,14 @@ export default function Profile() {
 
             {/* Avatar */}
             <div className="flex-shrink-0 relative">
-              {/* White lift shadow around avatar card */}
-              <div className="w-[220px] h-[220px] rounded-[24px] overflow-hidden bg-black shadow-xl border-4 border-white">
+              <div className="w-[220px] h-[220px] overflow-hidden rounded-[24px]">
                 <img
-                  src={
-                    formData.photoURL || profile?.photoURL ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.displayName || 'U')}&background=0052CC&color=fff&size=220`
-                  }
+                  src={heroPhoto}
                   alt="Profile"
-                  onError={(e) => {
-                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.displayName || 'U')}&background=0052CC&color=fff&size=220`;
-                  }}
                   className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
+                  style={{ imageRendering: "auto" }}
+                />  
               </div>
-              {/* Open to work dot — bottom-right of avatar */}
               {formData.openToWork && (
                 <span className="absolute bottom-3 right-3 w-5 h-5 rounded-full bg-green-500 border-2 border-white shadow-sm" />
               )}
@@ -300,7 +449,6 @@ export default function Profile() {
             {/* Info column */}
             <div className="flex-1 min-w-0 pt-2">
 
-              {/* Name + badge */}
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-[44px] leading-tight font-black text-gray-900 tracking-tight">
                   {formData.displayName || 'Your Name'}
@@ -308,7 +456,6 @@ export default function Profile() {
                 <BadgeCheck size={26} className="text-blue-500 fill-blue-100 flex-shrink-0" />
               </div>
 
-              {/* Role row */}
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <span className="text-xl font-bold text-blue-600">{formData.primaryRole || 'Your Role'}</span>
                 {formData.secondaryRole && (
@@ -319,7 +466,6 @@ export default function Profile() {
                 )}
               </div>
 
-              {/* Meta pills row — with pipe separators like the screenshot */}
               <div className="mt-4 flex items-center gap-0 flex-wrap">
                 {locationLabel && (
                   <>
@@ -343,7 +489,6 @@ export default function Profile() {
                 </span>
               </div>
 
-              {/* Open-to-work toggle when editing */}
               {isEditing && (
                 <label className="mt-2 inline-flex items-center gap-2 cursor-pointer text-sm text-gray-600 hover:text-gray-900 transition-colors">
                   <input
@@ -356,7 +501,7 @@ export default function Profile() {
                 </label>
               )}
 
-              {/* Social links bar — single white pill with dividers (matches screenshot) */}
+              {/* Social links bar */}
               <div className="mt-6">
                 <div className="inline-flex items-stretch bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                   {[
@@ -401,7 +546,6 @@ export default function Profile() {
             data-section="personal"
             className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-7"
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
@@ -409,11 +553,9 @@ export default function Profile() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 leading-tight">About Me</h2>
-                  {/* Blue underline accent — matches screenshot */}
                   <div className="mt-0.5 w-8 h-[3px] rounded-full bg-blue-600" />
                 </div>
               </div>
-              {/* Quote decoration — top right */}
               <span className="text-blue-200 select-none" style={{ fontSize: 40, lineHeight: 1, fontFamily: 'Georgia, serif' }}>"</span>
             </div>
 
@@ -433,83 +575,84 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Skills */}
-            <div className="mt-5 flex flex-wrap gap-2">
-              {(Array.isArray(formData.skills) ? formData.skills : []).map((skill: string, idx: number) => (
-                <span
-                  key={idx}
-                  className="px-4 py-1.5 rounded-full bg-blue-50/60 text-blue-700 text-sm font-semibold border border-blue-100"
-                >
-                  {skill}
-                </span>
-              ))}
-              {(!formData.skills || formData.skills.length === 0) && !isEditing && (
-                <span className="text-sm text-gray-400">No skills added yet</span>
-              )}
-            </div>
+            {!isEditing && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {(Array.isArray(formData.skills) ? formData.skills : []).map((skill: string, idx: number) => (
+                  <span
+                    key={idx}
+                    className="px-4 py-1.5 rounded-full bg-blue-50/60 text-blue-700 text-sm font-semibold border border-blue-100"
+                  >
+                    {skill}
+                  </span>
+                ))}
+                {(!formData.skills || formData.skills.length === 0) && (
+                  <span className="text-sm text-gray-400">No skills added yet</span>
+                )}
+              </div>
+            )}
 
-            {/* Skill input in edit mode */}
             {isEditing && (
-              <div className="mt-4 flex gap-2">
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
+              <>
+                <div className="mt-4 flex gap-2">
+                  <input
+                    type="text"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = skillInput.trim();
+                        if (val && !(formData.skills || []).includes(val)) {
+                          setFormData({ ...formData, skills: [...(formData.skills || []), val] });
+                          setSkillInput('');
+                        }
+                      }
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg text-sm focus:outline-none focus:border-blue-600"
+                    placeholder="Type a skill and press Enter"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
                       const val = skillInput.trim();
                       if (val && !(formData.skills || []).includes(val)) {
                         setFormData({ ...formData, skills: [...(formData.skills || []), val] });
                         setSkillInput('');
                       }
-                    }
-                  }}
-                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg text-sm focus:outline-none focus:border-blue-600"
-                  placeholder="Type a skill and press Enter"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const val = skillInput.trim();
-                    if (val && !(formData.skills || []).includes(val)) {
-                      setFormData({ ...formData, skills: [...(formData.skills || []), val] });
-                      setSkillInput('');
-                    }
-                  }}
-                  className="bg-blue-600 text-white rounded-lg px-4 hover:bg-blue-700 transition-colors"
-                >
-                  <Plus size={18} />
-                </button>
-              </div>
-            )}
-
-            {/* Show skill chips with remove button in edit mode */}
-            {isEditing && (formData.skills || []).length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(formData.skills || []).map((skill: string, idx: number) => (
-                  <motion.span
-                    key={idx}
-                    layout
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-blue-100 border border-blue-300 text-blue-700 text-sm font-semibold rounded-full"
+                    }}
+                    className="bg-blue-600 text-white rounded-lg px-4 hover:bg-blue-700 transition-colors"
                   >
-                    {skill}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newSkills = [...formData.skills];
-                        newSkills.splice(idx, 1);
-                        setFormData({ ...formData, skills: newSkills });
-                      }}
-                      className="hover:text-red-600 transition-colors ml-0.5"
-                    >
-                      <X size={13} />
-                    </button>
-                  </motion.span>
-                ))}
-              </div>
+                    <Plus size={18} />
+                  </button>
+                </div>
+
+                {(formData.skills || []).length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(formData.skills || []).map((skill: string, idx: number) => (
+                      <motion.span
+                        key={idx}
+                        layout
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="flex items-center gap-1.5 px-3 py-1 bg-blue-100 border border-blue-300 text-blue-700 text-sm font-semibold rounded-full"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSkills = [...formData.skills];
+                            newSkills.splice(idx, 1);
+                            setFormData({ ...formData, skills: newSkills });
+                          }}
+                          className="hover:text-red-600 transition-colors ml-0.5"
+                        >
+                          <X size={13} />
+                        </button>
+                      </motion.span>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
 
@@ -530,7 +673,6 @@ export default function Profile() {
               <span className="text-2xl font-black text-blue-600">{completion.percentage}%</span>
             </div>
 
-            {/* Progress bar */}
             <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden mb-5">
               <motion.div
                 initial={{ width: 0 }}
@@ -557,7 +699,10 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!isEditing) setIsEditing(true);
+                        if (!isEditing) {
+                          setPhotoURLAtEditStart(formData.photoURL || '');
+                          setIsEditing(true);
+                        }
                         const el = document.querySelector('[data-section="personal"]');
                         el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }}
@@ -592,29 +737,10 @@ export default function Profile() {
           transition={{ delay: 0.2 }}
           className="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6"
         >
-          {/* Each stat: icon in colored bg circle + number + label */}
-          <StatPill
-            icon={<BriefcaseStatIcon />}
-            value={formData.experiences?.length || 0}
-            label="Experience"
-          />
-          <StatPill
-            icon={<LayersStatIcon />}
-            value={formData.projects?.length || 0}
-            label="Projects"
-          />
-          <StatPill
-            icon={<GraduationCap size={20} className="text-green-600" />}
-            iconBg="bg-green-50"
-            value={formData.education?.length || 0}
-            label="Education"
-          />
-          <StatPill
-            icon={<ShieldCheck size={20} className="text-orange-500" />}
-            iconBg="bg-orange-50"
-            value={formData.certifications?.length || 0}
-            label="Certifications"
-          />
+          <StatPill icon={<BriefcaseStatIcon />} value={formData.experiences?.length || 0} label="Experience" />
+          <StatPill icon={<LayersStatIcon />} value={formData.projects?.length || 0} label="Projects" />
+          <StatPill icon={<GraduationCap size={20} className="text-green-600" />} iconBg="bg-green-50" value={formData.education?.length || 0} label="Education" />
+          <StatPill icon={<ShieldCheck size={20} className="text-orange-500" />} iconBg="bg-orange-50" value={formData.certifications?.length || 0} label="Certifications" />
         </motion.div>
 
         {/* ── MAIN FORM SECTIONS ─────────────────────────────────────────── */}
@@ -646,8 +772,27 @@ export default function Profile() {
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm"
                     />
                   </InputGroup>
-                  <InputGroup label="Profile Photo URL">
-                    <EditableInput isEditing={isEditing} value={formData.photoURL} onChange={(v: string) => setFormData({ ...formData, photoURL: v })} placeholder="https://..." />
+                  <InputGroup label="Profile Photo">
+                    <PhotoUpload
+                      currentPhotoURL={formData.photoURL}
+                      googlePhotoURL={profile?.photoURL}
+                      displayName={formData.displayName}
+                      uid={profile?.uid}
+                      pendingRemoval={pendingPhotoRemoval}
+                      onSelectFile={(src: string, uploadFn: (blob: Blob) => Promise<void>) => {
+                        // Open crop modal instead of uploading directly
+                        cropUploadCallback.current = uploadFn;
+                        setCropImageSrc(src);
+                      }}
+                      onUploadComplete={(url: string) => {
+                        setFormData({ ...formData, photoURL: url });
+                        setPendingPhotoRemoval(false);
+                      }}
+                      onRemove={() => {
+                        setFormData({ ...formData, photoURL: '' });
+                        setPendingPhotoRemoval(true);
+                      }}
+                    />
                   </InputGroup>
                   <InputGroup label="Phone Number">
                     <EditableInput isEditing={isEditing} value={formData.phone} onChange={(v: string) => setFormData({ ...formData, phone: v })} placeholder="+91 000 000 0000" />
@@ -660,12 +805,6 @@ export default function Profile() {
                   </InputGroup>
                   <InputGroup label="City">
                     <EditableInput isEditing={isEditing} value={formData.city} onChange={(v: string) => setFormData({ ...formData, city: v })} placeholder="Chennai" />
-                  </InputGroup>
-                </div>
-
-                <div className="mt-6">
-                  <InputGroup label="About / Bio">
-                    <EditableTextarea isEditing={isEditing} value={formData.bio} onChange={(v: string) => setFormData({ ...formData, bio: v })} placeholder="Write a professional summary..." minHeight="min-h-[100px]" />
                   </InputGroup>
                 </div>
 
@@ -698,40 +837,8 @@ export default function Profile() {
               </ProfileSection>
             )}
 
-            {/* Experience */}
-            {(isEditing || formData.experiences?.length > 0) && (
-              <ModularSection
-                title="Experience" icon={<Briefcase size={22} />}
-                items={formData.experiences} isCollapsed={collapsed.experience}
-                onToggle={() => toggleCollapse('experience')}
-                onAdd={() => addItem('experiences', { role: '', company: '', type: 'Full-time', startMonth: '', startYear: '', endMonth: '', endYear: '', current: false, location: '', mode: 'Onsite', skills: '', description: '' })}
-                itemRenderer={(exp: any) => (
-                  <ExperienceItem isEditing={isEditing} key={exp.id} exp={exp}
-                    onUpdate={(f: any, v: any) => updateItem('experiences', exp.id, f, v)}
-                    onDelete={() => removeItem('experiences', exp.id)} />
-                )}
-                addButtonText="Add Experience" isEditing={isEditing}
-              />
-            )}
-
-            {/* Projects */}
-            {(isEditing || formData.projects?.length > 0) && (
-              <ModularSection
-                title="Projects" icon={<Layers size={22} />}
-                items={formData.projects} isCollapsed={collapsed.projects}
-                onToggle={() => toggleCollapse('projects')}
-                onAdd={() => addItem('projects', { title: '', category: '', description: '', skills: '', technologies: '', startMonth: '', startYear: '', endMonth: '', endYear: '', status: 'Completed', demoUrl: '', githubUrl: '' })}
-                itemRenderer={(proj: any) => (
-                  <ProjectItem isEditing={isEditing} key={proj.id} proj={proj}
-                    onUpdate={(f: any, v: any) => updateItem('projects', proj.id, f, v)}
-                    onDelete={() => removeItem('projects', proj.id)} />
-                )}
-                addButtonText="Add Project" isEditing={isEditing}
-              />
-            )}
-
-            {/* Profiles & Links */}
-            {(isEditing || [formData.portfolioUrl, formData.githubUrl, formData.linkedinUrl].some(Boolean)) && (
+            {/* Profiles & Links — edit mode only */}
+            {isEditing && (
               <ProfileSection
                 title="Profiles & Links" icon={<LinkIcon size={22} />}
                 isCollapsed={collapsed.links} onToggle={() => toggleCollapse('links')} sectionId="links"
@@ -748,6 +855,51 @@ export default function Profile() {
               </ProfileSection>
             )}
 
+            {/* Experience */}
+            {(isEditing || formData.experiences?.length > 0) && (
+              <ModularSection
+                title="Experience" icon={<Briefcase size={22} />}
+                items={formData.experiences} isCollapsed={collapsed.experience}
+                onToggle={() => toggleCollapse('experience')}
+                onAdd={() => addItem('experiences', { role: '', company: '', type: 'Full-time', startMonth: '', startYear: '', endMonth: '', endYear: '', current: false, location: '', mode: 'Onsite', skills: '', description: '' })}
+                itemRenderer={(exp: any) => (
+                  <ExperienceItem
+                    isEditing={isEditing} key={exp.id} exp={exp}
+                    isIncomplete={incompleteCards.has(exp.id)}
+                    missingFields={incompleteCards.get(exp.id)?.missing || []}
+                    onUpdate={(f: any, v: any) => updateItem('experiences', exp.id, f, v)}
+                    onDelete={() => removeItem('experiences', exp.id)}
+                  />
+                )}
+                addButtonText="Add Experience" isEditing={isEditing}
+                sectionNote={
+                  EXPERIENCE_LEVELS_REQUIRING_EXP.includes(formData.experienceLevel) && isEditing
+                    ? `Required for "${formData.experienceLevel}" level`
+                    : undefined
+                }
+              />
+            )}
+
+            {/* Projects */}
+            {(isEditing || formData.projects?.length > 0) && (
+              <ModularSection
+                title="Projects" icon={<Layers size={22} />}
+                items={formData.projects} isCollapsed={collapsed.projects}
+                onToggle={() => toggleCollapse('projects')}
+                onAdd={() => addItem('projects', { title: '', category: '', description: '', skills: '', technologies: '', startMonth: '', startYear: '', endMonth: '', endYear: '', status: 'Completed', demoUrl: '', githubUrl: '' })}
+                itemRenderer={(proj: any) => (
+                  <ProjectItem
+                    isEditing={isEditing} key={proj.id} proj={proj}
+                    isIncomplete={incompleteCards.has(proj.id)}
+                    missingFields={incompleteCards.get(proj.id)?.missing || []}
+                    onUpdate={(f: any, v: any) => updateItem('projects', proj.id, f, v)}
+                    onDelete={() => removeItem('projects', proj.id)}
+                  />
+                )}
+                addButtonText="Add Project" isEditing={isEditing}
+              />
+            )}
+
             {/* Education */}
             {(isEditing || formData.education?.length > 0) && (
               <ModularSection
@@ -756,9 +908,13 @@ export default function Profile() {
                 onToggle={() => toggleCollapse('education')}
                 onAdd={() => addItem('education', { institution: '', degree: '', department: '', startYear: '', endYear: '', current: false })}
                 itemRenderer={(edu: any) => (
-                  <EducationItem isEditing={isEditing} key={edu.id} edu={edu}
+                  <EducationItem
+                    isEditing={isEditing} key={edu.id} edu={edu}
+                    isIncomplete={incompleteCards.has(edu.id)}
+                    missingFields={incompleteCards.get(edu.id)?.missing || []}
                     onUpdate={(f: any, v: any) => updateItem('education', edu.id, f, v)}
-                    onDelete={() => removeItem('education', edu.id)} />
+                    onDelete={() => removeItem('education', edu.id)}
+                  />
                 )}
                 addButtonText="Add Education" isEditing={isEditing}
               />
@@ -772,9 +928,13 @@ export default function Profile() {
                 onToggle={() => toggleCollapse('certifications')}
                 onAdd={() => addItem('certifications', { name: '', org: '', issueMonth: '', issueYear: '', url: '' })}
                 itemRenderer={(cert: any) => (
-                  <CertificationItem isEditing={isEditing} key={cert.id} cert={cert}
+                  <CertificationItem
+                    isEditing={isEditing} key={cert.id} cert={cert}
+                    isIncomplete={incompleteCards.has(cert.id)}
+                    missingFields={incompleteCards.get(cert.id)?.missing || []}
                     onUpdate={(f: any, v: any) => updateItem('certifications', cert.id, f, v)}
-                    onDelete={() => removeItem('certifications', cert.id)} />
+                    onDelete={() => removeItem('certifications', cert.id)}
+                  />
                 )}
                 addButtonText="Add Certification" isEditing={isEditing}
               />
@@ -788,9 +948,13 @@ export default function Profile() {
                 onToggle={() => toggleCollapse('publications')}
                 onAdd={() => addItem('publications', { title: '', publisher: '', dateMonth: '', dateYear: '', url: '' })}
                 itemRenderer={(pub: any) => (
-                  <PublicationItem isEditing={isEditing} key={pub.id} pub={pub}
+                  <PublicationItem
+                    isEditing={isEditing} key={pub.id} pub={pub}
+                    isIncomplete={incompleteCards.has(pub.id)}
+                    missingFields={incompleteCards.get(pub.id)?.missing || []}
                     onUpdate={(f: any, v: any) => updateItem('publications', pub.id, f, v)}
-                    onDelete={() => removeItem('publications', pub.id)} />
+                    onDelete={() => removeItem('publications', pub.id)}
+                  />
                 )}
                 addButtonText="Add Publication" isEditing={isEditing}
               />
@@ -854,7 +1018,15 @@ export default function Profile() {
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               type="button"
-              onClick={() => { setFormData(JSON.parse(initialData)); setHasChanges(false); setIsEditing(false); setValidationErrors([]); }}
+              onClick={() => {
+                setFormData(JSON.parse(initialData));
+                setHasChanges(false);
+                setIsEditing(false);
+                setValidationErrors([]);
+                setTouchedCards(new Set());
+                setPendingPhotoRemoval(false);
+                setPhotoURLAtEditStart('');
+              }}
               className="flex-1 px-5 py-3 border-2 border-gray-300 bg-white text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-sm"
             >
               Cancel
@@ -889,7 +1061,256 @@ export default function Profile() {
   );
 }
 
-// ── SOCIAL ICON SVGS (matching the screenshot's brand colors) ──────────────
+// ── PROFILE LOADING SCREEN ───────────────────────────────────────────────────
+
+function ProfileLoadingScreen() {
+  return (
+    <div className="min-h-screen bg-[#f5f6fa] flex flex-col items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 12, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="bg-white rounded-3xl shadow-sm border border-gray-100 px-10 py-10 flex flex-col items-center w-[340px]"
+      >
+        <div className="relative mb-7">
+          <motion.div
+            animate={{ scale: [1, 1.18, 1], opacity: [0.25, 0, 0.25] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute inset-0 rounded-full bg-blue-400"
+          />
+          <motion.div
+            animate={{ scale: [1, 1.04, 1] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-500 flex items-center justify-center shadow-md"
+          >
+            <User size={28} className="text-white" strokeWidth={2.2} />
+          </motion.div>
+        </div>
+        <h2 className="text-base font-bold text-gray-900 mb-1">Loading your profile</h2>
+        <p className="text-sm text-gray-400 mb-6">Just a moment...</p>
+        <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: '100%' }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+            className="h-full w-1/2 bg-gradient-to-r from-transparent via-blue-500 to-transparent rounded-full"
+          />
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="mt-6 w-full max-w-4xl px-4"
+      >
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex gap-8 items-start overflow-hidden">
+          <div className="w-[160px] h-[160px] rounded-[20px] bg-gray-100 flex-shrink-0 relative overflow-hidden">
+            <SkeletonShimmer />
+          </div>
+          <div className="flex-1 pt-2 space-y-3">
+            <div className="h-9 w-56 bg-gray-100 rounded-xl relative overflow-hidden"><SkeletonShimmer /></div>
+            <div className="h-5 w-36 bg-gray-100 rounded-lg relative overflow-hidden"><SkeletonShimmer /></div>
+            <div className="h-4 w-48 bg-gray-100 rounded-lg relative overflow-hidden mt-4"><SkeletonShimmer /></div>
+            <div className="mt-5 flex gap-2">
+              {[80, 64, 96, 72].map((w, i) => (
+                <div key={i} style={{ width: w }} className="h-9 bg-gray-100 rounded-xl relative overflow-hidden">
+                  <SkeletonShimmer />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function SkeletonShimmer() {
+  return (
+    <motion.div
+      animate={{ x: ['-100%', '100%'] }}
+      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent"
+    />
+  );
+}
+
+// ── PHOTO UPLOAD (ImageKit + Crop) ────────────────────────────────────────────
+
+const MAX_SIZE_MB = 5;
+const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const IMAGEKIT_FOLDER = 'profile-photos';
+
+interface PhotoUploadProps {
+  currentPhotoURL: string;
+  googlePhotoURL?: string;
+  displayName: string;
+  uid?: string;
+  pendingRemoval?: boolean;
+  /** 
+   * Called when a file is selected and validated.
+   * Instead of uploading directly, we surface the raw image src
+   * and an upload function so the parent can show the crop modal first.
+   */
+  onSelectFile: (imageSrc: string, uploadFn: (blob: Blob) => Promise<void>) => void;
+  onUploadComplete: (url: string) => void;
+  onRemove: () => void;
+}
+
+function PhotoUpload({
+  currentPhotoURL,
+  googlePhotoURL,
+  displayName,
+  uid,
+  pendingRemoval,
+  onSelectFile,
+  onUploadComplete,
+  onRemove,
+}: PhotoUploadProps) {
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const hasCustomPhoto = isImageKitPhoto(currentPhotoURL) && !pendingRemoval;
+
+  const displaySrc =
+    currentPhotoURL
+      ? `${currentPhotoURL}${currentPhotoURL.includes('?') ? '&' : '?'}tr=w-800,h-800,c-at_max,q-100,f-auto`
+      : googlePhotoURL ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || 'U')}&background=0052CC&color=fff&size=300`;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error('Please upload a JPG, PNG, or WEBP image.');
+      return;
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      toast.error(`Image must be under ${MAX_SIZE_MB}MB.`);
+      return;
+    }
+    if (!uid) {
+      toast.error('User not authenticated.');
+      return;
+    }
+
+    // Create object URL for the crop modal
+    const objectUrl = URL.createObjectURL(file);
+
+    // Upload function that will be called AFTER cropping
+    const uploadCroppedBlob = async (blob: Blob) => {
+      setUploading(true);
+      setProgress(0);
+      try {
+        const fileName = `${uid}-${Date.now()}`;
+        const result = await uploadToImageKit(blob, fileName, IMAGEKIT_FOLDER, (pct) =>
+          setProgress(pct)
+        );
+        onUploadComplete(result.url);
+        toast.success('Photo updated!');
+      } catch (err) {
+        console.error(err);
+        toast.error('Upload failed. Your existing photo is still active.');
+      } finally {
+        setUploading(false);
+        setProgress(0);
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+
+    // Pass to parent to open crop modal
+    onSelectFile(objectUrl, uploadCroppedBlob);
+  };
+
+  return (
+    <div className="flex items-center gap-5">
+      {/* Preview */}
+      <div className="relative flex-shrink-0">
+        <div className="w-[72px] h-[72px] rounded-[16px] overflow-hidden bg-gray-100 border-2 border-gray-200 shadow-sm">
+          {uploading ? (
+            <div className="w-full h-full bg-blue-50 flex flex-col items-center justify-center gap-1">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                className="w-5 h-5 border-2 border-blue-200 border-t-blue-600 rounded-full"
+              />
+              <span className="text-[9px] font-bold text-blue-500">{progress}%</span>
+            </div>
+          ) : (
+            <img
+              src={displaySrc}
+              alt="Profile"
+              onError={(e) => {
+                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || 'U')}&background=0052CC&color=fff&size=120`;
+              }}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          )}
+        </div>
+        {uploading && (
+          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="34" fill="none" stroke="#e0e7ff" strokeWidth="3" />
+            <motion.circle
+              cx="36" cy="36" r="34"
+              fill="none" stroke="#2563eb" strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 34}`}
+              strokeDashoffset={`${2 * Math.PI * 34 * (1 - progress / 100)}`}
+              style={{ transition: 'stroke-dashoffset 0.3s ease' }}
+            />
+          </svg>
+        )}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex flex-col gap-2">
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
+        >
+          <Camera size={14} />
+          {uploading ? `Uploading ${progress}%...` : 'Change Photo'}
+        </motion.button>
+
+        {hasCustomPhoto && !uploading && (
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onRemove}
+            className="flex items-center gap-2 px-4 py-2 bg-white text-gray-600 text-sm font-medium rounded-lg border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+          >
+            <ImageOff size={14} />
+            Remove Photo
+          </motion.button>
+        )}
+
+        <p className="text-[10px] text-gray-400 leading-tight">
+          JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB · Crops to circle
+        </p>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+    </div>
+  );
+}
+
+// ── SOCIAL ICON SVGS ──────────────────────────────────────────────────────────
 
 function GlobeIcon() {
   return (
@@ -928,12 +1349,8 @@ function BehanceIcon() {
 
 // ── STAT PILL ────────────────────────────────────────────────────────────────
 
-function BriefcaseStatIcon() {
-  return <Briefcase size={20} className="text-purple-500" />;
-}
-function LayersStatIcon() {
-  return <Layers size={20} className="text-blue-500" />;
-}
+function BriefcaseStatIcon() { return <Briefcase size={20} className="text-purple-500" />; }
+function LayersStatIcon() { return <Layers size={20} className="text-blue-500" />; }
 
 function StatPill({ icon, iconBg, value, label }: { icon: React.ReactNode; iconBg?: string; value: number; label: string }) {
   return (
@@ -1026,10 +1443,16 @@ function ProfileSection({ title, icon, children, isCollapsed, onToggle, sectionI
   );
 }
 
-function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd, itemRenderer, addButtonText, isEditing }: any) {
+function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd, itemRenderer, addButtonText, isEditing, sectionNote }: any) {
   const dataItems = Array.isArray(items) ? items : [];
   return (
     <ProfileSection title={title} icon={icon} isCollapsed={isCollapsed} onToggle={onToggle}>
+      {sectionNote && (
+        <p className="mb-4 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
+          <AlertCircle size={14} />
+          {sectionNote}
+        </p>
+      )}
       <div className="space-y-5">
         <AnimatePresence>{dataItems.map((item: any) => itemRenderer(item))}</AnimatePresence>
         {isEditing && (
@@ -1047,22 +1470,63 @@ function ModularSection({ title, icon, items = [], isCollapsed, onToggle, onAdd,
   );
 }
 
-// ── ITEM COMPONENTS (unchanged logic, just cleaner class names) ───────────────
+// ── INCOMPLETE CARD BANNER ────────────────────────────────────────────────────
 
-function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
+function IncompleteCardBanner({ missingFields, onDelete }: { missingFields: string[]; onDelete: () => void }) {
   return (
-    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
+    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start justify-between gap-3">
+      <div className="flex items-start gap-2">
+        <AlertCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-xs font-bold text-red-700">This section is incomplete. Complete all required fields or delete this card.</p>
+          {missingFields.length > 0 && (
+            <p className="text-xs text-red-500 mt-0.5">Missing: {missingFields.join(', ')}</p>
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="flex-shrink-0 flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-lg transition-colors"
+      >
+        <Trash2 size={12} />
+        Delete
+      </button>
+    </div>
+  );
+}
+
+// ── ITEM COMPONENTS ───────────────────────────────────────────────────────────
+
+function ExperienceItem({ exp, onUpdate, onDelete, isEditing, isIncomplete, missingFields }: any) {
+  return (
+    <motion.div
+      layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      data-card-id={exp.id}
+      className={`p-6 rounded-xl relative group transition-all ${
+        isIncomplete && isEditing
+          ? 'bg-red-50/40 border-2 border-red-300'
+          : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
+      }`}
     >
-      {isEditing && (
+      {isEditing && isIncomplete && (
+        <IncompleteCardBanner missingFields={missingFields} onDelete={onDelete} />
+      )}
+      {isEditing && !isIncomplete && (
         <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
           className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
           <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Role / Position"><EditableInput isEditing={isEditing} value={exp.role} onChange={(e: any) => onUpdate('role', e)} placeholder="Software Engineer" /></InputGroup>
-        <InputGroup label="Company / Organization"><EditableInput isEditing={isEditing} value={exp.company} onChange={(e: any) => onUpdate('company', e)} placeholder="Company Name" /></InputGroup>
+        <InputGroup label="Role / Position">
+          <EditableInput isEditing={isEditing} value={exp.role} onChange={(e: any) => onUpdate('role', e)} placeholder="Software Engineer"
+            hasError={isIncomplete && !exp.role?.trim()} />
+        </InputGroup>
+        <InputGroup label="Company / Organization">
+          <EditableInput isEditing={isEditing} value={exp.company} onChange={(e: any) => onUpdate('company', e)} placeholder="Company Name"
+            hasError={isIncomplete && !exp.company?.trim()} />
+        </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
         <InputGroup label="Type">
@@ -1071,7 +1535,9 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
             {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </InputGroup>
-        <InputGroup label="Location"><EditableInput isEditing={isEditing} value={exp.location} onChange={(e: any) => onUpdate('location', e)} placeholder="City, Country" /></InputGroup>
+        <InputGroup label="Location">
+          <EditableInput isEditing={isEditing} value={exp.location} onChange={(e: any) => onUpdate('location', e)} placeholder="City, Country" />
+        </InputGroup>
         <InputGroup label="Mode">
           <select disabled={!isEditing} value={exp.mode} onChange={(e) => onUpdate('mode', e.target.value)}
             className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600' : 'bg-gray-100 border border-gray-200 text-gray-200'}`}>
@@ -1088,7 +1554,7 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
             <select disabled={!isEditing} value={exp.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)}
-              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+              className={`w-full px-3 py-2.5 rounded-lg text-sm ${isEditing && !exp.startYear ? 'bg-white border-2 border-red-300 text-gray-900' : isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
               <option value="">Year</option>
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -1116,7 +1582,9 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
         </InputGroup>
       </div>
       <div className="mb-5">
-        <InputGroup label="Skills Used"><EditableInput isEditing={isEditing} value={exp.skills} onChange={(e: any) => onUpdate('skills', e)} placeholder="React, Node.js, TypeScript" /></InputGroup>
+        <InputGroup label="Skills Used">
+          <EditableInput isEditing={isEditing} value={exp.skills} onChange={(e: any) => onUpdate('skills', e)} placeholder="React, Node.js, TypeScript" />
+        </InputGroup>
       </div>
       <InputGroup label="Description">
         <EditableTextarea isEditing={isEditing} value={exp.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Responsibilities and achievements..." minHeight="min-h-[90px]" />
@@ -1125,20 +1593,34 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing }: any) {
   );
 }
 
-function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
+function ProjectItem({ proj, onUpdate, onDelete, isEditing, isIncomplete, missingFields }: any) {
   return (
-    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
+    <motion.div
+      layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      data-card-id={proj.id}
+      className={`p-6 rounded-xl relative group transition-all ${
+        isIncomplete && isEditing
+          ? 'bg-red-50/40 border-2 border-red-300'
+          : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
+      }`}
     >
-      {isEditing && (
+      {isEditing && isIncomplete && (
+        <IncompleteCardBanner missingFields={missingFields} onDelete={onDelete} />
+      )}
+      {isEditing && !isIncomplete && (
         <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
           className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
           <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Project Title"><EditableInput isEditing={isEditing} value={proj.title} onChange={(e: any) => onUpdate('title', e)} placeholder="Project Name" /></InputGroup>
-        <InputGroup label="Category"><EditableInput isEditing={isEditing} value={proj.category} onChange={(e: any) => onUpdate('category', e)} placeholder="Web App, Mobile App" /></InputGroup>
+        <InputGroup label="Project Title">
+          <EditableInput isEditing={isEditing} value={proj.title} onChange={(e: any) => onUpdate('title', e)} placeholder="Project Name"
+            hasError={isIncomplete && !proj.title?.trim()} />
+        </InputGroup>
+        <InputGroup label="Category">
+          <EditableInput isEditing={isEditing} value={proj.category} onChange={(e: any) => onUpdate('category', e)} placeholder="Web App, Mobile App" />
+        </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <InputGroup label="Start Date">
@@ -1173,10 +1655,13 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
             {PROJECT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </InputGroup>
-        <InputGroup label="Technologies"><EditableInput isEditing={isEditing} value={proj.technologies} onChange={(e: any) => onUpdate('technologies', e)} placeholder="React, Node, MongoDB" /></InputGroup>
+        <InputGroup label="Technologies">
+          <EditableInput isEditing={isEditing} value={proj.technologies} onChange={(e: any) => onUpdate('technologies', e)} placeholder="React, Node, MongoDB" />
+        </InputGroup>
       </div>
       <InputGroup label="Description">
-        <EditableTextarea isEditing={isEditing} value={proj.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Project summary..." minHeight="min-h-[90px]" />
+        <EditableTextarea isEditing={isEditing} value={proj.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Project summary..." minHeight="min-h-[90px]"
+          hasError={isIncomplete && !proj.description?.trim()} />
       </InputGroup>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
         <SocialInput isEditing={isEditing} icon={<Github size={15} />} placeholder="Repository Link" value={proj.githubUrl} onChange={(v: any) => onUpdate('githubUrl', v)} />
@@ -1186,26 +1671,43 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing }: any) {
   );
 }
 
-function EducationItem({ edu, onUpdate, onDelete, isEditing }: any) {
+function EducationItem({ edu, onUpdate, onDelete, isEditing, isIncomplete, missingFields }: any) {
   return (
-    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
+    <motion.div
+      layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      data-card-id={edu.id}
+      className={`p-6 rounded-xl relative group transition-all ${
+        isIncomplete && isEditing
+          ? 'bg-red-50/40 border-2 border-red-300'
+          : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
+      }`}
     >
-      {isEditing && (
+      {isEditing && isIncomplete && (
+        <IncompleteCardBanner missingFields={missingFields} onDelete={onDelete} />
+      )}
+      {isEditing && !isIncomplete && (
         <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
           className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
           <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Institution Name"><EditableInput isEditing={isEditing} value={edu.institution} onChange={(e: any) => onUpdate('institution', e)} placeholder="University Name" /></InputGroup>
-        <InputGroup label="Degree / Course"><EditableInput isEditing={isEditing} value={edu.degree} onChange={(e: any) => onUpdate('degree', e)} placeholder="Bachelor of Science" /></InputGroup>
+        <InputGroup label="Institution Name">
+          <EditableInput isEditing={isEditing} value={edu.institution} onChange={(e: any) => onUpdate('institution', e)} placeholder="University Name"
+            hasError={isIncomplete && !edu.institution?.trim()} />
+        </InputGroup>
+        <InputGroup label="Degree / Course">
+          <EditableInput isEditing={isEditing} value={edu.degree} onChange={(e: any) => onUpdate('degree', e)} placeholder="Bachelor of Science"
+            hasError={isIncomplete && !edu.degree?.trim()} />
+        </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <InputGroup label="Department / Major"><EditableInput isEditing={isEditing} value={edu.department} onChange={(e: any) => onUpdate('department', e)} placeholder="Computer Science" /></InputGroup>
+        <InputGroup label="Department / Major">
+          <EditableInput isEditing={isEditing} value={edu.department} onChange={(e: any) => onUpdate('department', e)} placeholder="Computer Science" />
+        </InputGroup>
         <InputGroup label="Start Year">
           <select disabled={!isEditing} value={edu.startYear || ''} onChange={(e) => onUpdate('startYear', e.target.value)}
-            className={`w-full px-4 py-2.5 rounded-lg text-sm ${isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
+            className={`w-full px-4 py-2.5 rounded-lg text-sm ${isIncomplete && !edu.startYear ? 'border-2 border-red-300 bg-white' : isEditing ? 'bg-white border border-gray-300 text-gray-900' : 'bg-gray-100 border border-gray-200 text-gray-600'}`}>
             <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </InputGroup>
@@ -1226,20 +1728,35 @@ function EducationItem({ edu, onUpdate, onDelete, isEditing }: any) {
   );
 }
 
-function CertificationItem({ cert, onUpdate, onDelete, isEditing }: any) {
+function CertificationItem({ cert, onUpdate, onDelete, isEditing, isIncomplete, missingFields }: any) {
   return (
-    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
+    <motion.div
+      layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      data-card-id={cert.id}
+      className={`p-6 rounded-xl relative group transition-all ${
+        isIncomplete && isEditing
+          ? 'bg-red-50/40 border-2 border-red-300'
+          : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
+      }`}
     >
-      {isEditing && (
+      {isEditing && isIncomplete && (
+        <IncompleteCardBanner missingFields={missingFields} onDelete={onDelete} />
+      )}
+      {isEditing && !isIncomplete && (
         <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
           className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
           <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Certification Name"><EditableInput isEditing={isEditing} value={cert.name} onChange={(e: any) => onUpdate('name', e)} placeholder="AWS Certified" /></InputGroup>
-        <InputGroup label="Organization"><EditableInput isEditing={isEditing} value={cert.org} onChange={(e: any) => onUpdate('org', e)} placeholder="Amazon" /></InputGroup>
+        <InputGroup label="Certification Name">
+          <EditableInput isEditing={isEditing} value={cert.name} onChange={(e: any) => onUpdate('name', e)} placeholder="AWS Certified"
+            hasError={isIncomplete && !cert.name?.trim()} />
+        </InputGroup>
+        <InputGroup label="Organization">
+          <EditableInput isEditing={isEditing} value={cert.org} onChange={(e: any) => onUpdate('org', e)} placeholder="Amazon"
+            hasError={isIncomplete && !cert.org?.trim()} />
+        </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Issue Date">
@@ -1254,26 +1771,43 @@ function CertificationItem({ cert, onUpdate, onDelete, isEditing }: any) {
             </select>
           </div>
         </InputGroup>
-        <InputGroup label="Credential URL"><EditableInput isEditing={isEditing} value={cert.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." /></InputGroup>
+        <InputGroup label="Credential URL">
+          <EditableInput isEditing={isEditing} value={cert.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." />
+        </InputGroup>
       </div>
     </motion.div>
   );
 }
 
-function PublicationItem({ pub, onUpdate, onDelete, isEditing }: any) {
+function PublicationItem({ pub, onUpdate, onDelete, isEditing, isIncomplete, missingFields }: any) {
   return (
-    <motion.div layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-      className="p-6 bg-gray-50 border border-gray-200 rounded-xl relative group hover:border-gray-300 transition-all"
+    <motion.div
+      layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      data-card-id={pub.id}
+      className={`p-6 rounded-xl relative group transition-all ${
+        isIncomplete && isEditing
+          ? 'bg-red-50/40 border-2 border-red-300'
+          : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
+      }`}
     >
-      {isEditing && (
+      {isEditing && isIncomplete && (
+        <IncompleteCardBanner missingFields={missingFields} onDelete={onDelete} />
+      )}
+      {isEditing && !isIncomplete && (
         <motion.button whileHover={{ scale: 1.2 }} type="button" onClick={onDelete}
           className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5">
           <Trash2 size={16} />
         </motion.button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <InputGroup label="Title"><EditableInput isEditing={isEditing} value={pub.title} onChange={(e: any) => onUpdate('title', e)} placeholder="Paper Title" /></InputGroup>
-        <InputGroup label="Publisher"><EditableInput isEditing={isEditing} value={pub.publisher} onChange={(e: any) => onUpdate('publisher', e)} placeholder="Journal, Medium, etc." /></InputGroup>
+        <InputGroup label="Title">
+          <EditableInput isEditing={isEditing} value={pub.title} onChange={(e: any) => onUpdate('title', e)} placeholder="Paper Title"
+            hasError={isIncomplete && !pub.title?.trim()} />
+        </InputGroup>
+        <InputGroup label="Publisher">
+          <EditableInput isEditing={isEditing} value={pub.publisher} onChange={(e: any) => onUpdate('publisher', e)} placeholder="Journal, Medium, etc."
+            hasError={isIncomplete && !pub.publisher?.trim()} />
+        </InputGroup>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InputGroup label="Date">
@@ -1288,7 +1822,9 @@ function PublicationItem({ pub, onUpdate, onDelete, isEditing }: any) {
             </select>
           </div>
         </InputGroup>
-        <InputGroup label="URL"><EditableInput isEditing={isEditing} value={pub.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." /></InputGroup>
+        <InputGroup label="URL">
+          <EditableInput isEditing={isEditing} value={pub.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." />
+        </InputGroup>
       </div>
     </motion.div>
   );
@@ -1313,7 +1849,7 @@ function EditableInput({ isEditing, value, onChange, placeholder, hasError }: an
       disabled={!isEditing} type="text" value={value || ''}
       onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
       className={`w-full px-4 py-2.5 rounded-lg text-sm transition-all ${
-        hasError ? 'border-2 border-red-500 focus:border-red-500' :
+        hasError ? 'border-2 border-red-400 bg-white focus:outline-none focus:border-red-500' :
         isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 hover:border-gray-400' :
         'bg-transparent border-0 text-gray-700 cursor-default p-0'
       }`}
@@ -1321,11 +1857,12 @@ function EditableInput({ isEditing, value, onChange, placeholder, hasError }: an
   );
 }
 
-function EditableTextarea({ isEditing, value, onChange, placeholder, minHeight }: any) {
+function EditableTextarea({ isEditing, value, onChange, placeholder, minHeight, hasError }: any) {
   return (
     <textarea
       disabled={!isEditing} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
       className={`w-full px-4 py-2.5 rounded-lg text-sm transition-all resize-none ${minHeight} ${
+        hasError ? 'border-2 border-red-400 bg-white focus:outline-none focus:border-red-500' :
         isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 hover:border-gray-400' :
         'bg-transparent border-0 text-gray-600 cursor-default p-0'
       }`}
