@@ -4,11 +4,11 @@ import { motion } from 'motion/react';
 import {
   collection, query, where, getDocs, doc, getDoc, updateDoc, increment
 } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { useAuth } from '../../context/AuthContext';
+import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { resolveUidForUsername } from '../../lib/usernameUtils';
+import { resolveUidForUsername } from '../lib/usernameUtils';
 import {
   MapPin, Eye, Download, Users, Calendar, ShieldCheck, Briefcase,
   BookOpen, Globe, Github, Linkedin, ExternalLink, Copy, Check,
