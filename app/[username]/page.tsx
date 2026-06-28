@@ -362,34 +362,36 @@ export default function PublicProfilePage() {
     <div className="bg-gray-50 min-h-screen pb-20">
 
       {/* ── Top Action Bar ───────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-100 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2">
+      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-100 px-3 sm:px-4 py-3">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             {/* Reuse whatever logo element your project exports; text fallback */}
-            <span className="text-lg font-black text-blue-600 italic uppercase tracking-tight">C Found</span>
+            <span className="text-base sm:text-lg font-black text-blue-600 italic uppercase tracking-tight whitespace-nowrap">C Found</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={copyLink}
-              className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
             >
-              {copied ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
-              Share Profile
+              {copied ? <Check size={14} className="text-green-500 shrink-0" /> : <Share2 size={14} className="shrink-0" />}
+              <span className="hidden sm:inline">Share Profile</span>
+              <span className="sm:hidden">Share</span>
             </button>
             {contact.email || socialLinks.linkedin ? (
               <a
                 href={`mailto:${contact.email}`}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-sm font-bold transition-colors"
+                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap"
               >
-                <Download size={14} />
-                Download Resume
+                <Download size={14} className="shrink-0" />
+                <span className="hidden sm:inline">Download Resume</span>
+                <span className="sm:hidden">Resume</span>
               </a>
             ) : null}
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 space-y-5 pt-5">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 space-y-5 pt-5">
 
         {/* ── Hero Banner ─────────────────────────────────────────────────── */}
         <motion.div
@@ -408,7 +410,7 @@ export default function PublicProfilePage() {
             <rect width="100%" height="100%" fill="url(#lines)" />
           </svg>
 
-          <div className="relative z-10 p-6 md:p-8">
+          <div className="relative z-10 p-5 sm:p-6 md:p-8">
             <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
               {/* Avatar */}
               <div className="relative shrink-0">
@@ -469,7 +471,7 @@ export default function PublicProfilePage() {
               </div>
 
               {/* Stats */}
-              <div className="hidden md:flex flex-col gap-3 shrink-0 text-right">
+              <div className="hidden md:flex flex-col gap-3 shrink-0 w-44">
                 {[
                   { icon: <Eye size={14} />, label: 'Views', value: profile.viewCount ?? 0 },
                   { icon: <Download size={14} />, label: 'Resume Downloads', value: profile.downloadCount ?? 0 },
@@ -477,9 +479,9 @@ export default function PublicProfilePage() {
                   { icon: <Calendar size={14} />, label: 'Member Since', value: memberSince },
                 ].map((s) => (
                   <div key={s.label} className="flex items-center gap-3 text-white/80">
-                    <span className="text-white/40">{s.icon}</span>
-                    <div className="text-left">
-                      <div className="text-[10px] text-white/40 font-semibold">{s.label}</div>
+                    <span className="text-white/40 w-4 shrink-0 flex items-center justify-center">{s.icon}</span>
+                    <div className="text-left min-w-0">
+                      <div className="text-[10px] text-white/40 font-semibold whitespace-nowrap">{s.label}</div>
                       <div className="text-base font-black text-white leading-tight">{s.value}</div>
                     </div>
                   </div>
@@ -488,15 +490,15 @@ export default function PublicProfilePage() {
             </div>
 
             {/* Mobile stats row */}
-            <div className="flex md:hidden items-center gap-6 mt-5 pt-5 border-t border-white/10">
+            <div className="flex md:hidden items-center justify-between gap-2 mt-5 pt-5 border-t border-white/10">
               {[
                 { label: 'Views', value: profile.viewCount ?? 0 },
                 { label: 'Downloads', value: profile.downloadCount ?? 0 },
                 { label: 'Connections', value: profile.connectionCount ?? 0 },
               ].map((s) => (
-                <div key={s.label} className="text-center">
+                <div key={s.label} className="text-center flex-1">
                   <div className="text-lg font-black text-white">{s.value}</div>
-                  <div className="text-[10px] text-white/50 font-semibold">{s.label}</div>
+                  <div className="text-[10px] text-white/50 font-semibold whitespace-nowrap">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -534,9 +536,9 @@ export default function PublicProfilePage() {
                           )}
                         </div>
                         <div className="flex-1 pb-2">
-                          <div className="flex flex-wrap items-start justify-between gap-1 mb-0.5">
-                            <h3 className="font-black text-gray-900 text-sm">{exp.title}</h3>
-                            <span className="text-xs text-gray-400 font-medium shrink-0">
+                          <div className="flex items-start justify-between gap-2 mb-0.5">
+                            <h3 className="font-black text-gray-900 text-sm min-w-0 break-words">{exp.title}</h3>
+                            <span className="text-xs text-gray-400 font-medium shrink-0 text-right whitespace-nowrap">
                               {exp.dateRange}
                             </span>
                           </div>
@@ -560,9 +562,9 @@ export default function PublicProfilePage() {
                   <div className="space-y-5">
                     {profile.education.map((edu, i) => (
                       <div key={i}>
-                        <div className="flex flex-wrap items-start justify-between gap-1 mb-0.5">
-                          <h3 className="font-black text-gray-900 text-sm">{edu.degree}</h3>
-                          <span className="text-xs text-gray-400 font-medium">
+                        <div className="flex items-start justify-between gap-2 mb-0.5">
+                          <h3 className="font-black text-gray-900 text-sm min-w-0 break-words">{edu.degree}</h3>
+                          <span className="text-xs text-gray-400 font-medium shrink-0 text-right whitespace-nowrap">
                             {edu.startYear} – {edu.current ? 'Present' : (edu.endYear || 'Present')}
                           </span>
                         </div>
@@ -654,15 +656,15 @@ export default function PublicProfilePage() {
                   <div className="space-y-4">
                     {publications.map((pub, i) => (
                       <div key={i} className="border border-gray-100 rounded-xl p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-1">
-                          <h4 className="text-sm font-black text-gray-900">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-sm font-black text-gray-900 min-w-0 break-words">
                             {pub.url ? (
-                              <a href={pub.url} target="_blank" rel="noreferrer" className="hover:text-blue-600 transition-colors inline-flex items-center gap-1">
-                                {pub.title} <ExternalLink size={11} />
+                              <a href={pub.url} target="_blank" rel="noreferrer" className="hover:text-blue-600 transition-colors inline-flex items-start gap-1">
+                                <span className="break-words">{pub.title}</span> <ExternalLink size={11} className="shrink-0 mt-0.5" />
                               </a>
                             ) : pub.title}
                           </h4>
-                          <span className="text-xs text-gray-400 font-medium">
+                          <span className="text-xs text-gray-400 font-medium shrink-0 text-right whitespace-nowrap">
                             {[pub.dateMonth, pub.dateYear].filter(Boolean).join(' ')}
                           </span>
                         </div>
@@ -679,29 +681,29 @@ export default function PublicProfilePage() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <Card className="p-6">
                   <SectionHeader icon={<Mail size={15} />} title="Contact" />
-                  <div className="flex flex-wrap gap-6">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-6">
                     {contact.email && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <Mail size={14} className="text-gray-400" />
-                        <span className="font-semibold">{contact.email}</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-700 min-w-0">
+                        <Mail size={14} className="text-gray-400 shrink-0" />
+                        <span className="font-semibold break-all">{contact.email}</span>
                       </div>
                     )}
                     {contact.phone && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <Phone size={14} className="text-gray-400" />
-                        <span className="font-semibold">{contact.phone}</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-700 min-w-0">
+                        <Phone size={14} className="text-gray-400 shrink-0" />
+                        <span className="font-semibold break-words">{contact.phone}</span>
                       </div>
                     )}
                     {profile.country && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <MapPin size={14} className="text-gray-400" />
-                        <span className="font-semibold">{[profile.city, profile.country].filter(Boolean).join(', ')}</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-700 min-w-0">
+                        <MapPin size={14} className="text-gray-400 shrink-0" />
+                        <span className="font-semibold break-words">{[profile.city, profile.country].filter(Boolean).join(', ')}</span>
                       </div>
                     )}
                     {contact.website && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <Globe size={14} className="text-gray-400" />
-                        <a href={contact.website} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 hover:underline">
+                      <div className="flex items-center gap-2 text-sm text-gray-700 min-w-0">
+                        <Globe size={14} className="text-gray-400 shrink-0" />
+                        <a href={contact.website} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 hover:underline break-all">
                           {contact.website.replace(/^https?:\/\//, '')}
                         </a>
                       </div>
