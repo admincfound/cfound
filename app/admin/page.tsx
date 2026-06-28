@@ -38,11 +38,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ users: 0, applications: 0, projects: 0, posts: 0 });
   const [recentApps, setRecentApps] = useState<any[]>([]);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
-<<<<<<< Updated upstream
   const [dashboardLoading, setDashboardLoading] = useState(true);
-=======
-  const [pageLoading, setPageLoading] = useState(true);
->>>>>>> Stashed changes
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
   const chartData = [
@@ -114,11 +110,7 @@ export default function AdminDashboard() {
       } catch (err) {
         console.error(err);
       } finally {
-<<<<<<< Updated upstream
         setDashboardLoading(false);
-=======
-          setPageLoading(false);
->>>>>>> Stashed changes
       }
     };
     fetchAdminStats();
@@ -262,11 +254,7 @@ export default function AdminDashboard() {
                        </tr>
                      </thead>
                      <tbody className="divide-y divide-[var(--border-main)]">
-<<<<<<< Updated upstream
                        {dashboardLoading ? (
-=======
-                       {pageLoading ? (
->>>>>>> Stashed changes
                           <tr><td colSpan={4} className="px-8 py-20 text-center animate-pulse text-[var(--text-muted)] font-black text-[10px] uppercase tracking-[0.3em]">SYNCHRONIZING RECORDS...</td></tr>
                        ) : recentApps.length > 0 ? (
                           recentApps.map(app => (
