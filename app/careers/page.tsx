@@ -134,10 +134,11 @@ export default function Careers() {
     if (userApplications.has(opp.id)) { toast.error("You have already applied for this position."); return; }
     if (shouldSkipPopup()) {
       doQuickApply(opp);
-    } else {
-      setPendingApplyOpp(opp);
-      setShowApplyPopup(true);
+      return;
     }
+
+    setPendingApplyOpp(opp);
+    setShowApplyPopup(true);
   };
 
   const doQuickApply = async (opp: any) => {
@@ -500,6 +501,18 @@ export default function Careers() {
         </div>
       </div>
     </div>
+    <ApplyPopup
+      open={showApplyPopup}
+      opportunity={pendingApplyOpp}
+      onClose={() => {
+        setShowApplyPopup(false);
+        setPendingApplyOpp(null);
+      }}
+      onQuickApply={(skip) => {
+        if (skip) setSkipPopup(true);
+        if (pendingApplyOpp) doQuickApply(pendingApplyOpp);
+      }}
+    />
     </>
   );
 }
