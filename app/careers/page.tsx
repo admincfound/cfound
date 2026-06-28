@@ -504,12 +504,28 @@ export default function Careers() {
     <ApplyPopup
       open={showApplyPopup}
       opportunity={pendingApplyOpp}
-      onClose={() => {
+      applying={applyingId === pendingApplyOpp?.id}
+      onCancel={() => {
         setShowApplyPopup(false);
         setPendingApplyOpp(null);
       }}
       onQuickApply={() => {
         if (pendingApplyOpp) doQuickApply(pendingApplyOpp);
+      }}
+      onViewDetails={() => {
+        if (!pendingApplyOpp) return;
+
+        router.push(
+          `/careers/${
+            pendingApplyOpp.title
+              .toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, "")
+              .replace(/\s+/g, "-")
+          }-${pendingApplyOpp.id}`
+        );
+
+        setShowApplyPopup(false);
+        setPendingApplyOpp(null);
       }}
     />
     </>
