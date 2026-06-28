@@ -2199,6 +2199,7 @@ function SocialInput({ icon, value, onChange, placeholder, isEditing }: any) {
     </div>
   );
 }
+<<<<<<< Updated upstream
 export default function Profile() {
   return (
     <Suspense fallback={<ProfileLoadingScreen />}>
@@ -2206,3 +2207,5 @@ export default function Profile() {
     </Suspense>
   );
 }
+=======
+>>>>>>> Stashed changes
