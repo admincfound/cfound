@@ -276,7 +276,7 @@ export default function Dashboard() {
   const [usernameWarningDismissed, setUsernameWarningDismissed] = useState(false);
   const router = useRouter();
 
-  const profileData = profile as Record<string, unknown> | null;
+  const profileData = profile as unknown as Record<string, unknown> | null;
   const userSkills: string[] = Array.isArray(profileData?.skills)
     ? (profileData!.skills as string[])
     : [];
