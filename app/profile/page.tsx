@@ -107,7 +107,7 @@ interface ValidationError {
   message: string;
 }
 
-export default function Profile() {
+function ProfileContent() {
   const { profile, isAdmin, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>(null);
@@ -2197,5 +2197,12 @@ function SocialInput({ icon, value, onChange, placeholder, isEditing }: any) {
         }`}
       />
     </div>
+  );
+}
+export default function Profile() {
+  return (
+    <Suspense fallback={<ProfileLoadingScreen />}>
+      <ProfileContent />
+    </Suspense>
   );
 }
