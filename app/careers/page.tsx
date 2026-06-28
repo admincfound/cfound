@@ -508,8 +508,7 @@ export default function Careers() {
         setShowApplyPopup(false);
         setPendingApplyOpp(null);
       }}
-      onQuickApply={(skip) => {
-        if (skip) setSkipPopup(true);
+      onQuickApply={() => {
         if (pendingApplyOpp) doQuickApply(pendingApplyOpp);
       }}
     />
