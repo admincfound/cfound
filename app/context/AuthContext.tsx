@@ -65,6 +65,8 @@ export interface UserProfile {
   certifications?: any[];
   publications?: any[];
 
+  username?: string;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -72,7 +74,8 @@ export interface UserProfile {
 interface AuthContextType {
   user: FirebaseUser | null;
   profile: UserProfile | null;
-  loading: boolean;
+  loading: boolean;       // true until Firebase Auth resolves
+  profileLoading: boolean; // true until Firestore profile is fetched
   isAdmin: boolean;
 }
 
@@ -80,6 +83,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  profileLoading: true,
   isAdmin: false,
 });
 
@@ -87,137 +91,88 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export function AuthProvider({
-  children,
-}: AuthProviderProps) {
-  const [user, setUser] =
-    useState<FirebaseUser | null>(null);
-
-  const [profile, setProfile] =
-    useState<UserProfile | null>(null);
-
-  const [loading, setLoading] =
-    useState(true);
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribeProfile:
-      | (() => void)
-      | undefined;
+    let unsubscribeProfile: (() => void) | undefined;
 
-    const unsubscribeAuth =
-      onAuthStateChanged(
-        auth,
-        (firebaseUser) => {
-          setUser(firebaseUser);
-          setLoading(false);
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
 
-          if (unsubscribeProfile) {
-            unsubscribeProfile();
-            unsubscribeProfile = undefined;
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = undefined;
+      }
+
+      if (!firebaseUser) {
+        setProfile(null);
+        setProfileLoading(false);
+        return;
+      }
+
+      // Profile is now loading
+      setProfileLoading(true);
+
+      const userRef = doc(db, "users", firebaseUser.uid);
+
+      unsubscribeProfile = onSnapshot(userRef, async (snapshot) => {
+        if (snapshot.exists()) {
+          const existingProfile = snapshot.data() as UserProfile;
+
+          if (
+            (!existingProfile.photoURL || existingProfile.photoURL === "") &&
+            firebaseUser.photoURL
+          ) {
+            const updatedProfile: UserProfile = {
+              ...existingProfile,
+              photoURL: firebaseUser.photoURL,
+              displayName:
+                existingProfile.displayName ||
+                firebaseUser.displayName ||
+                "",
+              email:
+                existingProfile.email || firebaseUser.email || "",
+              updatedAt: new Date().toISOString(),
+            };
+
+            setProfile(updatedProfile);
+            setProfileLoading(false);
+
+            await setDoc(userRef, updatedProfile, { merge: true });
+          } else {
+            setProfile(existingProfile);
+            setProfileLoading(false);
           }
 
-          if (!firebaseUser) {
-            setProfile(null);
-            return;
-          }
-
-          const userRef = doc(
-            db,
-            "users",
-            firebaseUser.uid
-          );
-
-          unsubscribeProfile =
-            onSnapshot(
-              userRef,
-              async (snapshot) => {
-                if (snapshot.exists()) {
-                  const existingProfile =
-                    snapshot.data() as UserProfile;
-
-                  if (
-                    (!existingProfile.photoURL ||
-                      existingProfile.photoURL ===
-                        "") &&
-                    firebaseUser.photoURL
-                  ) {
-                    const updatedProfile: UserProfile =
-                      {
-                        ...existingProfile,
-                        photoURL:
-                          firebaseUser.photoURL,
-                        displayName:
-                          existingProfile.displayName ||
-                          firebaseUser.displayName ||
-                          "",
-                        email:
-                          existingProfile.email ||
-                          firebaseUser.email ||
-                          "",
-                        updatedAt:
-                          new Date().toISOString(),
-                      };
-
-                    setProfile(
-                      updatedProfile
-                    );
-
-                    await setDoc(
-                      userRef,
-                      updatedProfile,
-                      {
-                        merge: true,
-                      }
-                    );
-                  } else {
-                    setProfile(
-                      existingProfile
-                    );
-                  }
-
-                  return;
-                }
-
-                const isAdmin =
-                  firebaseUser.email ===
-                  "admin.cfound@gmail.com";
-
-                const newProfile: UserProfile =
-                  {
-                    uid: firebaseUser.uid,
-                    email:
-                      firebaseUser.email ||
-                      "",
-                    displayName:
-                      firebaseUser.displayName ||
-                      "",
-                    photoURL:
-                      firebaseUser.photoURL ||
-                      "",
-                    role: isAdmin
-                      ? "admin"
-                      : "user",
-                    createdAt:
-                      new Date().toISOString(),
-                  };
-
-                setProfile(newProfile);
-
-                await setDoc(
-                  userRef,
-                  newProfile,
-                  {
-                    merge: true,
-                  }
-                );
-              }
-            );
+          return;
         }
-      );
+
+        const isAdmin =
+          firebaseUser.email === "admin.cfound@gmail.com";
+
+        const newProfile: UserProfile = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || "",
+          displayName: firebaseUser.displayName || "",
+          photoURL: firebaseUser.photoURL || "",
+          role: isAdmin ? "admin" : "user",
+          createdAt: new Date().toISOString(),
+        };
+
+        setProfile(newProfile);
+        setProfileLoading(false);
+
+        await setDoc(userRef, newProfile, { merge: true });
+      });
+    });
 
     return () => {
       unsubscribeAuth();
-
       if (unsubscribeProfile) {
         unsubscribeProfile();
       }
@@ -230,8 +185,8 @@ export function AuthProvider({
         user,
         profile,
         loading,
-        isAdmin:
-          profile?.role === "admin",
+        profileLoading,
+        isAdmin: profile?.role === "admin",
       }}
     >
       {children}
@@ -282,41 +237,23 @@ export function handleFirestoreError(
 ) {
   const errorInfo: FirestoreErrorInfo = {
     error:
-      error instanceof Error
-        ? error.message
-        : String(error),
-
+      error instanceof Error ? error.message : String(error),
     operationType,
-
     path,
-
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
-      emailVerified:
-        auth.currentUser?.emailVerified,
-      isAnonymous:
-        auth.currentUser?.isAnonymous,
-      tenantId:
-        auth.currentUser?.tenantId,
-
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
       providerInfo:
-        auth.currentUser?.providerData?.map(
-          (provider) => ({
-            providerId:
-              provider.providerId,
-            email: provider.email,
-          })
-        ) || [],
+        auth.currentUser?.providerData?.map((provider) => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || [],
     },
   };
 
-  console.error(
-    "Firestore Error:",
-    errorInfo
-  );
-
-  throw new Error(
-    JSON.stringify(errorInfo)
-  );
+  console.error("Firestore Error:", errorInfo);
+  throw new Error(JSON.stringify(errorInfo));
 }

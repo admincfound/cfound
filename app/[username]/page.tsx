@@ -4,53 +4,202 @@ import { motion } from 'motion/react';
 import {
   collection, query, where, getDocs, doc, getDoc, updateDoc, increment
 } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { useAuth } from '../../context/AuthContext';
+import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { resolveUidForUsername } from '../lib/usernameUtils';
 import {
   MapPin, Eye, Download, Users, Calendar, ShieldCheck, Briefcase,
   BookOpen, Globe, Github, Linkedin, ExternalLink, Copy, Check,
   CheckCircle, Code2, GraduationCap, Award, Phone, Mail, Share2,
-  Loader2, UserX
+  Loader2, UserX, BookMarked
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+// Mirrors the actual Firestore `users/{uid}` document shape written by the
+// Profile edit page, with a few legacy fields kept optional for backwards
+// compatibility with documents created before this schema was finalized.
 
 interface PublicProfile {
   uid: string;
   username?: string;
   displayName?: string;
   photoURL?: string;
+
+  // Role / role legacy alias
+  primaryRole?: string;
+  secondaryRole?: string;
+  /** @deprecated legacy field name, prefer primaryRole */
   currentRole?: string;
+
   country?: string;
+  state?: string;
+  city?: string;
   bio?: string;
+  /** @deprecated legacy alias for bio on very old documents */
   about?: string;
+
   skills?: string[];
+  experienceLevel?: string;
+
   languages?: { name: string; level: string }[];
+
+  experiences?: {
+    role: string; company: string; type?: string; location?: string; mode?: string;
+    startMonth?: string; startYear: string; endMonth?: string; endYear?: string;
+    current?: boolean; skills?: string; description?: string;
+  }[];
+  /** @deprecated legacy field name, prefer experiences */
   experience?: {
     title: string; company: string;
     startDate: string; endDate?: string; current?: boolean; description?: string;
   }[];
+
   education?: {
-    degree: string; institution: string;
-    startYear: string; endYear: string; grade?: string;
+    institution: string; degree: string; department?: string;
+    startYear: string; endYear?: string; current?: boolean; grade?: string;
   }[];
+
   projects?: {
-    title: string; subtitle?: string; description?: string;
-    tech?: string[]; url?: string; icon?: string;
+    title: string; category?: string; description?: string;
+    technologies?: string; skills?: string;
+    startMonth?: string; startYear?: string; endMonth?: string; endYear?: string;
+    status?: string; demoUrl?: string; githubUrl?: string;
   }[];
-  certificates?: {
-    name: string; issuer: string; date?: string; issuerIcon?: string;
+
+  certifications?: {
+    name: string; org: string; issueMonth?: string; issueYear?: string; url?: string;
   }[];
-  socialLinks?: { linkedin?: string; github?: string; website?: string };
-  contact?: { email?: string; phone?: string; website?: string };
+  /** @deprecated legacy field name, prefer certifications */
+  certificates?: { name: string; issuer: string; date?: string; issuerIcon?: string }[];
+
+  publications?: {
+    title: string; publisher: string; dateMonth?: string; dateYear?: string; url?: string;
+  }[];
+
+  portfolioUrl?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  behanceUrl?: string;
+  artstationUrl?: string;
+  youtubeUrl?: string;
+  otherUrl?: string;
+
+  email?: string;
+  phone?: string;
+
+  openToWork?: boolean;
+  /** @deprecated legacy field name, prefer openToWork */
   isOpenToWork?: boolean;
+
   viewCount?: number;
   downloadCount?: number;
   connectionCount?: number;
   createdAt?: any;
+}
+
+// ─── Derived/normalized view-model helpers ────────────────────────────────────
+// Keep the rendering JSX clean by resolving legacy-vs-current fields up front.
+
+function getOpenToWork(p: PublicProfile): boolean {
+  return p.openToWork ?? p.isOpenToWork ?? false;
+}
+
+function getRole(p: PublicProfile): string {
+  return p.primaryRole || p.currentRole || 'Member';
+}
+
+function getAbout(p: PublicProfile): string {
+  return p.bio || p.about || '';
+}
+
+interface NormalizedExperience {
+  title: string; company: string; dateRange: string; description?: string;
+}
+
+function getExperiences(p: PublicProfile): NormalizedExperience[] {
+  if (Array.isArray(p.experiences) && p.experiences.length > 0) {
+    return p.experiences.map((e) => ({
+      title: e.role,
+      company: e.company,
+      dateRange: `${[e.startMonth, e.startYear]
+        .filter(Boolean)
+        .join(" ")} – ${
+        e.current
+          ? "Present"
+          : [e.endMonth, e.endYear].filter(Boolean).join(" ") || "Present"
+      }`,
+      description: e.description,
+    }));
+  }
+
+  if (Array.isArray(p.experience) && p.experience.length > 0) {
+    return p.experience.map((e) => ({
+      title: e.title,
+      company: e.company,
+      dateRange: `${e.startDate} – ${
+        e.current ? "Present" : e.endDate || "Present"
+      }`,
+      description: e.description,
+    }));
+  }
+
+  return [];
+}
+
+interface NormalizedCertificate {
+  name: string; issuer: string; date?: string;
+}
+
+function getCertifications(p: PublicProfile): NormalizedCertificate[] {
+  if (p.certifications && p.certifications.length > 0) {
+    return p.certifications.map((c) => ({
+      name: c.name,
+      issuer: c.org,
+      date: [c.issueMonth, c.issueYear].filter(Boolean).join(' ') || undefined,
+    }));
+  }
+  if (p.certificates && p.certificates.length > 0) {
+    return p.certificates.map((c) => ({ name: c.name, issuer: c.issuer, date: c.date }));
+  }
+  return [];
+}
+
+interface NormalizedProject {
+  title: string; subtitle?: string; description?: string; tech: string[]; url?: string;
+}
+
+function getProjects(p: PublicProfile): NormalizedProject[] {
+  if (!p.projects || p.projects.length === 0) return [];
+  return p.projects.map((proj) => {
+    const techSource = proj.technologies || proj.skills || '';
+    const tech = techSource.split(',').map((t) => t.trim()).filter(Boolean);
+    return {
+      title: proj.title,
+      subtitle: proj.category,
+      description: proj.description,
+      tech,
+      url: proj.demoUrl || proj.githubUrl,
+    };
+  });
+}
+
+interface NormalizedSocialLinks {
+  linkedin?: string; github?: string; website?: string;
+}
+
+function getSocialLinks(p: PublicProfile): NormalizedSocialLinks {
+  return {
+    linkedin: p.linkedinUrl,
+    github: p.githubUrl,
+    website: p.portfolioUrl,
+  };
+}
+
+function getContact(p: PublicProfile): { email?: string; phone?: string; website?: string } {
+  return { email: p.email, phone: p.phone, website: p.portfolioUrl };
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -104,24 +253,42 @@ export default function PublicProfilePage() {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      // Try querying by username field first
+      // 1. Try querying by username field on the users collection first (fast path —
+      //    correct for any profile saved through the current Profile edit page).
       const q = query(collection(db, 'users'), where('username', '==', username));
       const snap = await getDocs(q);
 
       let data: PublicProfile | null = null;
+      let resolvedDocId: string | null = null;
 
       if (!snap.empty) {
         data = { uid: snap.docs[0].id, ...snap.docs[0].data() } as PublicProfile;
+        resolvedDocId = snap.docs[0].id;
       } else {
-        // Fallback: try treating the username param as a uid
-        const docRef = doc(db, 'users', username);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          data = { uid: docSnap.id, ...docSnap.data() } as PublicProfile;
+        // 2. Fall back to the usernames/{username} reservation collection, in case
+        //    the users doc hasn't been backfilled with the username field yet.
+        const ownerUid = await resolveUidForUsername(username);
+        if (ownerUid) {
+          const ownerSnap = await getDoc(doc(db, 'users', ownerUid));
+          if (ownerSnap.exists()) {
+            data = { uid: ownerSnap.id, ...ownerSnap.data() } as PublicProfile;
+            resolvedDocId = ownerSnap.id;
+          }
         }
       }
 
       if (!data) {
+        // 3. Final fallback: treat the route param as a raw uid (supports old links
+        //    shared before usernames existed, and admin/manual navigation).
+        const docRef = doc(db, 'users', username);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          data = { uid: docSnap.id, ...docSnap.data() } as PublicProfile;
+          resolvedDocId = docSnap.id;
+        }
+      }
+
+      if (!data || !resolvedDocId) {
         setNotFound(true);
         return;
       }
@@ -130,9 +297,7 @@ export default function PublicProfilePage() {
 
       // Increment view count (skip own profile)
       if (user?.uid !== data.uid) {
-        const ref = snap.empty
-          ? doc(db, 'users', username)
-          : doc(db, 'users', snap.docs[0].id);
+        const ref = doc(db, 'users', resolvedDocId);
         await updateDoc(ref, { viewCount: increment(1) }).catch(() => {});
       }
     } catch (err) {
@@ -191,6 +356,17 @@ export default function PublicProfilePage() {
     );
   }
 
+  // ── Derived view-model ───────────────────────────────────────────────────
+  const isOpenToWork = getOpenToWork(profile);
+  const role = getRole(profile);
+  const about = getAbout(profile);
+  const experiences = getExperiences(profile);
+  const certifications = getCertifications(profile);
+  const projects = getProjects(profile);
+  const socialLinks = getSocialLinks(profile);
+  const contact = getContact(profile);
+  const publications = profile.publications || [];
+
   // ── Profile Page ─────────────────────────────────────────────────────────
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
@@ -210,9 +386,9 @@ export default function PublicProfilePage() {
               {copied ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
               Share Profile
             </button>
-            {profile.contact?.email || profile.socialLinks?.linkedin ? (
+            {contact.email || socialLinks.linkedin ? (
               <a
-                href={`mailto:${profile.contact?.email}`}
+                href={`mailto:${contact.email}`}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-sm font-bold transition-colors"
               >
                 <Download size={14} />
@@ -268,33 +444,33 @@ export default function PublicProfilePage() {
                   </h1>
                   <CheckCircle size={20} className="text-blue-400" />
                 </div>
-                <p className="text-blue-300 font-bold text-sm mb-2">{profile.currentRole || 'Member'}</p>
+                <p className="text-blue-300 font-bold text-sm mb-2">{role}</p>
                 {profile.country && (
                   <div className="flex items-center gap-1 text-white/60 text-xs mb-3">
                     <MapPin size={11} />
-                    <span>{profile.country}</span>
+                    <span>{[profile.city, profile.country].filter(Boolean).join(', ')}</span>
                   </div>
                 )}
-                {profile.bio && (
-                  <p className="text-white/80 text-sm leading-relaxed max-w-xl">{profile.bio}</p>
+                {about && (
+                  <p className="text-white/80 text-sm leading-relaxed max-w-xl">{about}</p>
                 )}
 
                 {/* Social links */}
                 <div className="flex items-center gap-2 mt-4">
-                  {profile.socialLinks?.linkedin && (
-                    <a href={profile.socialLinks.linkedin} target="_blank" rel="noreferrer"
+                  {socialLinks.linkedin && (
+                    <a href={socialLinks.linkedin} target="_blank" rel="noreferrer"
                       className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-colors">
                       <Linkedin size={15} />
                     </a>
                   )}
-                  {profile.socialLinks?.github && (
-                    <a href={profile.socialLinks.github} target="_blank" rel="noreferrer"
+                  {socialLinks.github && (
+                    <a href={socialLinks.github} target="_blank" rel="noreferrer"
                       className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-colors">
                       <Github size={15} />
                     </a>
                   )}
-                  {profile.socialLinks?.website && (
-                    <a href={profile.socialLinks.website} target="_blank" rel="noreferrer"
+                  {socialLinks.website && (
+                    <a href={socialLinks.website} target="_blank" rel="noreferrer"
                       className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-colors">
                       <Globe size={15} />
                     </a>
@@ -344,26 +520,26 @@ export default function PublicProfilePage() {
           <div className="md:col-span-8 space-y-5">
 
             {/* About Me */}
-            {profile.about && (
+            {about && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
                 <Card className="p-6">
                   <SectionHeader icon={<Users size={15} />} title="About Me" />
-                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{profile.about}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{about}</p>
                 </Card>
               </motion.div>
             )}
 
             {/* Experience */}
-            {profile.experience && profile.experience.length > 0 && (
+            {experiences.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
                 <Card className="p-6">
                   <SectionHeader icon={<Briefcase size={15} />} title="Experience" />
                   <div className="space-y-6">
-                    {profile.experience.map((exp, i) => (
+                    {experiences.map((exp, i) => (
                       <div key={i} className="flex gap-4">
                         <div className="flex flex-col items-center pt-1">
                           <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                          {i < (profile.experience?.length ?? 0) - 1 && (
+                          {i < experiences.length - 1 && (
                             <div className="w-px flex-1 bg-gray-100 mt-2" />
                           )}
                         </div>
@@ -371,7 +547,7 @@ export default function PublicProfilePage() {
                           <div className="flex flex-wrap items-start justify-between gap-1 mb-0.5">
                             <h3 className="font-black text-gray-900 text-sm">{exp.title}</h3>
                             <span className="text-xs text-gray-400 font-medium shrink-0">
-                              {exp.startDate} – {exp.current ? 'Present' : exp.endDate}
+                              {exp.dateRange}
                             </span>
                           </div>
                           <p className="text-xs font-bold text-blue-600 mb-2">{exp.company}</p>
@@ -396,7 +572,9 @@ export default function PublicProfilePage() {
                       <div key={i}>
                         <div className="flex flex-wrap items-start justify-between gap-1 mb-0.5">
                           <h3 className="font-black text-gray-900 text-sm">{edu.degree}</h3>
-                          <span className="text-xs text-gray-400 font-medium">{edu.startYear} – {edu.endYear}</span>
+                          <span className="text-xs text-gray-400 font-medium">
+                            {edu.startYear} – {edu.current ? 'Present' : (edu.endYear || 'Present')}
+                          </span>
                         </div>
                         <p className="text-xs font-bold text-blue-600">{edu.institution}</p>
                         {edu.grade && <p className="text-xs text-gray-400 mt-1 font-medium">CGPA: {edu.grade}</p>}
@@ -408,17 +586,17 @@ export default function PublicProfilePage() {
             )}
 
             {/* Projects */}
-            {profile.projects && profile.projects.length > 0 && (
+            {projects.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
                 <Card className="p-6">
                   <SectionHeader icon={<Code2 size={15} />} title="Projects" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {profile.projects.map((proj, i) => (
+                    {projects.map((proj, i) => (
                       <div key={i} className="border border-gray-100 rounded-xl p-4 hover:border-blue-100 hover:shadow-sm transition-all">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500 text-xs font-black">
-                              {proj.icon || proj.title?.[0]}
+                              {proj.title?.[0]}
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5">
@@ -436,7 +614,7 @@ export default function PublicProfilePage() {
                         {proj.description && (
                           <p className="text-xs text-gray-500 leading-relaxed mb-3">{proj.description}</p>
                         )}
-                        {proj.tech && proj.tech.length > 0 && (
+                        {proj.tech.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {proj.tech.map((t, j) => (
                               <span key={j} className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{t}</span>
@@ -450,18 +628,18 @@ export default function PublicProfilePage() {
               </motion.div>
             )}
 
-            {/* Certificates */}
-            {profile.certificates && profile.certificates.length > 0 && (
+            {/* Certifications */}
+            {certifications.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }}>
                 <Card className="p-6">
                   <SectionHeader icon={<Award size={15} />} title="Certificates" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {profile.certificates.map((cert, i) => (
+                    {certifications.map((cert, i) => (
                       <div key={i} className="border border-gray-100 rounded-xl p-4 hover:border-blue-100 transition-all">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-3">
                             <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-xs font-black text-gray-600 shrink-0">
-                              {cert.issuerIcon || cert.issuer?.[0]}
+                              {cert.issuer?.[0]}
                             </div>
                             <div>
                               <h4 className="text-xs font-black text-gray-900 leading-snug">{cert.name}</h4>
@@ -478,35 +656,63 @@ export default function PublicProfilePage() {
               </motion.div>
             )}
 
+            {/* Publications */}
+            {publications.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19 }}>
+                <Card className="p-6">
+                  <SectionHeader icon={<BookMarked size={15} />} title="Publications" />
+                  <div className="space-y-4">
+                    {publications.map((pub, i) => (
+                      <div key={i} className="border border-gray-100 rounded-xl p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-1">
+                          <h4 className="text-sm font-black text-gray-900">
+                            {pub.url ? (
+                              <a href={pub.url} target="_blank" rel="noreferrer" className="hover:text-blue-600 transition-colors inline-flex items-center gap-1">
+                                {pub.title} <ExternalLink size={11} />
+                              </a>
+                            ) : pub.title}
+                          </h4>
+                          <span className="text-xs text-gray-400 font-medium">
+                            {[pub.dateMonth, pub.dateYear].filter(Boolean).join(' ')}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-blue-600 mt-0.5">{pub.publisher}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+
             {/* Contact */}
-            {profile.contact && (
+            {(contact.email || contact.phone || profile.country) && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <Card className="p-6">
                   <SectionHeader icon={<Mail size={15} />} title="Contact" />
                   <div className="flex flex-wrap gap-6">
-                    {profile.contact.email && (
+                    {contact.email && (
                       <div className="flex items-center gap-2 text-sm text-gray-700">
                         <Mail size={14} className="text-gray-400" />
-                        <span className="font-semibold">{profile.contact.email}</span>
+                        <span className="font-semibold">{contact.email}</span>
                       </div>
                     )}
-                    {profile.contact.phone && (
+                    {contact.phone && (
                       <div className="flex items-center gap-2 text-sm text-gray-700">
                         <Phone size={14} className="text-gray-400" />
-                        <span className="font-semibold">{profile.contact.phone}</span>
+                        <span className="font-semibold">{contact.phone}</span>
                       </div>
                     )}
                     {profile.country && (
                       <div className="flex items-center gap-2 text-sm text-gray-700">
                         <MapPin size={14} className="text-gray-400" />
-                        <span className="font-semibold">{profile.country}</span>
+                        <span className="font-semibold">{[profile.city, profile.country].filter(Boolean).join(', ')}</span>
                       </div>
                     )}
-                    {profile.contact.website && (
+                    {contact.website && (
                       <div className="flex items-center gap-2 text-sm text-gray-700">
                         <Globe size={14} className="text-gray-400" />
-                        <a href={profile.contact.website} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 hover:underline">
-                          {profile.contact.website.replace(/^https?:\/\//, '')}
+                        <a href={contact.website} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 hover:underline">
+                          {contact.website.replace(/^https?:\/\//, '')}
                         </a>
                       </div>
                     )}
@@ -528,7 +734,7 @@ export default function PublicProfilePage() {
                 </div>
                 <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 mb-2">
                   <span className="text-xs font-semibold text-blue-700 flex-1 truncate">
-                    cfound.in/{profile.username ?? profile.uid}
+                    cfound.in/{profile.username ?? username}
                   </span>
                   <button onClick={copyLink} className="shrink-0 text-blue-500 hover:text-blue-700 transition-colors">
                     {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
@@ -542,15 +748,15 @@ export default function PublicProfilePage() {
             <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.09 }}>
               <Card className="p-5">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${profile.isOpenToWork ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <div className={`w-2.5 h-2.5 rounded-full ${isOpenToWork ? 'bg-green-500' : 'bg-gray-300'}`} />
                   <h3 className="font-black text-gray-900 text-sm">
-                    {profile.isOpenToWork ? 'Open to Opportunities' : 'Not Currently Available'}
+                    {isOpenToWork ? 'Open to Opportunities' : 'Not Currently Available'}
                   </h3>
                 </div>
                 <p className="text-xs text-gray-500 mb-3">
-                  {profile.isOpenToWork ? 'Actively looking for new opportunities.' : 'Not accepting opportunities right now.'}
+                  {isOpenToWork ? 'Actively looking for new opportunities.' : 'Not accepting opportunities right now.'}
                 </p>
-                {profile.isOpenToWork && (
+                {isOpenToWork && (
                   <span className="inline-block text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
                     Available for Work
                   </span>

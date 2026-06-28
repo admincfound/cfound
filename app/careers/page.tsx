@@ -35,6 +35,7 @@ import {
   Share2
 } from 'lucide-react';
 import { sendApplicationEmail } from '../services/emailService';
+import ApplyPopup, { shouldSkipPopup, setSkipPopup } from '../components/ApplyPopup';
 import { getProfileCompletion } from '../lib/profileUtils';
 
 
@@ -46,6 +47,8 @@ export default function Careers() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [pendingApplyOpp, setPendingApplyOpp] = useState<any>(null);
+  const [showApplyPopup, setShowApplyPopup] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -123,24 +126,23 @@ export default function Careers() {
     }
   };
 
-  const handleApply = async (opp: any) => {
+  const handleApply = (opp: any) => {
     if (isAdmin) return;
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
+    if (!user) { router.push('/login'); return; }
     const completion = getProfileCompletion(profile);
-    if (!completion.isComplete) {
-      toast.error("Complete your profile before applying.");
-      return;
+    if (!completion.isComplete) { toast.error("Complete your profile before applying."); return; }
+    if (userApplications.has(opp.id)) { toast.error("You have already applied for this position."); return; }
+    if (shouldSkipPopup()) {
+      doQuickApply(opp);
+    } else {
+      setPendingApplyOpp(opp);
+      setShowApplyPopup(true);
     }
+  };
 
-    if (userApplications.has(opp.id)) {
-      toast.error("You have already applied for this position.");
-      return;
-    }
-
+  const doQuickApply = async (opp: any) => {
+    setShowApplyPopup(false);
+    setPendingApplyOpp(null);
     setApplyingId(opp.id);
     try {
       const applicationId = `${user.uid}_${opp.id}`;

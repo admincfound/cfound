@@ -18,6 +18,8 @@ import {
   GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import AuthLoadingScreen from '@/app/components/AuthLoadingScreen';
 import { toast } from 'react-hot-toast';
 
 import { 
@@ -31,11 +33,12 @@ import {
 } from 'recharts';
 
 export default function AdminDashboard() {
-  const { profile } = useAuth();
+  const { profile, loading, profileLoading, isAdmin, user } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState({ users: 0, applications: 0, projects: 0, posts: 0 });
   const [recentApps, setRecentApps] = useState<any[]>([]);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
   const chartData = [
@@ -47,6 +50,19 @@ export default function AdminDashboard() {
     { name: 'Sat', apps: 6 },
     { name: 'Sun', apps: 9 },
   ];
+
+
+  // ── Auth Guard ──────────────────────────────────────────────────────────
+  const authResolved = !loading && !profileLoading;
+  useEffect(() => {
+    if (!authResolved) return;
+    if (!user || !isAdmin) {
+      router.replace('/login');
+    }
+  }, [authResolved, user, isAdmin, router]);
+
+  if (!authResolved) return <AuthLoadingScreen message="Loading admin console…" />;
+  if (!user || !isAdmin) return null;
 
   useEffect(() => {
     const fetchAdminStats = async () => {
@@ -94,7 +110,7 @@ export default function AdminDashboard() {
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        setDashboardLoading(false);
       }
     };
     fetchAdminStats();
@@ -238,7 +254,7 @@ export default function AdminDashboard() {
                        </tr>
                      </thead>
                      <tbody className="divide-y divide-[var(--border-main)]">
-                       {loading ? (
+                       {dashboardLoading ? (
                           <tr><td colSpan={4} className="px-8 py-20 text-center animate-pulse text-[var(--text-muted)] font-black text-[10px] uppercase tracking-[0.3em]">SYNCHRONIZING RECORDS...</td></tr>
                        ) : recentApps.length > 0 ? (
                           recentApps.map(app => (

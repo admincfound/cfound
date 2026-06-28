@@ -1,5 +1,5 @@
 'use client';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
@@ -7,12 +7,17 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { uploadToImageKit, deleteFromImageKit } from '../lib/imagekitUpload';
 import { useAuth } from '../context/AuthContext';
+import {
+  validateUsernameFormat, normalizeUsername, isUsernameAvailable,
+  claimUsername, changeUsername,
+} from '../lib/usernameUtils';
 import { 
   User, Github, Linkedin, Globe, Plus, Trash2, Save, 
   ChevronDown, ChevronUp, Briefcase, BookOpen, Award, Layers,
   Sparkles, Link as LinkIcon, BookMarked, AlertCircle, CheckCircle2, X, Edit3,
   ArrowUp, MapPin, ExternalLink, BadgeCheck, Quote, PenLine,
-  BarChart2, GraduationCap, ShieldCheck, Camera, ImageOff, Upload
+  BarChart2, GraduationCap, ShieldCheck, Camera, ImageOff, Upload,
+  AtSign, Loader2, Copy, Check
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getProfileCompletion } from '../lib/profileUtils';
@@ -27,6 +32,12 @@ const WORK_MODES = ['Remote', 'Hybrid', 'Onsite'];
 const PROJECT_STATUS = ['Completed', 'In Progress', 'Planned'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const YEARS = Array.from({length: 40}, (_, i) => new Date().getFullYear() - i).map(String);
+
+// Debounce delay (ms) for live username-availability checking while typing.
+const USERNAME_CHECK_DEBOUNCE_MS = 500;
+
+// The public-facing base URL shown in the "your profile link" preview card.
+const PUBLIC_PROFILE_BASE = 'cfound.in';
 
 // ── IMAGEKIT DETECTION ────────────────────────────────────────────────────────
 
@@ -81,6 +92,10 @@ function getMissingFields(section: string, item: any): string[] {
 
 const EXPERIENCE_LEVELS_REQUIRING_EXP = ['1–2 Years', '2–5 Years', '5–10 Years', '10+ Years'];
 
+// ── USERNAME STATUS TYPE ──────────────────────────────────────────────────────
+
+type UsernameStatus = 'idle' | 'unchanged' | 'checking' | 'available' | 'unavailable' | 'invalid';
+
 // ── FIELD WRAPPER ─────────────────────────────────────────────────────────────
 
 const FieldWrapper = ({ show, children }: { show: boolean; children: React.ReactNode }) => {
@@ -104,6 +119,36 @@ export default function Profile() {
   // ── PHOTO STATE ───────────────────────────────────────────────────────────
   const [photoURLAtEditStart, setPhotoURLAtEditStart] = useState<string>('');
   const [pendingPhotoRemoval, setPendingPhotoRemoval] = useState(false);
+
+  // ── USERNAME STATE ────────────────────────────────────────────────────────
+  // The username the user had *before* entering edit mode — used to detect
+  // whether a change actually happened, and as the "old" value when reserving
+  // it during a change.
+  const [usernameAtEditStart, setUsernameAtEditStart] = useState<string>('');
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
+  const [usernameMessage, setUsernameMessage] = useState<string>('');
+  const [usernameCopied, setUsernameCopied] = useState(false);
+  const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Bumped on every keystroke so a stale async check can detect it's outdated
+  // and bail out without overwriting a newer result.
+  const usernameCheckToken = useRef(0);
+  const searchParams = useSearchParams();
+
+  // Scroll to + focus the username input, enabling edit mode first if needed
+  const scrollToUsernameField = () => {
+    if (!isEditing) {
+      setPhotoURLAtEditStart(formData?.photoURL || '');
+      setUsernameAtEditStart(formData?.username || '');
+      setIsEditing(true);
+    }
+    setTimeout(() => {
+      const el = document.getElementById('username-input');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+    }, 150);
+  };
 
   // ── CROP STATE ────────────────────────────────────────────────────────────
   // When set, a crop modal is shown for the selected raw image src
@@ -142,6 +187,7 @@ export default function Profile() {
         state: profile.state || '',
         city: profile.city || '',
         photoURL: profile.photoURL || '',
+        username: profile.username || '',
         bio: profile.bio || '',
         role: profile.role || 'user',
         primaryRole: profile.primaryRole || '',
@@ -195,6 +241,75 @@ export default function Profile() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Handle ?action=choose-username — enables edit mode and scrolls to username field
+  useEffect(() => {
+    if (searchParams?.get('action') === 'choose-username' && formData && !isEditing) {
+      scrollToUsernameField();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, formData]);
+
+  // ── USERNAME: live availability checking ─────────────────────────────────
+  // Debounced so we don't hit Firestore on every keystroke. Re-runs whenever
+  // the username field changes while editing.
+  useEffect(() => {
+    if (!isEditing || !formData) return;
+
+    if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current);
+
+    const raw = formData.username || '';
+    const normalized = normalizeUsername(raw);
+    const myToken = ++usernameCheckToken.current;
+
+    // Empty username is allowed (it's an optional field) — nothing to check.
+    if (!normalized) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+
+    // Typing back their own current username — always fine, skip the network check.
+    if (normalized === normalizeUsername(usernameAtEditStart)) {
+      setUsernameStatus('unchanged');
+      setUsernameMessage('This is your current username.');
+      return;
+    }
+
+    const format = validateUsernameFormat(raw);
+    if (!format.valid) {
+      setUsernameStatus('invalid');
+      setUsernameMessage(format.error || 'Invalid username');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    setUsernameMessage('Checking availability…');
+
+    usernameCheckTimer.current = setTimeout(async () => {
+      try {
+        const result = await isUsernameAvailable(normalized, profile?.uid);
+        if (usernameCheckToken.current !== myToken) return; // stale response, ignore
+        if (result.available) {
+          setUsernameStatus('available');
+          setUsernameMessage('Username is available!');
+        } else {
+          setUsernameStatus('unavailable');
+          setUsernameMessage(result.message || 'Username is not available.');
+        }
+      } catch (err) {
+        if (usernameCheckToken.current !== myToken) return;
+        console.error('Username availability check failed:', err);
+        setUsernameStatus('unavailable');
+        setUsernameMessage('Could not verify availability. Please try again.');
+      }
+    }, USERNAME_CHECK_DEBOUNCE_MS);
+
+    return () => {
+      if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData?.username, isEditing, usernameAtEditStart, profile?.uid]);
+
   // ── INCOMPLETE CARDS (computed) ───────────────────────────────────────────
 
   const incompleteCards = useMemo(() => {
@@ -221,6 +336,17 @@ export default function Profile() {
     if (!Array.isArray(formData.skills) || formData.skills.length === 0) errors.push({ section: 'personal', message: 'At least one skill is required' });
     if (isEditing && !formData.declarationAccepted) errors.push({ section: 'declaration', message: 'You must accept the declaration' });
     if (isEditing && formData.declarationAccepted && !formData.signature?.trim()) errors.push({ section: 'declaration', message: 'Digital signature is required' });
+
+    // Username: only blocks save if the user actually typed something into a
+    // changed/invalid/unavailable state. An empty username is always fine
+    // (it's optional), and "unchanged" is always fine.
+    if (usernameStatus === 'invalid') {
+      errors.push({ section: 'personal', message: usernameMessage || 'Username is invalid' });
+    } else if (usernameStatus === 'unavailable') {
+      errors.push({ section: 'personal', message: usernameMessage || 'Username is not available' });
+    } else if (usernameStatus === 'checking') {
+      errors.push({ section: 'personal', message: 'Still checking username availability — please wait a moment' });
+    }
 
     if (EXPERIENCE_LEVELS_REQUIRING_EXP.includes(formData.experienceLevel)) {
       const completedExp = (formData.experiences || []).filter((e: any) => isCardComplete('experiences', e));
@@ -267,9 +393,30 @@ export default function Profile() {
     if (!currentUser) { toast.error("User not authenticated"); return; }
     setLoading(true);
     try {
+      const normalizedNewUsername = normalizeUsername(formData.username || '');
+      const normalizedOldUsername = normalizeUsername(usernameAtEditStart || '');
+      const usernameChanged = normalizedNewUsername !== normalizedOldUsername;
+
+      // Claim/reserve the username FIRST — this is the step that can fail due
+      // to a race with another user, and we want the whole save to feel
+      // atomic from the user's perspective (don't save other fields if this fails).
+      if (usernameChanged && normalizedNewUsername) {
+        const result = normalizedOldUsername
+          ? await changeUsername(currentUser.uid, normalizedOldUsername, normalizedNewUsername)
+          : await claimUsername(currentUser.uid, normalizedNewUsername);
+
+        if (!result.success) {
+          toast.error(result.error || 'That username was just taken. Please choose another.');
+          setUsernameStatus('unavailable');
+          setUsernameMessage(result.error || 'That username was just taken. Please choose another.');
+          setLoading(false);
+          return;
+        }
+      }
+
       await setDoc(
         doc(db, 'users', currentUser.uid),
-        { ...formData, uid: currentUser.uid, email: currentUser.email || '', updatedAt: new Date().toISOString() },
+        { ...formData, username: normalizedNewUsername || '', uid: currentUser.uid, email: currentUser.email || '', updatedAt: new Date().toISOString() },
         { merge: true }
       );
 
@@ -282,11 +429,14 @@ export default function Profile() {
       toast.success("Profile updated successfully! 🎉");
       setIsEditing(false);
       setHasChanges(false);
-      setInitialData(JSON.stringify(formData));
+      setInitialData(JSON.stringify({ ...formData, username: normalizedNewUsername || '' }));
       setValidationErrors([]);
       setTouchedCards(new Set());
       setPendingPhotoRemoval(false);
       setPhotoURLAtEditStart('');
+      setUsernameAtEditStart(normalizedNewUsername || '');
+      setUsernameStatus('idle');
+      setUsernameMessage('');
     } catch (err) {
       console.error(err);
       toast.error("Failed to update profile.");
@@ -338,6 +488,20 @@ export default function Profile() {
       formData?.displayName || "U"
     )}&background=0052CC&color=fff&size=800`;
 
+  const copyPublicProfileLink = async () => {
+    const username = formData?.username || profile?.username;
+    if (!username) return;
+    const url = `https://${PUBLIC_PROFILE_BASE}/${username}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setUsernameCopied(true);
+      toast.success('Profile link copied!');
+      setTimeout(() => setUsernameCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy link');
+    }
+  };
+
   if (authLoading || !formData) return <ProfileLoadingScreen />;
 
   if (isAdmin) {
@@ -384,7 +548,7 @@ export default function Profile() {
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white via-white to-indigo-50/40" />
 
-          {/* Action buttons row — Edit Profile + Download Resume (DESKTOP ONLY, unchanged) */}
+          {/* Action buttons row — Edit Profile + Download Resume + View Public Profile (DESKTOP ONLY) */}
           {!isEditing && (
             <div className="hidden lg:flex absolute top-6 right-6 z-30 items-center gap-3">
               {/* Download Resume — lazy loaded, only renders when profile is loaded */}
@@ -401,7 +565,25 @@ export default function Profile() {
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => {
+                  if (formData.username) {
+                    window.open(`/${formData.username}`, '_blank', 'noopener,noreferrer');
+                  } else {
+                    scrollToUsernameField();
+                  }
+                }}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-semibold shadow-sm transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
+              >
+                <ExternalLink size={15} />
+                View Public Profile
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => {
                   setPhotoURLAtEditStart(formData.photoURL || '');
+                  setUsernameAtEditStart(formData.username || '');
                   setIsEditing(true);
                 }}
                 className="px-5 py-2.5 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
@@ -461,6 +643,34 @@ export default function Profile() {
                 </h1>
                 <BadgeCheck size={22} className="lg:w-[26px] lg:h-[26px] text-blue-500 fill-blue-100 flex-shrink-0" />
               </div>
+
+              {/* Username / public profile link preview (read-only display) */}
+              {!isEditing && (
+                formData.username ? (
+                  <button
+                    type="button"
+                    onClick={copyPublicProfileLink}
+                    className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-blue-600 transition-colors group"
+                    title="Copy your public profile link"
+                  >
+                    <AtSign size={13} className="text-gray-400 group-hover:text-blue-500" />
+                    {formData.username}
+                    {usernameCopied ? <Check size={13} className="text-green-500" /> : <Copy size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  </button>
+                ) : (
+                  <div className="mt-1.5 flex items-center gap-2 flex-wrap justify-center lg:justify-start">
+                    <span className="text-sm text-gray-400 font-medium">No username selected</span>
+                    <button
+                      type="button"
+                      onClick={scrollToUsernameField}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg transition-colors"
+                    >
+                      <AtSign size={11} />
+                      Choose Username
+                    </button>
+                  </div>
+                )
+              )}
 
               <div className="flex items-center justify-center lg:justify-start gap-2 lg:gap-3 mt-1 flex-wrap">
                 <span className="text-lg lg:text-xl font-bold text-blue-600 break-words">{formData.primaryRole || 'Your Role'}</span>
@@ -541,9 +751,9 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* ── MOBILE ACTION BAR — Edit Profile + Download Resume (mobile/tablet only) ── */}
+        {/* ── MOBILE ACTION BAR — Edit Profile + Download Resume + View Public Profile (mobile/tablet only) ── */}
         {!isEditing && (
-          <div className="flex lg:hidden items-stretch gap-3 mb-6">
+          <div className="flex lg:hidden flex-wrap items-stretch gap-3 mb-6">
             <Suspense fallback={null}>
               <DownloadDropdown
                 profileData={formData}
@@ -559,12 +769,30 @@ export default function Profile() {
               type="button"
               onClick={() => {
                 setPhotoURLAtEditStart(formData.photoURL || '');
+                setUsernameAtEditStart(formData.username || '');
                 setIsEditing(true);
               }}
               className="flex-1 px-5 py-3 bg-white text-blue-600 rounded-2xl font-semibold shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
             >
               <PenLine size={15} />
               Edit Profile
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={() => {
+                if (formData.username) {
+                  window.open(`/${formData.username}`, '_blank', 'noopener,noreferrer');
+                } else {
+                  scrollToUsernameField();
+                }
+              }}
+              className="flex-1 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-semibold transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+            >
+              <ExternalLink size={15} />
+              View Public Profile
             </motion.button>
           </div>
         )}
@@ -735,6 +963,7 @@ export default function Profile() {
                       onClick={() => {
                         if (!isEditing) {
                           setPhotoURLAtEditStart(formData.photoURL || '');
+                          setUsernameAtEditStart(formData.username || '');
                           setIsEditing(true);
                         }
                         const el = document.querySelector('[data-section="personal"]');
@@ -806,6 +1035,55 @@ export default function Profile() {
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-sm"
                     />
                   </InputGroup>
+
+                  {/* ── USERNAME (Public Profile) ──────────────────────────── */}
+                  <div className="md:col-span-2">
+                    <InputGroup label="Username (Public Profile)">
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <AtSign size={15} />
+                        </span>
+                        <input
+                          id="username-input"
+                          type="text"
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
+                          placeholder="your.username_123"
+                          maxLength={30}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className={`w-full pl-10 pr-10 py-2.5 rounded-lg text-sm transition-all bg-white border focus:outline-none ${
+                            usernameStatus === 'available' ? 'border-green-400 focus:border-green-500' :
+                            usernameStatus === 'unavailable' || usernameStatus === 'invalid' ? 'border-red-400 focus:border-red-500' :
+                            'border-gray-300 focus:border-blue-600 hover:border-gray-400'
+                          }`}
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                          {usernameStatus === 'checking' && <Loader2 size={15} className="text-gray-400 animate-spin" />}
+                          {usernameStatus === 'available' && <CheckCircle2 size={15} className="text-green-500" />}
+                          {(usernameStatus === 'unavailable' || usernameStatus === 'invalid') && <AlertCircle size={15} className="text-red-500" />}
+                          {usernameStatus === 'unchanged' && <CheckCircle2 size={15} className="text-blue-400" />}
+                        </span>
+                      </div>
+
+                      {usernameMessage && (
+                        <p className={`mt-1.5 text-xs font-semibold flex items-center gap-1 ${
+                          usernameStatus === 'available' || usernameStatus === 'unchanged' ? 'text-green-600' :
+                          usernameStatus === 'checking' ? 'text-gray-400' :
+                          'text-red-500'
+                        }`}>
+                          {usernameMessage}
+                        </p>
+                      )}
+                      {!usernameMessage && (
+                        <p className="mt-1.5 text-[11px] text-gray-400">
+                          3–30 characters. Lowercase letters, numbers, underscores (_) and periods (.) only. This becomes your public profile link: {PUBLIC_PROFILE_BASE}/{formData.username || 'your-username'}
+                        </p>
+                      )}
+                    </InputGroup>
+                  </div>
+
                   <InputGroup label="Profile Photo">
                     <PhotoUpload
                       currentPhotoURL={formData.photoURL}
@@ -1060,6 +1338,9 @@ export default function Profile() {
                 setTouchedCards(new Set());
                 setPendingPhotoRemoval(false);
                 setPhotoURLAtEditStart('');
+                setUsernameAtEditStart('');
+                setUsernameStatus('idle');
+                setUsernameMessage('');
               }}
               className="flex-1 px-5 py-3 border-2 border-gray-300 bg-white text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-sm"
             >
@@ -1067,7 +1348,7 @@ export default function Profile() {
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              type="button" disabled={loading} onClick={handleUpdateProfile}
+              type="button" disabled={loading || usernameStatus === 'checking'} onClick={handleUpdateProfile}
               className="flex-1 px-5 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 text-sm"
             >
               {loading
