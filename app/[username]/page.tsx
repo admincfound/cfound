@@ -4,11 +4,11 @@ import { motion } from 'motion/react';
 import {
   collection, query, where, getDocs, doc, getDoc, updateDoc, increment
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { useAuth } from '../context/AuthContext';
+import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { resolveUidForUsername } from '../lib/usernameUtils';
+import { resolveUidForUsername } from '../../lib/usernameUtils';
 import {
   MapPin, Eye, Download, Users, Calendar, ShieldCheck, Briefcase,
   BookOpen, Globe, Github, Linkedin, ExternalLink, Copy, Check,
@@ -120,32 +120,22 @@ interface NormalizedExperience {
 }
 
 function getExperiences(p: PublicProfile): NormalizedExperience[] {
-  if (Array.isArray(p.experiences) && p.experiences.length > 0) {
+  if (p.experiences && p.experiences.length > 0) {
     return p.experiences.map((e) => ({
       title: e.role,
       company: e.company,
-      dateRange: `${[e.startMonth, e.startYear]
-        .filter(Boolean)
-        .join(" ")} – ${
-        e.current
-          ? "Present"
-          : [e.endMonth, e.endYear].filter(Boolean).join(" ") || "Present"
-      }`,
+      dateRange: `${[e.startMonth, e.startYear].filter(Boolean).join(' ')} – ${e.current ? 'Present' : [e.endMonth, e.endYear].filter(Boolean).join(' ') || 'Present'}`,
       description: e.description,
     }));
   }
-
-  if (Array.isArray(p.experience) && p.experience.length > 0) {
+  if (p.experience && p.experience.length > 0) {
     return p.experience.map((e) => ({
       title: e.title,
       company: e.company,
-      dateRange: `${e.startDate} – ${
-        e.current ? "Present" : e.endDate || "Present"
-      }`,
+      dateRange: `${e.startDate} – ${e.current ? 'Present' : e.endDate}`,
       description: e.description,
     }));
   }
-
   return [];
 }
 
