@@ -560,6 +560,33 @@ export default function Internship() {
         onSuccess={fetchInternships}
       />
     </div>
+    <ApplyPopup
+      open={showApplyPopup}
+      opportunity={pendingApplyOpp}
+      applying={applyingId === pendingApplyOpp?.id}
+      onCancel={() => {
+        setShowApplyPopup(false);
+        setPendingApplyOpp(null);
+      }}
+      onQuickApply={() => {
+        if (pendingApplyOpp) doQuickApply(pendingApplyOpp);
+      }}
+      onViewDetails={() => {
+        if (!pendingApplyOpp) return;
+
+        trackView(pendingApplyOpp.id);
+
+        router.push(
+          `/internship/${pendingApplyOpp.slug || pendingApplyOpp.title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")}-${pendingApplyOpp.id}`
+        );
+
+        setShowApplyPopup(false);
+        setPendingApplyOpp(null);
+      }}
+    />
     </>
   );
 }
