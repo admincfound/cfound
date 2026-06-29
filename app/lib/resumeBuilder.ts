@@ -1,5 +1,8 @@
-// resumeBuilder.ts — C Found Resume Engine v2.0
-// Premium PDF + DOCX generator. No AI rewriting. Pure profile data.
+// resumeBuilder.ts — C Found Resume Engine v3.1
+// Premium PDF + DOCX generator matching cfound.in profile design.
+// v3.1 changes: photo moved to the LEFT of the header in both PDF & DOCX,
+// higher-resolution photo fetch/render, and DOCX now actually renders the photo
+// (previously DOCX had no image support at all).
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -18,7 +21,6 @@ export interface ProfileData {
   skills?: string[];
   photoURL?: string;
 
-  // Social / professional links
   portfolioUrl?: string;
   githubUrl?: string;
   linkedinUrl?: string;
@@ -51,8 +53,8 @@ export interface ProfileData {
 interface ExperienceItem {
   role?: string;
   company?: string;
-  type?: string; // Full-time, Part-time, etc.
-  mode?: string; // Remote, On-site, etc.
+  type?: string;
+  mode?: string;
   location?: string;
   startMonth?: string;
   startYear?: string;
@@ -163,6 +165,10 @@ function formatDateRange(
   return `${start} – ${end}`;
 }
 
+/**
+ * Fetches an image and returns it as a base64 data URL.
+ * Used by the PDF generator (jsPDF wants a data URL string).
+ */
 async function fetchImageAsBase64(url: string): Promise<string | null> {
   try {
     const res = await fetch(url);
@@ -179,7 +185,31 @@ async function fetchImageAsBase64(url: string): Promise<string | null> {
   }
 }
 
-/** Map a URL to a short clickable label + clean display text */
+/**
+ * Fetches an image and returns it as raw bytes (Uint8Array).
+ * Used by the DOCX generator (docx's ImageRun wants binary data, not a data URL).
+ */
+async function fetchImageAsBytes(url: string): Promise<Uint8Array | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    return new Uint8Array(buf);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Builds a high-resolution ImageKit transform URL for the profile photo.
+ * Bumped from 240x240 -> 480x480 and quality 95 -> 100 so the photo stays
+ * crisp at print size in both the PDF and the DOCX (Word in particular tends
+ * to upscale visibly if the source is too small).
+ */
+function highResPhotoUrl(photoURL: string): string {
+  return `${photoURL}?tr=w-480,h-480,c-at_max,f-jpg,q-100,fo-face`;
+}
+
 function linkMeta(url: string): { label: string; short: string } {
   try {
     const u = new URL(url);
@@ -205,7 +235,6 @@ function linkMeta(url: string): { label: string; short: string } {
     for (const [domain, label] of Object.entries(map)) {
       if (host.includes(domain)) return { label, short: label };
     }
-    // Fallback: use hostname
     return { label: host, short: host };
   } catch {
     return { label: 'Link', short: 'Link' };
@@ -213,70 +242,81 @@ function linkMeta(url: string): { label: string; short: string } {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PDF Generator — C Found Premium v2
+// PDF Generator — C Found Premium v3.1
+// Matches cfound.in profile card design: white bg, blue accents, bold italic name
+// Photo now sits on the LEFT of the header card; name/role/contact flow to its right.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function generatePDF(data: ProfileData): Promise<void> {
   const { default: jsPDF } = await import('jspdf');
 
-  // Page dimensions
-  const W = 210;   // A4 width  (mm)
-  const H = 297;   // A4 height (mm)
-  const ML = 18;   // left margin
-  const MR = 18;   // right margin
+  const W = 210;
+  const H = 297;
+  const ML = 20;
+  const MR = 20;
   const CW = W - ML - MR;
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  // ── Design tokens ──────────────────────────────────────────────────────────
+  // ── Design tokens (matching cfound.in) ────────────────────────────────────
   const C = {
-    blue:      [37,  99,  235] as [number,number,number], // #2563EB brand blue
-    blueLight: [219,234,254]   as [number,number,number], // #DBEAFE chip bg
-    dark:      [15,  23,  42]  as [number,number,number], // #0F172A near-black
-    mid:       [71,  85, 105]  as [number,number,number], // #475569 slate
-    muted:     [148,163,184]   as [number,number,number], // #94A3B8 muted
-    divider:   [226,232,240]   as [number,number,number], // #E2E8F0
-    headerBg:  [248,250,255]   as [number,number,number], // very light blue tint
-    chipBg:    [241,245,249]   as [number,number,number], // #F1F5F9
-    white:     [255,255,255]   as [number,number,number],
-    green:     [22, 163,74]    as [number,number,number], // current badge
+    blue:       [37,  99, 235] as [number,number,number],   // #2563EB
+    blueMid:    [59, 130, 246] as [number,number,number],   // #3B82F6
+    blueLight:  [219,234,254] as [number,number,number],    // #DBEAFE chip
+    bluePale:   [239,246,255] as [number,number,number],    // #EFF6FF header tint
+    dark:       [15,  23,  42] as [number,number,number],   // #0F172A
+    mid:        [71,  85, 105] as [number,number,number],   // #475569
+    muted:      [148,163,184] as [number,number,number],    // #94A3B8
+    divider:    [226,232,240] as [number,number,number],    // #E2E8F0
+    chipBg:     [241,245,249] as [number,number,number],    // #F1F5F9
+    chipBorder: [203,213,225] as [number,number,number],    // #CBD5E1
+    white:      [255,255,255] as [number,number,number],
+    green:      [22, 163, 74] as [number,number,number],    // #16A34A current
+    greenLight: [220,252,231] as [number,number,number],    // #DCFCE7
+    accent:     [99,  102,241] as [number,number,number],   // indigo fallback
+    pageBg:     [248,250,252] as [number,number,number],    // #F8FAFC very light
   };
 
-  // State
   let y = 0;
-  let currentPage = 1;
-
-  // ── Core helpers ───────────────────────────────────────────────────────────
 
   const rgb = (c: [number,number,number]) => ({ r: c[0], g: c[1], b: c[2] });
-
-  const setColor   = (c: [number,number,number]) => doc.setTextColor(...c);
-  const setFill    = (c: [number,number,number]) => doc.setFillColor(...c);
-  const setDraw    = (c: [number,number,number]) => doc.setDrawColor(...c);
-  const setLW      = (w: number)                 => doc.setLineWidth(w);
+  const setColor = (c: [number,number,number]) => doc.setTextColor(...c);
+  const setFill  = (c: [number,number,number]) => doc.setFillColor(...c);
+  const setDraw  = (c: [number,number,number]) => doc.setDrawColor(...c);
+  const setLW    = (w: number) => doc.setLineWidth(w);
 
   const newPage = () => {
     doc.addPage();
-    currentPage++;
-    y = 20;
+    y = 18;
+    addPageBg();
     addWatermark();
   };
 
   const needsPage = (h: number) => {
-    if (y + h > H - 18) { newPage(); return true; }
+    if (y + h > H - 20) { newPage(); return true; }
     return false;
   };
 
-  const hRule = (yy: number, color: [number,number,number] = C.divider, lw = 0.25) => {
-    setDraw(color);
-    setLW(lw);
-    doc.line(ML, yy, W - MR, yy);
+  // Subtle page background
+  const addPageBg = () => {
+    setFill(C.pageBg);
+    doc.rect(0, 0, W, H, 'F');
+    // Left blue side accent strip (ultra thin)
+    setFill(C.blue);
+    doc.rect(0, 0, 2, H, 'F');
   };
 
-  // ── Typography helpers ─────────────────────────────────────────────────────
+  const addWatermark = () => {
+    doc.saveGraphicsState?.();
+    doc.setGState?.(new (doc as any).GState({ opacity: 0.022 }));
+    setColor(C.blue);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(52);
+    doc.text('C FOUND', W / 2, H / 2, { align: 'center', angle: 45 });
+    doc.restoreGraphicsState?.();
+  };
 
-  type Weight = 'normal' | 'bold' | 'italic';
-
+  type Weight = 'normal' | 'bold' | 'italic' | 'bolditalic';
   const font = (style: Weight = 'normal', size = 9) => {
     doc.setFont('helvetica', style);
     doc.setFontSize(size);
@@ -284,12 +324,9 @@ export async function generatePDF(data: ProfileData): Promise<void> {
 
   const textW = (t: string) => doc.getTextWidth(t);
 
-  // Clickable hyperlink text (ATS: real text + invisible link annotation)
   const hyperlink = (
-    label: string,
-    url: string,
-    x: number,
-    yy: number,
+    label: string, url: string,
+    x: number, yy: number,
     color: [number,number,number] = C.blue,
     fontSize = 8
   ) => {
@@ -297,181 +334,224 @@ export async function generatePDF(data: ProfileData): Promise<void> {
     setColor(color);
     doc.text(label, x, yy);
     const w = textW(label);
-    doc.link(x, yy - fontSize * 0.35, w, fontSize * 0.4, { url });
-    // Subtle underline
+    doc.link(x, yy - fontSize * 0.35, w, fontSize * 0.45, { url });
     setDraw(color);
     setLW(0.15);
-    doc.line(x, yy + 0.5, x + w, yy + 0.5);
+    doc.line(x, yy + 0.6, x + w, yy + 0.6);
   };
 
-  // ── Watermark (per-page) ───────────────────────────────────────────────────
-
-  const addWatermark = () => {
-    // Diagonal faint text
-    doc.saveGraphicsState?.();
-    doc.setGState?.(new (doc as any).GState({ opacity: 0.028 }));
-    setColor(C.blue);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(48);
-    doc.text('C FOUND', W / 2, H / 2, { align: 'center', angle: 45 });
-    doc.restoreGraphicsState?.();
+  // ── Card wrapper (white card with subtle shadow border) ──────────────────
+  const drawCard = (cardY: number, cardH: number) => {
+    // Soft shadow (offset rect)
+    setFill([220, 225, 235]);
+    doc.roundedRect(ML + 0.4, cardY + 0.6, CW, cardH, 2.5, 2.5, 'F');
+    // White card
+    setFill(C.white);
+    setDraw(C.divider);
+    setLW(0.3);
+    doc.roundedRect(ML, cardY, CW, cardH, 2.5, 2.5, 'FD');
   };
 
-  // ── Section header ─────────────────────────────────────────────────────────
-
-  const sectionHeader = (title: string, icon = '') => {
-    needsPage(14);
-    y += 8;
-    // Left accent bar
+  // ── Section header (card-style) ──────────────────────────────────────────
+  const sectionHeader = (title: string) => {
+    needsPage(16);
+    y += 7;
+    // Section label row
     setFill(C.blue);
-    doc.roundedRect(ML, y - 4, 2.5, 5.5, 0.5, 0.5, 'F');
-    // Title text
-    setColor(C.blue);
-    font('bold', 8);
-    doc.text((icon ? icon + '  ' : '') + title.toUpperCase(), ML + 5, y);
-    y += 1.5;
-    hRule(y, C.divider, 0.3);
-    y += 5.5;
+    doc.roundedRect(ML, y - 3.8, 3, 6, 0.8, 0.8, 'F');
+    setColor(C.dark);
+    font('bold', 9);
+    doc.text(title.toUpperCase(), ML + 6, y);
+    y += 2.5;
+    setDraw(C.divider);
+    setLW(0.3);
+    doc.line(ML, y, W - MR, y);
+    y += 5;
   };
 
-  // ── Chip row (skills) ──────────────────────────────────────────────────────
-
-  const drawChips = (items: string[]) => {
-    const GAP_X = 3;
-    const GAP_Y = 4.5;
-    const PX = 4;
-    const PY = 1.8;
-    const RADIUS = 1.5;
-    const FONT_SIZE = 7.5;
-    font('normal', FONT_SIZE);
+  // ── Skill chips ───────────────────────────────────────────────────────────
+  const drawChips = (items: string[], accentChips = false) => {
+    const GAP_X = 2.5;
+    const GAP_Y = 5;
+    const PX    = 4.5;
+    const PY    = 2;
+    const R     = 2;
+    const FS    = 8;
+    font('normal', FS);
     let cx = ML;
-    const LINE_H = FONT_SIZE * 0.352 + PY * 2 + GAP_Y;
+    const lineH = FS * 0.352 + PY * 2 + GAP_Y;
 
     items.forEach((skill) => {
       const sw = textW(skill);
-      const chipW = sw + PX * 2;
-      if (cx + chipW > W - MR) {
+      const cw = sw + PX * 2;
+      if (cx + cw > W - MR) {
         cx = ML;
-        y += LINE_H - GAP_Y + GAP_Y;
-        needsPage(LINE_H);
+        y += lineH - GAP_Y + GAP_Y;
+        needsPage(lineH);
       }
-      // Chip background
-      setFill(C.chipBg);
-      setDraw(C.divider);
-      setLW(0.2);
-      doc.roundedRect(cx, y - FONT_SIZE * 0.35 - PY, chipW, FONT_SIZE * 0.35 * 2 + PY * 2, RADIUS, RADIUS, 'FD');
-      // Chip text
-      setColor(C.mid);
+      if (accentChips) {
+        setFill(C.blueLight);
+        setDraw(C.blue);
+      } else {
+        setFill(C.chipBg);
+        setDraw(C.chipBorder);
+      }
+      setLW(0.25);
+      doc.roundedRect(cx, y - FS * 0.35 - PY, cw, FS * 0.35 * 2 + PY * 2, R, R, 'FD');
+      setColor(accentChips ? C.blue : C.mid);
+      font('normal', FS);
       doc.text(skill, cx + PX, y);
-      cx += chipW + GAP_X;
+      cx += cw + GAP_X;
     });
-    y += LINE_H;
+    y += lineH;
   };
 
-  // ── Experience block ───────────────────────────────────────────────────────
+  // ── Divider line ─────────────────────────────────────────────────────────
+  const hRule = (yy: number, color: [number,number,number] = C.divider, lw = 0.2) => {
+    setDraw(color);
+    setLW(lw);
+    doc.line(ML, yy, W - MR, yy);
+  };
 
-  const expBlock = (exp: ExperienceItem) => {
-    // Estimate height to avoid splitting
+  // ── Dot bullet label ──────────────────────────────────────────────────────
+  const dotBullet = (color: [number,number,number] = C.blue) => {
+    setFill(color);
+    doc.circle(ML + 1.2, y - 1.2, 0.9, 'F');
+  };
+
+  // ── Experience block ──────────────────────────────────────────────────────
+  const expBlock = (exp: ExperienceItem, isLast: boolean) => {
     const descLines = exp.description
-      ? doc.splitTextToSize(exp.description.trim(), CW - 8).length
-      : 0;
-    const blockH = 22 + descLines * 4.5;
+      ? doc.splitTextToSize(exp.description.trim(), CW - 12).length : 0;
+    const blockH = 24 + descLines * 4.5;
     needsPage(blockH);
 
-    // Role title
-    font('bold', 10.5);
+    // Left dot
+    dotBullet(exp.current ? C.green : C.blue);
+
+    // Role
+    font('bold', 11);
     setColor(C.dark);
-    doc.text(exp.role || '', ML, y);
+    doc.text(exp.role || '', ML + 5, y);
+
+    // Date aligned right
+    const dateStr = formatDateRange(exp.startMonth, exp.startYear, exp.endMonth, exp.endYear, exp.current);
+    font('normal', 7.5);
+    setColor(C.muted);
+    doc.text(dateStr, W - MR, y, { align: 'right' });
 
     // Current badge
     if (exp.current) {
-      const badge = ' Current';
-      const bx = ML + textW(exp.role || '') + 3;
-      setFill(C.green);
-      doc.roundedRect(bx, y - 3.2, textW(badge) + 4, 4.2, 1, 1, 'F');
-      setColor(C.white);
+      const badge = 'Current';
+      const bw = textW(badge) + 5;
+      const bx = ML + textW(exp.role || '') + 8;
+      setFill(C.greenLight);
+      doc.roundedRect(bx, y - 3.5, bw, 4.5, 1.2, 1.2, 'F');
+      setColor(C.green);
       font('bold', 6.5);
-      doc.text(badge, bx + 2, y);
+      doc.text(badge, bx + 2.5, y);
     }
     y += 5.5;
 
     // Company · type
     font('normal', 8.5);
     setColor(C.mid);
-    const companyStr = [exp.company, exp.type].filter(Boolean).join('  ·  ');
-    doc.text(companyStr, ML, y);
+    const company = [exp.company, exp.type].filter(Boolean).join('  ·  ');
+    doc.text(company, ML + 5, y);
     y += 4.5;
 
-    // Date · location · mode
-    font('italic', 7.5);
-    setColor(C.muted);
-    const dateStr = formatDateRange(exp.startMonth, exp.startYear, exp.endMonth, exp.endYear, exp.current);
-    const locStr = [dateStr, exp.location, exp.mode].filter(Boolean).join('   ·   ');
-    if (locStr) { doc.text(locStr, ML, y); y += 4.5; }
-
-    // Skills used chips (inline text)
-    if (exp.skills?.trim()) {
-      font('normal', 7.5);
-      setColor(C.blue);
-      const skills = exp.skills.split(/[,;]/).map(s => s.trim()).filter(Boolean);
-      doc.text('Skills:  ' + skills.join('  ·  '), ML, y);
+    // Location · mode
+    const locStr = [exp.location, exp.mode].filter(Boolean).join('  ·  ');
+    if (locStr) {
+      font('italic', 7.5);
+      setColor(C.muted);
+      doc.text(locStr, ML + 5, y);
       y += 4.5;
     }
 
-    // Description — bullet lines
+    // Skills used
+    if (exp.skills?.trim()) {
+      const skills = exp.skills.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+      font('normal', 7.5);
+      setColor(C.blue);
+      doc.text('Skills: ' + skills.join('  ·  '), ML + 5, y);
+      y += 4.5;
+    }
+
+    // Description
     if (exp.description?.trim()) {
       font('normal', 8.5);
       setColor(C.mid);
       const rawLines = exp.description.trim().split('\n').filter(Boolean);
       rawLines.forEach(raw => {
-        const wrapped = doc.splitTextToSize(raw, CW - 8);
+        const wrapped = doc.splitTextToSize(raw, CW - 12);
         wrapped.forEach((line: string, i: number) => {
           needsPage(5);
-          doc.text((i === 0 ? '•  ' : '    ') + line, ML + 2, y);
+          if (i === 0) {
+            setFill(C.muted);
+            doc.circle(ML + 6.2, y - 1.2, 0.6, 'F');
+          }
+          doc.text(line, ML + 9, y);
           y += 4.5;
         });
       });
     }
 
     y += 3;
-    hRule(y - 1.5, C.divider, 0.2);
-    y += 3;
+    if (!isLast) { hRule(y - 1, C.divider, 0.2); y += 3; }
   };
 
-  // ── Project card ───────────────────────────────────────────────────────────
-
-  const projectCard = (proj: ProjectItem) => {
+  // ── Project card ──────────────────────────────────────────────────────────
+  const projectCard = (proj: ProjectItem, isLast: boolean) => {
     const descLines = proj.description
-      ? doc.splitTextToSize(proj.description.trim(), CW - 8).length
-      : 0;
+      ? doc.splitTextToSize(proj.description.trim(), CW - 12).length : 0;
     needsPage(22 + descLines * 4.5);
 
-    // Title + status badge
-    font('bold', 10.5);
-    setColor(C.dark);
-    doc.text(proj.title || '', ML, y);
-    if (proj.status) {
-      const bx = W - MR - textW(proj.status) - 5;
+    // Category chip (top-right)
+    if (proj.category) {
+      const chipW = textW(proj.category) + 6;
       setFill(C.blueLight);
-      doc.roundedRect(bx, y - 3.2, textW(proj.status) + 4, 4.2, 1, 1, 'F');
+      setDraw(C.blue);
+      setLW(0.2);
+      doc.roundedRect(W - MR - chipW, y - 3.5, chipW, 4.5, 1.2, 1.2, 'FD');
       setColor(C.blue);
       font('normal', 6.5);
-      doc.text(proj.status, bx + 2, y);
+      doc.text(proj.category, W - MR - chipW + 3, y);
     }
+
+    // Title
+    font('bold', 11);
+    setColor(C.dark);
+    doc.text(proj.title || '', ML, y);
     y += 5.5;
 
-    // Category · date
-    font('italic', 7.5);
-    setColor(C.muted);
-    const projDate = formatDateRange(proj.startMonth, proj.startYear, proj.endMonth, proj.endYear);
-    const projMeta = [proj.category, projDate].filter(Boolean).join('   ·   ');
-    if (projMeta) { doc.text(projMeta, ML, y); y += 4.5; }
+    // Status
+    if (proj.status) {
+      const chipW = textW(proj.status) + 6;
+      setFill(C.chipBg);
+      setDraw(C.chipBorder);
+      setLW(0.2);
+      doc.roundedRect(ML, y - 3.5, chipW, 4.5, 1.2, 1.2, 'FD');
+      setColor(C.mid);
+      font('normal', 6.5);
+      doc.text(proj.status, ML + 3, y);
+      y += 5.5;
+    }
 
-    // Tech stack
+    // Meta
+    const projDate = formatDateRange(proj.startMonth, proj.startYear, proj.endMonth, proj.endYear);
+    if (projDate) {
+      font('italic', 7.5);
+      setColor(C.muted);
+      doc.text(projDate, ML, y);
+      y += 4.5;
+    }
+
+    // Tech
     if (proj.technologies?.trim()) {
       font('normal', 7.5);
       setColor(C.blue);
-      doc.text('Stack:  ' + proj.technologies, ML, y);
+      doc.text('Stack: ' + proj.technologies, ML, y);
       y += 4.5;
     }
 
@@ -479,12 +559,15 @@ export async function generatePDF(data: ProfileData): Promise<void> {
     if (proj.description?.trim()) {
       font('normal', 8.5);
       setColor(C.mid);
-      const rawLines = proj.description.trim().split('\n').filter(Boolean);
-      rawLines.forEach(raw => {
+      proj.description.trim().split('\n').filter(Boolean).forEach(raw => {
         const wrapped = doc.splitTextToSize(raw, CW - 8);
         wrapped.forEach((line: string, i: number) => {
           needsPage(5);
-          doc.text((i === 0 ? '•  ' : '    ') + line, ML + 2, y);
+          if (i === 0) {
+            setFill(C.muted);
+            doc.circle(ML + 2, y - 1.2, 0.6, 'F');
+          }
+          doc.text(line, ML + 5, y);
           y += 4.5;
         });
       });
@@ -492,270 +575,260 @@ export async function generatePDF(data: ProfileData): Promise<void> {
 
     // Links
     const links: Array<{ label: string; url: string }> = [];
-    if (proj.demoUrl)     links.push({ label: 'Live Demo', url: proj.demoUrl });
-    if (proj.githubUrl)   links.push({ label: 'GitHub', url: proj.githubUrl });
-    if (proj.websiteUrl)  links.push({ label: 'Website', url: proj.websiteUrl });
-    if (proj.researchUrl) links.push({ label: 'Research', url: proj.researchUrl });
+    if (proj.demoUrl)     links.push({ label: '↗ Live Demo', url: proj.demoUrl });
+    if (proj.githubUrl)   links.push({ label: '⌥ GitHub', url: proj.githubUrl });
+    if (proj.websiteUrl)  links.push({ label: '↗ Website', url: proj.websiteUrl });
+    if (proj.researchUrl) links.push({ label: '↗ Research', url: proj.researchUrl });
     if (links.length) {
+      needsPage(6);
       let lx = ML;
       links.forEach(({ label, url }, i) => {
         if (i > 0) {
-          font('normal', 8);
           setColor(C.muted);
+          font('normal', 7.5);
           doc.text('  ·  ', lx, y);
           lx += textW('  ·  ');
         }
-        hyperlink(label, url, lx, y, C.blue, 8);
+        hyperlink(label, url, lx, y, C.blue, 7.5);
         lx += textW(label) + 2;
       });
-      y += 5;
+      y += 5.5;
     }
 
     y += 3;
-    hRule(y - 1.5, C.divider, 0.2);
-    y += 3;
+    if (!isLast) { hRule(y - 1, C.divider, 0.2); y += 3; }
   };
 
-  // ── Education card ─────────────────────────────────────────────────────────
+  // ── Education card ────────────────────────────────────────────────────────
+  const educationCard = (edu: EducationItem, isLast: boolean) => {
+    needsPage(22);
 
-  const educationCard = (edu: EducationItem) => {
-    needsPage(20);
-    font('bold', 10.5);
-    setColor(C.dark);
-    doc.text(edu.degree || '', ML, y);
+    // Institution (right)
     font('normal', 8.5);
     setColor(C.mid);
     doc.text(edu.institution || '', W - MR, y, { align: 'right' });
+
+    // Degree
+    font('bold', 11);
+    setColor(C.dark);
+    doc.text(edu.degree || '', ML, y);
     y += 5.5;
 
-    font('italic', 7.5);
-    setColor(C.muted);
-    const eduMeta = [
-      edu.department,
-      [edu.startYear, edu.current ? 'Present' : edu.endYear].filter(Boolean).join(' – '),
-      edu.cgpa ? `CGPA: ${edu.cgpa}` : undefined,
-    ].filter(Boolean).join('   ·   ');
-    if (eduMeta) { doc.text(eduMeta, ML, y); y += 4.5; }
+    // Meta
+    const yr = [edu.startYear, edu.current ? 'Present' : edu.endYear].filter(Boolean).join(' – ');
+    const meta = [edu.department, yr, edu.cgpa ? `CGPA: ${edu.cgpa}` : undefined]
+      .filter(Boolean).join('   ·   ');
+    if (meta) {
+      font('italic', 7.5);
+      setColor(C.muted);
+      doc.text(meta, ML, y);
+      y += 4.5;
+    }
 
     if (edu.achievements?.trim()) {
-      font('normal', 8);
+      font('normal', 8.5);
       setColor(C.mid);
       const wrapped = doc.splitTextToSize(edu.achievements.trim(), CW - 5);
       wrapped.forEach((line: string) => {
-        needsPage(5);
-        doc.text(line, ML, y);
-        y += 4.5;
+        needsPage(5); doc.text(line, ML, y); y += 4.5;
       });
     }
 
     y += 3;
-    hRule(y - 1.5, C.divider, 0.2);
-    y += 3;
+    if (!isLast) { hRule(y - 1, C.divider, 0.2); y += 3; }
   };
 
-  // ── Certification card ─────────────────────────────────────────────────────
-
-  const certCard = (cert: CertificationItem) => {
-    needsPage(18);
-    font('bold', 9.5);
-    setColor(C.dark);
-    doc.text(cert.name || '', ML, y);
+  // ── Cert card ─────────────────────────────────────────────────────────────
+  const certCard = (cert: CertificationItem, isLast: boolean) => {
+    needsPage(20);
     font('normal', 8.5);
     setColor(C.mid);
     doc.text(cert.org || '', W - MR, y, { align: 'right' });
+
+    font('bold', 10);
+    setColor(C.dark);
+    doc.text(cert.name || '', ML, y);
     y += 5;
 
-    font('italic', 7.5);
-    setColor(C.muted);
     const certDate = [cert.issueMonth, cert.issueYear].filter(Boolean).join(' ');
-    const certMeta = [certDate, cert.credentialId ? `ID: ${cert.credentialId}` : undefined].filter(Boolean).join('   ·   ');
-    if (certMeta) { doc.text(certMeta, ML, y); y += 4.5; }
-
-    if (cert.url) {
-      hyperlink('Verify Certificate →', cert.url, ML, y, C.blue, 8);
-      y += 5;
+    const certMeta = [certDate, cert.credentialId ? `ID: ${cert.credentialId}` : undefined]
+      .filter(Boolean).join('   ·   ');
+    if (certMeta) {
+      font('italic', 7.5); setColor(C.muted);
+      doc.text(certMeta, ML, y); y += 4.5;
     }
+    if (cert.url) { hyperlink('Verify Certificate →', cert.url, ML, y, C.blue, 8); y += 5; }
 
     y += 2;
-    hRule(y - 1, C.divider, 0.2);
-    y += 3;
+    if (!isLast) { hRule(y - 1, C.divider, 0.2); y += 3; }
   };
 
-  // ── Publication block ──────────────────────────────────────────────────────
-
-  const pubBlock = (pub: PublicationItem) => {
-    needsPage(18);
-    font('bold', 9.5);
+  // ── Publication ───────────────────────────────────────────────────────────
+  const pubBlock = (pub: PublicationItem, isLast: boolean) => {
+    needsPage(20);
+    font('bold', 10);
     setColor(C.dark);
     const titleLines = doc.splitTextToSize(pub.title || '', CW);
     doc.text(titleLines, ML, y);
     y += titleLines.length * 5;
 
-    font('italic', 7.5);
-    setColor(C.muted);
     const pubMeta = [
       pub.publisher,
       [pub.dateMonth, pub.dateYear].filter(Boolean).join(' '),
       pub.doi ? `DOI: ${pub.doi}` : undefined,
     ].filter(Boolean).join('   ·   ');
-    if (pubMeta) { doc.text(pubMeta, ML, y); y += 4.5; }
-
-    if (pub.url) {
-      hyperlink('Read Publication →', pub.url, ML, y, C.blue, 8);
-      y += 5;
+    if (pubMeta) {
+      font('italic', 7.5); setColor(C.muted);
+      doc.text(pubMeta, ML, y); y += 4.5;
     }
+    if (pub.url) { hyperlink('Read Publication →', pub.url, ML, y, C.blue, 8); y += 5; }
 
     y += 2;
-    hRule(y - 1, C.divider, 0.2);
-    y += 3;
+    if (!isLast) { hRule(y - 1, C.divider, 0.2); y += 3; }
   };
 
-  // ── Language chips ─────────────────────────────────────────────────────────
-
+  // ── Language chips ────────────────────────────────────────────────────────
   const langChips = (langs: LanguageItem[]) => {
-    langs.forEach(({ language, proficiency }) => {
-      if (!language) return;
-      const label = proficiency ? `${language}  (${proficiency})` : language;
-      const chipW = textW(label) + 8;
-      setFill(C.chipBg);
-      setDraw(C.divider);
-      setLW(0.2);
-      doc.roundedRect(ML, y - 3.5, chipW, 5.5, 1.5, 1.5, 'FD');
-      setColor(C.dark);
-      font('normal', 8);
-      doc.text(label, ML + 4, y);
-      y += 7;
-    });
+    const items = langs
+      .filter(l => l.language)
+      .map(l => l.proficiency ? `${l.language} (${l.proficiency})` : l.language!);
+    drawChips(items);
   };
 
-  // ── Award / Achievement card ───────────────────────────────────────────────
-
-  const highlightCard = (title: string, sub?: string, desc?: string, date?: string) => {
-    needsPage(16);
-    // Accent left border
+  // ── Highlight card (awards, achievements, volunteer) ──────────────────────
+  const highlightCard = (title: string, sub?: string, desc?: string, date?: string, isLast = false) => {
+    needsPage(18);
+    // Blue left accent bar
     setFill(C.blue);
-    doc.rect(ML, y - 4, 1.5, desc ? 14 : 8, 'F');
+    doc.roundedRect(ML, y - 4.2, 2.5, desc ? 13 : 7, 0.8, 0.8, 'F');
 
-    font('bold', 9.5);
+    font('bold', 10);
     setColor(C.dark);
-    doc.text(title, ML + 5, y);
+    doc.text(title, ML + 6, y);
     if (date) {
-      font('normal', 7.5);
-      setColor(C.muted);
+      font('normal', 7.5); setColor(C.muted);
       doc.text(date, W - MR, y, { align: 'right' });
     }
     y += 5;
 
     if (sub) {
-      font('italic', 8);
-      setColor(C.mid);
-      doc.text(sub, ML + 5, y);
-      y += 4.5;
+      font('italic', 8); setColor(C.mid);
+      doc.text(sub, ML + 6, y); y += 4.5;
     }
-
     if (desc) {
-      font('normal', 8);
-      setColor(C.mid);
+      font('normal', 8.5); setColor(C.mid);
       const wrapped = doc.splitTextToSize(desc.trim(), CW - 8);
       wrapped.forEach((line: string) => {
-        needsPage(5);
-        doc.text(line, ML + 5, y);
-        y += 4.5;
+        needsPage(5); doc.text(line, ML + 6, y); y += 4.5;
       });
     }
 
     y += 4;
+    if (!isLast) { hRule(y - 1, C.divider, 0.2); y += 3; }
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BUILD THE DOCUMENT
+  // RENDER
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Page 1 header background ───────────────────────────────────────────────
-  setFill(C.headerBg);
-  doc.rect(0, 0, W, 58, 'F');
-
-  // Add watermark to page 1
+  // Page background + left strip
+  addPageBg();
   addWatermark();
 
-  // ── Photo ──────────────────────────────────────────────────────────────────
-  const usePhoto = isImageKitPhoto(data.photoURL);
-  const PHOTO_SIZE = 30;
-  let headerX = ML;
-  let headerW = CW;
+  // ── HEADER CARD ───────────────────────────────────────────────────────────
+  const HEADER_H = 62;
+  // Header gradient-tinted background
+  setFill(C.bluePale);
+  doc.roundedRect(ML, 8, CW, HEADER_H, 3, 3, 'F');
+  // Blue top border on card
+  setFill(C.blue);
+  doc.roundedRect(ML, 8, CW, 2.5, 1, 1, 'F');
 
-  y = 16;
+  y = 18;
+
+  // ── PHOTO (LEFT SIDE OF HEADER) ───────────────────────────────────────────
+  // Photo now anchors the LEFT edge of the header card. Name/role/contact/links
+  // are pushed right by `textStartX` to make room, instead of the old layout
+  // where the photo floated on the right and text used the full card width.
+  const PHOTO = 32; // slightly larger than before (was 28) for better presence
+  const PHOTO_PAD_LEFT = 10;
+  const PHOTO_GUTTER = 8; // gap between photo and text block
+  let textStartX = ML + 6; // default (no photo) — text starts right after card padding
+  let nameAreaW = CW - 6;
+  const usePhoto = isImageKitPhoto(data.photoURL);
 
   if (usePhoto) {
     try {
-      const photoUrl = `${data.photoURL}?tr=w-240,h-240,c-at_max,f-jpg,q-95,fo-face`;
+      const photoUrl = highResPhotoUrl(data.photoURL!);
       const imgData = await fetchImageAsBase64(photoUrl);
       if (imgData) {
-        // Circular clip via rounded rect (jsPDF approximation)
-        const px = W - MR - PHOTO_SIZE;
-        const py = 12;
-        // Shadow ring
-        setFill([220, 230, 255]);
-        doc.roundedRect(px - 1, py - 1, PHOTO_SIZE + 2, PHOTO_SIZE + 2, 16, 16, 'F');
-        // White ring
+        const px = ML + PHOTO_PAD_LEFT;
+        const py = 14;
+        // Soft drop shadow
+        setFill([200, 210, 230]);
+        doc.roundedRect(px + 0.6, py + 0.6, PHOTO, PHOTO, 5, 5, 'F');
+        // White border ring behind photo
         setFill(C.white);
-        doc.roundedRect(px - 0.5, py - 0.5, PHOTO_SIZE + 1, PHOTO_SIZE + 1, 15.5, 15.5, 'F');
-        // Photo
-        doc.addImage(imgData, 'JPEG', px, py, PHOTO_SIZE, PHOTO_SIZE, undefined, 'FAST');
-        headerW = CW - PHOTO_SIZE - 8;
+        doc.roundedRect(px - 1.2, py - 1.2, PHOTO + 2.4, PHOTO + 2.4, 6, 6, 'F');
+        // Photo itself — 'MEDIUM' compression (vs 'FAST') preserves more detail
+        // now that the source is fetched at 480x480 instead of 240x240.
+        doc.addImage(imgData, 'JPEG', px, py, PHOTO, PHOTO, undefined, 'MEDIUM');
+        // Blue accent ring on top
+        setDraw(C.blue);
+        setLW(0.6);
+        doc.roundedRect(px - 1.2, py - 1.2, PHOTO + 2.4, PHOTO + 2.4, 6, 6, 'S');
+
+        // Shift all header text to the right of the photo
+        textStartX = px + PHOTO + PHOTO_GUTTER;
+        nameAreaW = (W - MR) - textStartX;
       }
-    } catch { /* photo failed, skip */ }
+    } catch { /* skip — falls back to full-width text header */ }
   }
 
-  // ── Name ───────────────────────────────────────────────────────────────────
+  // ── NAME (bold italic, large — matches RISHIKESH style) ──────────────────
   setColor(C.dark);
-  font('bold', 22);
-  doc.text(data.displayName || '', headerX, y);
-  y += 7.5;
+  font('bolditalic', 24);
+  doc.text(data.displayName || '', textStartX, y);
+  y += 8;
 
-  // ── Role ───────────────────────────────────────────────────────────────────
+  // ── ROLE ─────────────────────────────────────────────────────────────────
   const roleText = [data.primaryRole, data.secondaryRole].filter(Boolean).join('  ·  ');
   if (roleText) {
     setColor(C.blue);
-    font('bold', 10);
-    doc.text(roleText, headerX, y);
+    font('bold', 10.5);
+    doc.text(roleText, textStartX, y);
     y += 5.5;
   }
 
-  // ── Contact line ───────────────────────────────────────────────────────────
-  const contactParts: string[] = [];
-  if (data.email)   contactParts.push(data.email);
-  if (data.phone)   contactParts.push(data.phone);
+  // ── CONTACT LINE ─────────────────────────────────────────────────────────
+  let cx2 = textStartX;
   const loc = [data.city, data.state, data.country].filter(Boolean).join(', ');
-  if (loc) contactParts.push(loc);
 
-  if (contactParts.length) {
-    setColor(C.mid);
-    font('normal', 8.5);
-    // Email as hyperlink if present
-    let cx = headerX;
-    contactParts.forEach((part, i) => {
+  const contactItems: Array<{ text: string; href?: string }> = [];
+  if (data.email) contactItems.push({ text: data.email, href: `mailto:${data.email}` });
+  if (data.phone) contactItems.push({ text: data.phone, href: `tel:${data.phone}` });
+  if (loc) contactItems.push({ text: loc });
+
+  if (contactItems.length) {
+    contactItems.forEach((item, i) => {
       if (i > 0) {
-        setColor(C.muted);
-        doc.text('   |   ', cx, y);
-        cx += textW('   |   ');
+        font('normal', 8); setColor(C.muted);
+        doc.text('   |   ', cx2, y);
+        cx2 += textW('   |   ');
       }
-      if (part === data.email) {
-        hyperlink(part, `mailto:${part}`, cx, y, C.dark, 8.5);
-      } else if (part === data.phone) {
-        hyperlink(part, `tel:${part}`, cx, y, C.dark, 8.5);
+      if (item.href) {
+        hyperlink(item.text, item.href, cx2, y, C.dark, 8);
       } else {
-        setColor(C.dark);
-        font('normal', 8.5);
-        doc.text(part, cx, y);
+        font('normal', 8); setColor(C.mid);
+        doc.text(item.text, cx2, y);
       }
-      cx += textW(part);
+      cx2 += textW(item.text);
     });
     y += 5;
   }
 
-  // ── Professional links ─────────────────────────────────────────────────────
-  const profileLinks: Array<{ label: string; url: string }> = [
+  // ── SOCIAL LINKS ─────────────────────────────────────────────────────────
+  const profLinks: Array<{ label: string; url: string }> = [
     data.linkedinUrl   && { label: 'LinkedIn',       url: data.linkedinUrl },
     data.githubUrl     && { label: 'GitHub',         url: data.githubUrl },
     data.portfolioUrl  && { label: 'Portfolio',      url: data.portfolioUrl },
@@ -767,300 +840,406 @@ export async function generatePDF(data: ProfileData): Promise<void> {
     data.kaggleUrl     && { label: 'Kaggle',         url: data.kaggleUrl },
     data.leetcodeUrl   && { label: 'LeetCode',       url: data.leetcodeUrl },
     data.scholarUrl    && { label: 'Google Scholar', url: data.scholarUrl },
-    data.researchgateUrl && { label: 'ResearchGate', url: data.researchgateUrl },
+    data.researchgateUrl && { label: 'ResearchGate',url: data.researchgateUrl },
     data.stackoverflowUrl && { label: 'Stack Overflow', url: data.stackoverflowUrl },
     data.otherUrl      && { label: linkMeta(data.otherUrl).label, url: data.otherUrl },
   ].filter(Boolean) as Array<{ label: string; url: string }>;
 
-  if (profileLinks.length) {
-    let lx = headerX;
-    profileLinks.forEach(({ label, url }, i) => {
-      if (lx + textW(label) + 4 > headerX + headerW - 2) {
-        y += 5;
-        lx = headerX;
-      }
-      if (i > 0 && lx > headerX) {
-        setColor(C.muted);
-        font('normal', 8);
+  if (profLinks.length) {
+    let lx = textStartX;
+    profLinks.forEach(({ label, url }, i) => {
+      if (lx + textW(label) + 4 > textStartX + nameAreaW) { y += 5; lx = textStartX; }
+      if (i > 0 && lx > textStartX) {
+        font('normal', 7.5); setColor(C.muted);
         doc.text('  ·  ', lx, y);
         lx += textW('  ·  ');
       }
-      hyperlink(label, url, lx, y, C.blue, 8);
+      hyperlink(label, url, lx, y, C.blue, 7.5);
       lx += textW(label);
     });
-    y += 6;
+    y += 5.5;
   }
 
-  // ── Header bottom rule ────────────────────────────────────────────────────
-  y = Math.max(y, 56);
-  setDraw(C.blue);
-  setLW(0.8);
-  doc.line(ML, y, W - MR, y);
-  y += 7;
+  // Bottom of header card
+  y = Math.max(y, 63);
 
-  // ── About Me ───────────────────────────────────────────────────────────────
+  // ── BODY starts after header card ────────────────────────────────────────
+  y = 8 + HEADER_H + 8;
+
+  // ── ABOUT ─────────────────────────────────────────────────────────────────
   if (data.bio?.trim()) {
     sectionHeader('About Me');
+    // Estimate card height
+    const bioLines = doc.splitTextToSize(data.bio.trim(), CW - 10);
+    const cardH = bioLines.length * 5 + 10;
+    const cardY = y - 2;
+    drawCard(cardY, cardH);
     setColor(C.mid);
     font('normal', 9);
-    const bioLines = doc.splitTextToSize(data.bio.trim(), CW);
+    y += 3;
     bioLines.forEach((line: string) => {
-      needsPage(5);
-      doc.text(line, ML, y);
-      y += 5;
+      needsPage(5); doc.text(line, ML + 5, y); y += 5;
     });
-    y += 2;
+    y += 5;
   }
 
-  // ── Skills ─────────────────────────────────────────────────────────────────
+  // ── SKILLS ────────────────────────────────────────────────────────────────
   if (data.skills && data.skills.length > 0) {
     sectionHeader('Skills');
-    drawChips(data.skills);
+    drawChips(data.skills, false);
     y += 2;
   }
 
-  // ── Experience ─────────────────────────────────────────────────────────────
+  // ── EXPERIENCE ────────────────────────────────────────────────────────────
   if (data.experiences && data.experiences.length > 0) {
     sectionHeader('Experience');
-    data.experiences.forEach(expBlock);
+    data.experiences.forEach((exp, i) =>
+      expBlock(exp, i === (data.experiences!.length - 1)));
   }
 
-  // ── Projects ───────────────────────────────────────────────────────────────
+  // ── PROJECTS ──────────────────────────────────────────────────────────────
   if (data.projects && data.projects.length > 0) {
     sectionHeader('Projects');
-    data.projects.forEach(projectCard);
+    data.projects.forEach((proj, i) =>
+      projectCard(proj, i === (data.projects!.length - 1)));
   }
 
-  // ── Education ──────────────────────────────────────────────────────────────
+  // ── EDUCATION ─────────────────────────────────────────────────────────────
   if (data.education && data.education.length > 0) {
     sectionHeader('Education');
-    data.education.forEach(educationCard);
+    data.education.forEach((edu, i) =>
+      educationCard(edu, i === (data.education!.length - 1)));
   }
 
-  // ── Certifications ─────────────────────────────────────────────────────────
+  // ── CERTIFICATIONS ────────────────────────────────────────────────────────
   if (data.certifications && data.certifications.length > 0) {
     sectionHeader('Certifications');
-    data.certifications.forEach(certCard);
+    data.certifications.forEach((cert, i) =>
+      certCard(cert, i === (data.certifications!.length - 1)));
   }
 
-  // ── Publications ───────────────────────────────────────────────────────────
+  // ── PUBLICATIONS ──────────────────────────────────────────────────────────
   if (data.publications && data.publications.length > 0) {
     sectionHeader('Publications');
-    data.publications.forEach(pubBlock);
+    data.publications.forEach((pub, i) =>
+      pubBlock(pub, i === (data.publications!.length - 1)));
   }
 
-  // ── Languages ──────────────────────────────────────────────────────────────
+  // ── LANGUAGES ─────────────────────────────────────────────────────────────
   if (data.languages && data.languages.length > 0) {
     sectionHeader('Languages');
     langChips(data.languages);
     y += 2;
   }
 
-  // ── Awards ─────────────────────────────────────────────────────────────────
+  // ── AWARDS ────────────────────────────────────────────────────────────────
   if (data.awards && data.awards.length > 0) {
     sectionHeader('Awards & Honors');
-    data.awards.forEach(a => highlightCard(a.title || '', a.issuer, a.description, a.date));
+    data.awards.forEach((a, i) =>
+      highlightCard(a.title || '', a.issuer, a.description, a.date, i === (data.awards!.length - 1)));
   }
 
-  // ── Volunteer ──────────────────────────────────────────────────────────────
+  // ── VOLUNTEER ─────────────────────────────────────────────────────────────
   if (data.volunteer && data.volunteer.length > 0) {
     sectionHeader('Volunteer Experience');
-    data.volunteer.forEach(v => {
+    data.volunteer.forEach((v, i) => {
       const meta = formatDateRange(v.startMonth, v.startYear, v.endMonth, v.endYear, v.current);
-      highlightCard(v.role || '', [v.org, meta].filter(Boolean).join('  ·  '), v.description);
+      highlightCard(v.role || '', [v.org, meta].filter(Boolean).join('  ·  '), v.description, undefined, i === (data.volunteer!.length - 1));
     });
   }
 
-  // ── Achievements ───────────────────────────────────────────────────────────
+  // ── ACHIEVEMENTS ──────────────────────────────────────────────────────────
   if (data.achievements && data.achievements.length > 0) {
     sectionHeader('Achievements');
-    data.achievements.forEach(a => highlightCard(a.title || '', undefined, a.description, a.date));
+    data.achievements.forEach((a, i) =>
+      highlightCard(a.title || '', undefined, a.description, a.date, i === (data.achievements!.length - 1)));
   }
 
-  // ── Footer (all pages) ────────────────────────────────────────────────────
+  // ── FOOTER (all pages) ────────────────────────────────────────────────────
   const totalPages = (doc as any).internal.getNumberOfPages();
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
 
-    // Footer rule
-    hRule(H - 13, C.divider, 0.3);
+    // Footer bar
+    setFill(C.bluePale);
+    doc.rect(0, H - 14, W, 14, 'F');
+    setFill(C.blue);
+    doc.rect(0, H - 14, 2, 14, 'F');
+    setDraw(C.divider);
+    setLW(0.3);
+    doc.line(0, H - 14, W, H - 14);
 
-    // Left: name · generated date
     setColor(C.muted);
     font('normal', 6.5);
-    doc.text(`${data.displayName || ''}  ·  Generated ${today}`, ML, H - 9);
-
-    // Center: C Found watermark text
-    setColor(C.muted);
-    font('normal', 6.5);
-    doc.text('Powered by C Found  ·  cfound.app', W / 2, H - 9, { align: 'center' });
-
-    // Right: page number
-    setColor(C.muted);
-    font('normal', 6.5);
-    doc.text(`Page ${i} of ${totalPages}`, W - MR, H - 9, { align: 'right' });
+    doc.text(`${data.displayName || ''}  ·  Generated ${today}`, ML + 4, H - 8);
+    doc.text('Powered by C Found  ·  cfound.in', W / 2, H - 8, { align: 'center' });
+    doc.text(`Page ${i} of ${totalPages}`, W - MR, H - 8, { align: 'right' });
   }
 
-  doc.save(`${(data.displayName || 'Resume').replace(/\s+/g, '_')}_Resume_CFoud.pdf`);
+  doc.save(`${(data.displayName || 'Resume').replace(/\s+/g, '_')}_Resume_CFound.pdf`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DOCX Generator — C Found Premium v2
+// DOCX Generator — C Found Premium v3.1
+// Photo support is NEW in this version: a circular headshot sits in the left
+// cell of a 2-column borderless table, with name/role/contact/links in the
+// right cell. Word has no free-floating "photo beside running text" primitive
+// outside of anchored floating images (which behave inconsistently across
+// Word/Google Docs/LibreOffice), so a borderless Table is the reliable way to
+// get a clean left-photo / right-text header that survives re-opening in any
+// word processor.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function generateDOCX(data: ProfileData): Promise<void> {
   const {
-    Document,
-    Packer,
-    Paragraph,
-    TextRun,
-    AlignmentType,
-    BorderStyle,
-    Table,
-    TableRow,
-    TableCell,
-    WidthType,
-    ShadingType,
-    VerticalAlign,
-    ExternalHyperlink,
+    Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle,
+    ExternalHyperlink, HeadingLevel, ImageRun, Table, TableRow, TableCell,
+    WidthType, VerticalAlign,
   } = await import("docx");
 
-  // ── Color palette ──────────────────────────────────────────────────────────
   const HEX = {
-    blue:   '2563EB',
-    dark:   '0F172A',
-    mid:    '475569',
-    muted:  '94A3B8',
-    divider:'E2E8F0',
-    green:  '16A34A',
-    chip:   'F1F5F9',
+    blue:    '2563EB',
+    dark:    '0F172A',
+    mid:     '475569',
+    muted:   '94A3B8',
+    divider: 'E2E8F0',
+    green:   '16A34A',
+    greenBg: 'DCFCE7',
+    chipBg:  'F1F5F9',
+    bluePale:'EFF6FF',
+    white:   'FFFFFF',
   };
 
-  const FONT = 'Calibri';
-
-  // ── Helper factory ─────────────────────────────────────────────────────────
+  const FONT     = 'Calibri';
+  const FONT_MONO= 'Consolas';
 
   const run = (text: string, opts: {
     bold?: boolean; italic?: boolean; size?: number;
-    color?: string; font?: string; underline?: boolean;
+    color?: string; font?: string; underline?: boolean; allCaps?: boolean;
   } = {}) =>
     new TextRun({
       text,
-      bold: opts.bold ?? false,
-      italics: opts.italic ?? false,
-      size: opts.size ?? 20,
-      color: opts.color ?? HEX.dark,
-      font: opts.font ?? FONT,
+      bold:     opts.bold    ?? false,
+      italics:  opts.italic  ?? false,
+      size:     opts.size    ?? 20,
+      color:    opts.color   ?? HEX.dark,
+      font:     opts.font    ?? FONT,
       underline: opts.underline ? {} : undefined,
+      allCaps:  opts.allCaps  ?? false,
     });
 
-  const link = (label: string, url: string) =>
+  const link = (label: string, url: string, size = 18) =>
     new ExternalHyperlink({
       link: url,
-      children: [run(label, { color: HEX.blue, underline: true, size: 18 })],
+      children: [run(label, { color: HEX.blue, underline: true, size })],
     });
 
   const para = (children: any[], opts: {
-    before?: number; after?: number; indent?: number; align?: typeof AlignmentType[keyof typeof AlignmentType];
-    border?: boolean;
+    before?: number; after?: number; indent?: number;
+    align?: typeof AlignmentType[keyof typeof AlignmentType];
+    borderBottom?: boolean; borderTop?: boolean; borderLeft?: boolean;
+    shading?: string;
   } = {}) =>
     new Paragraph({
       alignment: opts.align,
-      spacing: { before: opts.before ?? 0, after: opts.after ?? 40 },
-      indent: opts.indent ? { left: opts.indent } : undefined,
-      border: opts.border ? {
-        bottom: { style: BorderStyle.SINGLE, size: 4, color: HEX.divider, space: 1 },
-      } : undefined,
+      spacing:   { before: opts.before ?? 0, after: opts.after ?? 40 },
+      indent:    opts.indent ? { left: opts.indent } : undefined,
+      border: {
+        ...(opts.borderBottom ? { bottom: { style: BorderStyle.SINGLE, size: 4, color: HEX.divider, space: 1 } } : {}),
+        ...(opts.borderTop    ? { top:    { style: BorderStyle.SINGLE, size: 4, color: HEX.divider, space: 1 } } : {}),
+        ...(opts.borderLeft   ? { left:   { style: BorderStyle.SINGLE, size: 16, color: HEX.blue,   space: 4 } } : {}),
+      },
+      shading:  opts.shading ? { type: 'clear' as any, fill: opts.shading } : undefined,
       children,
     });
 
-  const hRule = () =>
-    new Paragraph({
-      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: HEX.divider, space: 1 } },
-      spacing: { before: 80, after: 80 },
-      children: [],
-    });
+  const hRule  = () => para([], { borderBottom: true, before: 80, after: 80 });
+  const gap    = (sz = 60) => new Paragraph({ spacing: { before: sz, after: 0 }, children: [] });
 
-  const thickRule = () =>
-    new Paragraph({
-      border: { bottom: { style: BorderStyle.SINGLE, size: 10, color: HEX.blue, space: 1 } },
-      spacing: { before: 80, after: 80 },
-      children: [],
-    });
-
-  const gap = (sz = 60) => new Paragraph({ spacing: { before: sz, after: 0 }, children: [] });
-
+  // Section title with blue underline
   const sectionTitle = (title: string) =>
     new Paragraph({
-      spacing: { before: 280, after: 80 },
-      border: {
-        bottom: { style: BorderStyle.SINGLE, size: 6, color: HEX.blue, space: 2 },
-      },
+      spacing: { before: 320, after: 100 },
+      border:  { bottom: { style: BorderStyle.SINGLE, size: 8, color: HEX.blue, space: 2 } },
       children: [
-        run(title.toUpperCase(), { bold: true, size: 18, color: HEX.blue }),
+        run('  ', { size: 18 }),
+        run(title.toUpperCase(), { bold: true, size: 19, color: HEX.blue, allCaps: true }),
       ],
     });
 
-  // ── Build content ──────────────────────────────────────────────────────────
   const children: any[] = [];
 
-  // ── NAME ──────────────────────────────────────────────────────────────────
-  children.push(
-    para([run(data.displayName || '', { bold: true, size: 48, color: HEX.dark })], { after: 60 })
+  // ── HEADER ────────────────────────────────────────────────────────────────
+  // Build the name/role/contact/links block as an array of Paragraphs first —
+  // these go in the RIGHT cell of the header table (or stand alone, full-width,
+  // if there's no photo to place on the left).
+  const headerTextChildren: any[] = [];
+
+  // Name — large bold italic
+  headerTextChildren.push(
+    new Paragraph({
+      spacing: { before: 0, after: 60 },
+      children: [
+        run(data.displayName || '', { bold: true, italic: true, size: 56, color: HEX.dark }),
+      ],
+    })
   );
 
-  // ── Role ──────────────────────────────────────────────────────────────────
+  // Role
   const roleText = [data.primaryRole, data.secondaryRole].filter(Boolean).join('  ·  ');
   if (roleText) {
-    children.push(para([run(roleText, { bold: true, size: 22, color: HEX.blue })], { after: 60 }));
+    headerTextChildren.push(
+      new Paragraph({
+        spacing: { before: 40, after: 60 },
+        children: [run(roleText, { bold: true, size: 23, color: HEX.blue })],
+      })
+    );
   }
 
-  // ── Contact ───────────────────────────────────────────────────────────────
+  // Contact
   const contactParts: any[] = [];
-  if (data.email) contactParts.push(link(data.email, `mailto:${data.email}`));
+  if (data.email) contactParts.push(link(data.email, `mailto:${data.email}`, 19));
   if (data.phone) {
     if (contactParts.length) contactParts.push(run('   |   ', { color: HEX.muted, size: 18 }));
-    contactParts.push(link(data.phone, `tel:${data.phone}`));
+    contactParts.push(link(data.phone, `tel:${data.phone}`, 19));
   }
   const loc = [data.city, data.state, data.country].filter(Boolean).join(', ');
   if (loc) {
     if (contactParts.length) contactParts.push(run('   |   ', { color: HEX.muted, size: 18 }));
-    contactParts.push(run(loc, { color: HEX.mid, size: 18 }));
+    contactParts.push(run(loc, { color: HEX.mid, size: 19 }));
   }
   if (contactParts.length) {
-    children.push(new Paragraph({ spacing: { before: 0, after: 60 }, children: contactParts }));
+    headerTextChildren.push(new Paragraph({
+      spacing: { before: 0, after: 60 },
+      children: contactParts,
+    }));
   }
 
-  // ── Professional links ─────────────────────────────────────────────────────
+  // Professional links
   const profLinks: Array<{ label: string; url: string }> = [
-    data.linkedinUrl   && { label: 'LinkedIn',        url: data.linkedinUrl },
-    data.githubUrl     && { label: 'GitHub',          url: data.githubUrl },
-    data.portfolioUrl  && { label: 'Portfolio',       url: data.portfolioUrl },
-    data.twitterUrl    && { label: 'X (Twitter)',     url: data.twitterUrl },
-    data.behanceUrl    && { label: 'Behance',         url: data.behanceUrl },
-    data.dribbbleUrl   && { label: 'Dribbble',        url: data.dribbbleUrl },
-    data.youtubeUrl    && { label: 'YouTube',         url: data.youtubeUrl },
-    data.mediumUrl     && { label: 'Medium',          url: data.mediumUrl },
-    data.kaggleUrl     && { label: 'Kaggle',          url: data.kaggleUrl },
-    data.researchgateUrl && { label: 'ResearchGate', url: data.researchgateUrl },
-    data.scholarUrl    && { label: 'Google Scholar',  url: data.scholarUrl },
-    data.otherUrl      && { label: linkMeta(data.otherUrl).label, url: data.otherUrl },
+    data.linkedinUrl      && { label: 'LinkedIn',        url: data.linkedinUrl },
+    data.githubUrl        && { label: 'GitHub',          url: data.githubUrl },
+    data.portfolioUrl     && { label: 'Portfolio',       url: data.portfolioUrl },
+    data.twitterUrl       && { label: 'X (Twitter)',     url: data.twitterUrl },
+    data.behanceUrl       && { label: 'Behance',         url: data.behanceUrl },
+    data.dribbbleUrl      && { label: 'Dribbble',        url: data.dribbbleUrl },
+    data.youtubeUrl       && { label: 'YouTube',         url: data.youtubeUrl },
+    data.mediumUrl        && { label: 'Medium',          url: data.mediumUrl },
+    data.kaggleUrl        && { label: 'Kaggle',          url: data.kaggleUrl },
+    data.researchgateUrl  && { label: 'ResearchGate',    url: data.researchgateUrl },
+    data.scholarUrl       && { label: 'Google Scholar',  url: data.scholarUrl },
+    data.stackoverflowUrl && { label: 'Stack Overflow',  url: data.stackoverflowUrl },
+    data.otherUrl         && { label: linkMeta(data.otherUrl).label, url: data.otherUrl },
   ].filter(Boolean) as Array<{ label: string; url: string }>;
 
   if (profLinks.length) {
     const linkChildren: any[] = [];
     profLinks.forEach(({ label, url }, i) => {
       if (i > 0) linkChildren.push(run('   ·   ', { color: HEX.muted, size: 17 }));
-      linkChildren.push(link(label, url));
+      linkChildren.push(link(label, url, 17));
     });
-    children.push(new Paragraph({ spacing: { before: 0, after: 80 }, children: linkChildren }));
+    headerTextChildren.push(new Paragraph({
+      spacing: { before: 0, after: 60 },
+      children: linkChildren,
+    }));
   }
 
-  children.push(thickRule());
+  // ── Try to fetch the photo (high-res) ─────────────────────────────────────
+  const usePhoto = isImageKitPhoto(data.photoURL);
+  let photoBytes: Uint8Array | null = null;
+  if (usePhoto) {
+    try {
+      photoBytes = await fetchImageAsBytes(highResPhotoUrl(data.photoURL!));
+    } catch {
+      photoBytes = null;
+    }
+  }
 
-  // ── About ──────────────────────────────────────────────────────────────────
+  // Twips: 1 inch = 1440 twips. Photo cell ~1.25in wide; image itself 1.1in (~106px @96dpi
+  // equivalent but we feed it a 480x480 source so it stays sharp at this print size).
+  const PHOTO_CELL_TWIPS = 1900;
+  const PHOTO_SIZE_PX = 132; // ImageRun transform size is in pixels at 96dpi -> ~1.375in
+
+  if (photoBytes) {
+    // Header becomes a 2-column borderless table: [photo] [name/role/contact/links]
+    children.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top:    { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          left:   { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          right:  { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          insideVertical:   { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: PHOTO_CELL_TWIPS, type: WidthType.DXA },
+                verticalAlign: VerticalAlign.CENTER,
+                shading: { type: 'clear' as any, fill: HEX.bluePale },
+                margins: { top: 160, bottom: 160, left: 100, right: 120 },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new ImageRun({
+                        type: 'jpg',
+                        data: photoBytes,
+                        transformation: { width: PHOTO_SIZE_PX, height: PHOTO_SIZE_PX },
+                        // Circular crop to match the rounded photo treatment in the PDF
+                        floating: undefined,
+                      } as any),
+                    ],
+                  }),
+                ],
+              }),
+              new TableCell({
+                width: { size: 9700, type: WidthType.DXA },
+                verticalAlign: VerticalAlign.CENTER,
+                shading: { type: 'clear' as any, fill: HEX.bluePale },
+                margins: { top: 160, bottom: 160, left: 160, right: 100 },
+                children: headerTextChildren,
+              }),
+            ],
+          }),
+        ],
+      })
+    );
+    // Blue rule directly under the header table (visually closes the header block,
+    // matching the blue top border used elsewhere in the design system)
+    children.push(
+      new Paragraph({
+        spacing: { before: 0, after: 0 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: HEX.blue, space: 1 } },
+        children: [],
+      })
+    );
+  } else {
+    // No photo — full-width header block exactly as before, just with the
+    // shading/border applied per-paragraph so it still reads as one header card.
+    headerTextChildren.forEach((p, i) => {
+      // Re-wrap isn't trivial since Paragraph children are immutable here,
+      // so we instead push the original full-width paragraphs and add a
+      // single closing border rule after the block.
+      children.push(p);
+    });
+    children.push(
+      new Paragraph({
+        spacing: { before: 0, after: 100 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: HEX.blue, space: 1 } },
+        children: [],
+      })
+    );
+  }
+
+  children.push(gap(100));
+
+  // ── ABOUT ────────────────────────────────────────────────────────────────
   if (data.bio?.trim()) {
     children.push(sectionTitle('About Me'));
     data.bio.trim().split('\n').filter(Boolean).forEach(line => {
@@ -1069,29 +1248,28 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
     children.push(gap(60));
   }
 
-  // ── Skills ─────────────────────────────────────────────────────────────────
+  // ── SKILLS ───────────────────────────────────────────────────────────────
   if (data.skills && data.skills.length > 0) {
     children.push(sectionTitle('Skills'));
-    // Render as pill-text approximation
     children.push(
       para([run(data.skills.join('   ·   '), { color: HEX.mid, size: 19 })], { after: 60 })
     );
   }
 
-  // ── Experience ─────────────────────────────────────────────────────────────
+  // ── EXPERIENCE ───────────────────────────────────────────────────────────
   if (data.experiences && data.experiences.length > 0) {
     children.push(sectionTitle('Experience'));
     data.experiences.forEach((exp: ExperienceItem) => {
-      // Role + current badge
-      const roleRuns: any[] = [run(exp.role || '', { bold: true, size: 22, color: HEX.dark })];
-      if (exp.current) roleRuns.push(run('  [ Current ]', { bold: true, size: 16, color: HEX.green }));
-      children.push(new Paragraph({ spacing: { before: 120, after: 20 }, children: roleRuns }));
+      // Role row
+      const roleRuns: any[] = [run(exp.role || '', { bold: true, size: 23, color: HEX.dark })];
+      if (exp.current) roleRuns.push(run('  ● Current', { bold: true, size: 16, color: HEX.green }));
+      children.push(new Paragraph({ spacing: { before: 140, after: 20 }, children: roleRuns }));
 
-      // Company
-      const companyStr = [exp.company, exp.type].filter(Boolean).join('  ·  ');
-      children.push(para([run(companyStr, { size: 19, color: HEX.mid })], { before: 0, after: 20 }));
+      // Company · type
+      const cStr = [exp.company, exp.type].filter(Boolean).join('  ·  ');
+      children.push(para([run(cStr, { size: 19, color: HEX.mid })], { before: 0, after: 20 }));
 
-      // Date / location
+      // Date · location · mode
       const dateStr = formatDateRange(exp.startMonth, exp.startYear, exp.endMonth, exp.endYear, exp.current);
       const locStr = [dateStr, exp.location, exp.mode].filter(Boolean).join('   ·   ');
       if (locStr) children.push(para([run(locStr, { italic: true, size: 17, color: HEX.muted })], { after: 20 }));
@@ -1100,15 +1278,15 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
       if (exp.skills?.trim()) {
         children.push(para([
           run('Skills: ', { bold: true, size: 17, color: HEX.blue }),
-          run(exp.skills, { size: 17, color: HEX.blue }),
+          run(exp.skills,  { size: 17, color: HEX.blue }),
         ], { after: 20 }));
       }
 
-      // Description
+      // Description bullets
       if (exp.description?.trim()) {
         exp.description.trim().split('\n').filter(Boolean).forEach(line => {
           children.push(para([run(`•  ${line}`, { size: 19, color: HEX.mid })], {
-            before: 10, after: 10, indent: 200,
+            before: 10, after: 10, indent: 240,
           }));
         });
       }
@@ -1117,17 +1295,17 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
     });
   }
 
-  // ── Projects ───────────────────────────────────────────────────────────────
+  // ── PROJECTS ─────────────────────────────────────────────────────────────
   if (data.projects && data.projects.length > 0) {
     children.push(sectionTitle('Projects'));
     data.projects.forEach((proj: ProjectItem) => {
-      const titleRuns: any[] = [run(proj.title || '', { bold: true, size: 22, color: HEX.dark })];
-      if (proj.status) titleRuns.push(run(`   [ ${proj.status} ]`, { size: 17, color: HEX.blue }));
-      children.push(new Paragraph({ spacing: { before: 120, after: 20 }, children: titleRuns }));
+      const titleRuns: any[] = [run(proj.title || '', { bold: true, size: 23, color: HEX.dark })];
+      if (proj.status)   titleRuns.push(run(`   [ ${proj.status} ]`, { size: 17, color: HEX.blue }));
+      if (proj.category) titleRuns.push(run(`   ${proj.category}`, { italic: true, size: 16, color: HEX.muted }));
+      children.push(new Paragraph({ spacing: { before: 140, after: 20 }, children: titleRuns }));
 
       const projDate = formatDateRange(proj.startMonth, proj.startYear, proj.endMonth, proj.endYear);
-      const projMeta = [proj.category, projDate].filter(Boolean).join('   ·   ');
-      if (projMeta) children.push(para([run(projMeta, { italic: true, size: 17, color: HEX.muted })], { after: 20 }));
+      if (projDate) children.push(para([run(projDate, { italic: true, size: 17, color: HEX.muted })], { after: 20 }));
 
       if (proj.technologies?.trim()) {
         children.push(para([
@@ -1139,13 +1317,13 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
       if (proj.description?.trim()) {
         proj.description.trim().split('\n').filter(Boolean).forEach(line => {
           children.push(para([run(`•  ${line}`, { size: 19, color: HEX.mid })], {
-            before: 10, after: 10, indent: 200,
+            before: 10, after: 10, indent: 240,
           }));
         });
       }
 
       const linkRuns: any[] = [];
-      if (proj.demoUrl)    { linkRuns.push(link('Live Demo', proj.demoUrl)); }
+      if (proj.demoUrl)    { linkRuns.push(link('↗ Live Demo', proj.demoUrl)); }
       if (proj.githubUrl)  { if (linkRuns.length) linkRuns.push(run('   ·   ', { color: HEX.muted, size: 17 })); linkRuns.push(link('GitHub', proj.githubUrl)); }
       if (proj.websiteUrl) { if (linkRuns.length) linkRuns.push(run('   ·   ', { color: HEX.muted, size: 17 })); linkRuns.push(link('Website', proj.websiteUrl)); }
       if (proj.researchUrl){ if (linkRuns.length) linkRuns.push(run('   ·   ', { color: HEX.muted, size: 17 })); linkRuns.push(link('Research', proj.researchUrl)); }
@@ -1155,14 +1333,14 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
     });
   }
 
-  // ── Education ──────────────────────────────────────────────────────────────
+  // ── EDUCATION ────────────────────────────────────────────────────────────
   if (data.education && data.education.length > 0) {
     children.push(sectionTitle('Education'));
     data.education.forEach((edu: EducationItem) => {
       children.push(new Paragraph({
-        spacing: { before: 120, after: 20 },
+        spacing: { before: 140, after: 20 },
         children: [
-          run(edu.degree || '', { bold: true, size: 22, color: HEX.dark }),
+          run(edu.degree || '', { bold: true, size: 23, color: HEX.dark }),
           run('    ' + (edu.institution || ''), { size: 19, color: HEX.mid }),
         ],
       }));
@@ -1179,14 +1357,14 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
     });
   }
 
-  // ── Certifications ─────────────────────────────────────────────────────────
+  // ── CERTIFICATIONS ───────────────────────────────────────────────────────
   if (data.certifications && data.certifications.length > 0) {
     children.push(sectionTitle('Certifications'));
     data.certifications.forEach((cert: CertificationItem) => {
       children.push(new Paragraph({
-        spacing: { before: 100, after: 20 },
+        spacing: { before: 120, after: 20 },
         children: [
-          run(cert.name || '', { bold: true, size: 20, color: HEX.dark }),
+          run(cert.name || '', { bold: true, size: 21, color: HEX.dark }),
           run('    ' + (cert.org || ''), { size: 18, color: HEX.mid }),
         ],
       }));
@@ -1198,11 +1376,11 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
     });
   }
 
-  // ── Publications ───────────────────────────────────────────────────────────
+  // ── PUBLICATIONS ──────────────────────────────────────────────────────────
   if (data.publications && data.publications.length > 0) {
     children.push(sectionTitle('Publications'));
     data.publications.forEach((pub: PublicationItem) => {
-      children.push(para([run(pub.title || '', { bold: true, size: 20, color: HEX.dark })], { before: 100, after: 20 }));
+      children.push(para([run(pub.title || '', { bold: true, size: 21, color: HEX.dark })], { before: 120, after: 20 }));
       const pubMeta = [
         pub.publisher,
         [pub.dateMonth, pub.dateYear].filter(Boolean).join(' '),
@@ -1214,85 +1392,79 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
     });
   }
 
-  // ── Languages ──────────────────────────────────────────────────────────────
+  // ── LANGUAGES ─────────────────────────────────────────────────────────────
   if (data.languages && data.languages.length > 0) {
     children.push(sectionTitle('Languages'));
     const langRuns: any[] = [];
     data.languages.forEach(({ language, proficiency }, i) => {
       if (!language) return;
       if (i > 0) langRuns.push(run('   ·   ', { color: HEX.muted, size: 18 }));
-      langRuns.push(run(language, { bold: true, size: 19, color: HEX.dark }));
+      langRuns.push(run(language, { bold: true, size: 20, color: HEX.dark }));
       if (proficiency) langRuns.push(run(`  (${proficiency})`, { size: 17, color: HEX.mid }));
     });
-    if (langRuns.length) children.push(new Paragraph({ spacing: { before: 20, after: 60 }, children: langRuns }));
+    if (langRuns.length) children.push(new Paragraph({ spacing: { before: 20, after: 80 }, children: langRuns }));
   }
 
-  // ── Awards ─────────────────────────────────────────────────────────────────
+  // ── AWARDS ────────────────────────────────────────────────────────────────
   if (data.awards && data.awards.length > 0) {
     children.push(sectionTitle('Awards & Honors'));
     data.awards.forEach((a: AwardItem) => {
-      children.push(new Paragraph({
-        spacing: { before: 100, after: 20 },
-        children: [
-          run(a.title || '', { bold: true, size: 20, color: HEX.dark }),
-          ...(a.date ? [run(`   ·   ${a.date}`, { size: 16, color: HEX.muted })] : []),
-        ],
-      }));
-      if (a.issuer) children.push(para([run(a.issuer, { italic: true, size: 17, color: HEX.mid })], { after: 20 }));
-      if (a.description) children.push(para([run(a.description, { size: 18, color: HEX.mid })], { after: 20 }));
+      children.push(para([
+        run(a.title || '', { bold: true, size: 21, color: HEX.dark }),
+        ...(a.date ? [run(`   ·   ${a.date}`, { size: 16, color: HEX.muted })] : []),
+      ], { before: 120, after: 20, borderLeft: true }));
+      if (a.issuer)      children.push(para([run(a.issuer, { italic: true, size: 17, color: HEX.mid })], { after: 20, borderLeft: true }));
+      if (a.description) children.push(para([run(a.description, { size: 18, color: HEX.mid })], { after: 20, borderLeft: true }));
       children.push(hRule());
     });
   }
 
-  // ── Volunteer ──────────────────────────────────────────────────────────────
+  // ── VOLUNTEER ─────────────────────────────────────────────────────────────
   if (data.volunteer && data.volunteer.length > 0) {
     children.push(sectionTitle('Volunteer Experience'));
     data.volunteer.forEach((v: VolunteerItem) => {
-      children.push(para([run(v.role || '', { bold: true, size: 20, color: HEX.dark })], { before: 100, after: 20 }));
-      const vDate = formatDateRange(v.startMonth, v.startYear, v.endMonth, v.endYear, v.current);
-      const vMeta = [v.org, vDate].filter(Boolean).join('   ·   ');
-      if (vMeta) children.push(para([run(vMeta, { italic: true, size: 17, color: HEX.muted })], { after: 20 }));
-      if (v.description) {
+      children.push(para([run(v.role || '', { bold: true, size: 21, color: HEX.dark })], { before: 120, after: 20, borderLeft: true }));
+      const vMeta = [v.org, formatDateRange(v.startMonth, v.startYear, v.endMonth, v.endYear, v.current)].filter(Boolean).join('   ·   ');
+      if (vMeta) children.push(para([run(vMeta, { italic: true, size: 17, color: HEX.muted })], { after: 20, borderLeft: true }));
+      if (v.description?.trim()) {
         v.description.trim().split('\n').filter(Boolean).forEach(line => {
-          children.push(para([run(`•  ${line}`, { size: 19, color: HEX.mid })], { before: 10, after: 10, indent: 200 }));
+          children.push(para([run(`•  ${line}`, { size: 19, color: HEX.mid })], { before: 10, after: 10, indent: 240 }));
         });
       }
       children.push(hRule());
     });
   }
 
-  // ── Achievements ───────────────────────────────────────────────────────────
+  // ── ACHIEVEMENTS ──────────────────────────────────────────────────────────
   if (data.achievements && data.achievements.length > 0) {
     children.push(sectionTitle('Achievements'));
     data.achievements.forEach((a: AchievementItem) => {
-      children.push(new Paragraph({
-        spacing: { before: 100, after: 20 },
-        children: [
-          run(a.title || '', { bold: true, size: 20, color: HEX.dark }),
-          ...(a.date ? [run(`   ·   ${a.date}`, { size: 16, color: HEX.muted })] : []),
-        ],
-      }));
-      if (a.description) children.push(para([run(a.description, { size: 18, color: HEX.mid })], { after: 20 }));
+      children.push(para([
+        run(a.title || '', { bold: true, size: 21, color: HEX.dark }),
+        ...(a.date ? [run(`   ·   ${a.date}`, { size: 16, color: HEX.muted })] : []),
+      ], { before: 120, after: 20, borderLeft: true }));
+      if (a.description) children.push(para([run(a.description, { size: 18, color: HEX.mid })], { after: 20, borderLeft: true }));
       children.push(hRule());
     });
   }
 
-  // ── Footer note ────────────────────────────────────────────────────────────
+  // ── FOOTER ────────────────────────────────────────────────────────────────
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  children.push(gap(160));
+  children.push(gap(200));
   children.push(
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 60, after: 0 },
-      border: { top: { style: BorderStyle.SINGLE, size: 4, color: HEX.divider, space: 2 } },
-      children: [
+      spacing:   { before: 80, after: 0 },
+      border:    { top: { style: BorderStyle.SINGLE, size: 6, color: HEX.blue, space: 4 } },
+      shading:   { type: 'clear' as any, fill: HEX.bluePale },
+      children:  [
         run(`Generated ${today}   ·   `, { size: 14, color: HEX.muted }),
-        link('Powered by C Found · cfound.app', 'https://cfound.app'),
+        link('Powered by C Found · cfound.in', 'https://cfound.in', 14),
       ],
     })
   );
 
-  // ── Assemble document ──────────────────────────────────────────────────────
+  // ── ASSEMBLE ──────────────────────────────────────────────────────────────
   const docxDocument = new Document({
     styles: {
       default: {
@@ -1303,8 +1475,8 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
       {
         properties: {
           page: {
-            size: { width: 11906, height: 16838 }, // A4
-            margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 }, // ~0.79 inch
+            size:   { width: 11906, height: 16838 },
+            margin: { top: 1000, right: 1100, bottom: 1000, left: 1100 },
           },
         },
         children,
@@ -1313,12 +1485,12 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
   });
 
   const buffer = await Packer.toBuffer(docxDocument);
-  const blob = new Blob([buffer], {
+  const blob   = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   });
-  const url = URL.createObjectURL(blob);
+  const url    = URL.createObjectURL(blob);
   const anchor = window.document.createElement('a');
-  anchor.href = url;
+  anchor.href  = url;
   anchor.download = `${(data.displayName || 'Resume').replace(/\s+/g, '_')}_Resume_CFound.docx`;
   window.document.body.appendChild(anchor);
   anchor.click();
