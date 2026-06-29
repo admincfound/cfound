@@ -502,6 +502,63 @@ function ProfileContent() {
     }
   };
 
+  // ===== Hero Title & Status =====
+
+  // Current job
+  const currentExperience = formData?.experiences?.find(
+    (exp: any) => exp.current
+  );
+
+  // Latest previous job (if no current job)
+  const latestExperience =
+    formData?.experiences
+      ?.filter((exp: any) => !exp.current)
+      ?.sort((a: any, b: any) => {
+        const aYear = Number(a.endYear || a.startYear || 0);
+        const bYear = Number(b.endYear || b.startYear || 0);
+        return bYear - aYear;
+      })?.[0];
+
+  // Current education
+  const currentEducation = formData?.education?.find(
+    (edu: any) => edu.current
+  );
+
+  // Highest completed education
+  const highestEducation =
+    formData?.education
+      ?.filter((edu: any) => !edu.current)
+      ?.sort((a: any, b: any) => Number(b.endYear || 0) - Number(a.endYear || 0))
+      ?.[0];
+
+  let heroTitle = formData?.primaryRole || "Your Role";
+  let heroStatus = "Fresher";
+
+  // 1. Currently working
+  if (currentExperience) {
+    heroTitle = currentExperience.role || heroTitle;
+    heroStatus = "Working Professional";
+  }
+
+  // 2. Has previous experience
+  else if (latestExperience) {
+    heroTitle = latestExperience.role || heroTitle;
+    heroStatus = "Experienced Professional";
+  }
+
+  // 3. Currently studying (no experience)
+  else if (currentEducation) {
+    heroTitle = currentEducation.degree
+      ? `${currentEducation.degree} Student`
+      : heroTitle;
+    heroStatus = "Student";
+  }
+
+  // 4. Completed education (no experience)
+  else if (highestEducation) {
+    heroTitle = highestEducation.degree || heroTitle;
+    heroStatus = "Fresher";
+  }
   if (authLoading || !formData) return <ProfileLoadingScreen />;
 
   if (isAdmin) {
@@ -672,14 +729,14 @@ function ProfileContent() {
                 )
               )}
 
-              <div className="flex items-center justify-center lg:justify-start gap-2 lg:gap-3 mt-1 flex-wrap">
-                <span className="text-lg lg:text-xl font-bold text-blue-600 break-words">{formData.primaryRole || 'Your Role'}</span>
-                {formData.secondaryRole && (
-                  <>
-                    <span className="text-gray-300 font-light text-lg lg:text-xl hidden sm:inline">|</span>
-                    <span className="text-base lg:text-lg font-semibold text-gray-500 break-words">{formData.secondaryRole}</span>
-                  </>
-                )}
+              <div className="mt-2 flex flex-col items-center lg:items-start">
+                <h2 className="text-lg lg:text-xl font-bold text-blue-600">
+                  {heroTitle}
+                </h2>
+
+                <p className="text-base lg:text-lg font-semibold text-gray-500 mt-1">
+                  {heroStatus}
+                </p>
               </div>
 
               <div className="mt-4 flex items-center justify-center lg:justify-start gap-x-3 lg:gap-x-0 gap-y-2 flex-wrap">
