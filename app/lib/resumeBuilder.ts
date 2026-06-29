@@ -912,10 +912,20 @@ export async function generatePDF(data: ProfileData): Promise<void> {
 
 export async function generateDOCX(data: ProfileData): Promise<void> {
   const {
-    Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle,
-    Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign,
-    HyperlinkRef, HyperlinkType, ExternalHyperlink,
-  } = await import('docx');
+    Document,
+    Packer,
+    Paragraph,
+    TextRun,
+    AlignmentType,
+    BorderStyle,
+    Table,
+    TableRow,
+    TableCell,
+    WidthType,
+    ShadingType,
+    VerticalAlign,
+    ExternalHyperlink,
+  } = await import("docx");
 
   // ── Color palette ──────────────────────────────────────────────────────────
   const HEX = {
