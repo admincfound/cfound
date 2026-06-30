@@ -1101,8 +1101,8 @@ export async function generateDOCX(data: ProfileData): Promise<void> {
 
   // Build the name / title / contact / links stack — reused in both the
   // photo and no-photo layouts so spacing/typography stay identical.
-  const buildHeaderTextBlock = (): Paragraph[] => {
-    const block: Paragraph[] = [];
+  const buildHeaderTextBlock = (): InstanceType<typeof Paragraph>[] => {
+    const block: InstanceType<typeof Paragraph>[] = [];
 
     block.push(para([run(data.displayName || '', { bold: true, size: 50, color: HEX.ink })], { after: 70 }));
 
