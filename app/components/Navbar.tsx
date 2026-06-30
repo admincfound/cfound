@@ -179,7 +179,7 @@ export default function Navbar() {
                       <div className="py-1">
                         <Link href="/profile" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                           <User size={14} className="text-gray-400" />
-                          Edit Profile
+                          My Profile
                         </Link>
                         {!isAdmin && (
                           <button
@@ -190,10 +190,6 @@ export default function Navbar() {
                             View Public Profile
                           </button>
                         )}
-                        <Link href="/dashboard" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                          <LayoutDashboard size={14} className="text-gray-400" />
-                          Dashboard
-                        </Link>
                       </div>
                       <div className="border-t border-gray-50 pt-1">
                         <button

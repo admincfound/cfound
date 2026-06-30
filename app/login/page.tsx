@@ -7,7 +7,7 @@ import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export default function Login() {
   const router = useRouter();
@@ -22,9 +22,11 @@ export default function Login() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
 
-      await setDoc(
-        doc(db, 'users', result.user.uid),
-        {
+      const userRef = doc(db, 'users', result.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
           uid: result.user.uid,
           displayName: result.user.displayName || '',
           email: result.user.email || '',
@@ -33,10 +35,19 @@ export default function Login() {
             result.user.email === 'admin.cfound@gmail.com'
               ? 'admin'
               : 'user',
+          createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+        });
+      } else {
+        await setDoc(
+          userRef,
+          {
+            email: result.user.email || '',
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      }
 
       router.replace('/dashboard');
     } catch (err: any) {
