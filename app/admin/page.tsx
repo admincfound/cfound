@@ -92,9 +92,21 @@ export default function AdminDashboard() {
         ]);
 
         const merged: AnyDoc[] = [
-          ...internSnap.docs.map(d => ({ id: d.id, _collection: 'internshipApplications', ...d.data() })),
-          ...jobAppSnap.docs.map(d => ({ id: d.id, _collection: 'jobApplications', ...d.data() })),
-          ...courseEnrollSnap.docs.map(d => ({ id: d.id, _collection: 'courseEnrollments', ...d.data() })),
+          ...internSnap.docs.map<AnyDoc>(d => ({
+            id: d.id,
+            _collection: 'internshipApplications',
+            ...d.data(),
+          })),
+          ...jobAppSnap.docs.map<AnyDoc>(d => ({
+            id: d.id,
+            _collection: 'jobApplications',
+            ...d.data(),
+          })),
+          ...courseEnrollSnap.docs.map<AnyDoc>(d => ({
+            id: d.id,
+            _collection: 'courseEnrollments',
+            ...d.data(),
+          })),
         ].sort((a, b) => {
           const ta = toDate(a.createdAt || a.appliedAt)?.getTime() || 0;
           const tb = toDate(b.createdAt || b.appliedAt)?.getTime() || 0;
