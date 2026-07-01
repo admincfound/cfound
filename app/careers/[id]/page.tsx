@@ -2,7 +2,6 @@ import CareerClient from './CareerClient';
 
 import { getCareer } from '../../lib/careers';
 
-import Script from 'next/script';
 
 export async function generateMetadata({
  params
@@ -120,163 +119,103 @@ export default async function Page({
 
  return (
   <>
-    <Script
-  id="job-posting-schema"
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
 
-      "@type": "JobPosting",
+          title: job.title || "",
 
-      title: job.title || "",
+          description: [
+            job.description,
+            "Responsibilities:",
+            job.responsibilities,
+            "Requirements:",
+            Array.isArray(job.requirements)
+              ? job.requirements.join(", ")
+              : job.requirements
+          ]
+            .filter(Boolean)
+            .join("\n"),
 
-      description: `
-        ${job.description || ''}
+          datePosted:
+            job.createdAt?.toDate
+              ? job.createdAt.toDate().toISOString()
+              : job.createdAt?._seconds
+              ? new Date(job.createdAt._seconds * 1000).toISOString()
+              : undefined,
 
-        Responsibilities:
-        ${job.responsibilities || ''}
+          dateModified:
+            job.updatedAt?.toDate
+              ? job.updatedAt.toDate().toISOString()
+              : job.updatedAt?._seconds
+              ? new Date(job.updatedAt._seconds * 1000).toISOString()
+              : undefined,
 
-        Requirements:
-        ${Array.isArray(job.requirements)
-         ? job.requirements.join('\n')
-         : ''}
-        `,
+          validThrough: job.deadline
+            ? `${job.deadline}T23:59:59+05:30`
+            : undefined,
 
-      datePosted:
-       job.createdAt?.toDate
+          employmentType:
+            job.jobType === "full-time"
+              ? "FULL_TIME"
+              : job.jobType === "part-time"
+              ? "PART_TIME"
+              : job.jobType === "contract"
+              ? "CONTRACTOR"
+              : job.jobType === "internship"
+              ? "INTERN"
+              : "FULL_TIME",
 
-       ? job.createdAt
-           .toDate()
-           .toISOString()
+          url: `https://www.cfound.in/careers/${id}`,
 
-       : job.createdAt?._seconds
+          directApply: true,
 
-       ? new Date(
-           job.createdAt._seconds * 1000
-         ).toISOString()
+          identifier: {
+            "@type": "PropertyValue",
+            name: "C Found",
+            value: job.id || docId
+          },
 
-       : undefined,
+          hiringOrganization: {
+            "@type": "Organization",
+            name: job.companyName || "C Found",
+            sameAs: "https://www.cfound.in",
+            logo: "https://www.cfound.in/og-image.png"
+          },
 
-      dateModified:
+          jobLocation: {
+            "@type": "Place",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: job.city,
+              addressRegion: job.state,
+              addressCountry: "IN"
+            }
+          },
 
-       job.updatedAt?.toDate
+          applicantLocationRequirements: {
+            "@type": "Country",
+            name: "India"
+          },
 
-       ? job.updatedAt
-           .toDate()
-           .toISOString()
-
-       : job.updatedAt?._seconds
-
-       ? new Date(
-           job.updatedAt._seconds * 1000
-         ).toISOString()
-
-       : undefined,
-
-      url:
-       `https://www.cfound.in/careers/${id}`,
-
-      directApply: true,
-
-      identifier:{
-       "@type":"PropertyValue",
-
-       name:"C Found",
-
-       value:job.id || docId
-      },
-
-      validThrough: job.deadline
-        ? `${job.deadline}T23:59:59+05:30`
-        : undefined,
-
-      employmentType:
-        job.jobType === "full-time"
-          ? "FULL_TIME"
-          : job.jobType === "part-time"
-          ? "PART_TIME"
-          : job.jobType === "contract"
-          ? "CONTRACTOR"
-          : job.jobType === "internship"
-          ? "INTERN"
-          : "FULL_TIME",
-
-      jobLocationType:
-
-       job.mode === 'Remote'
-
-       ? 'TELECOMMUTE'
-
-       : 'ON_SITE',
-
-      industry:
-        job.industry || undefined,
-
-      baseSalary: job.minAmount
-       ? {
-           "@type":"MonetaryAmount",
-
-           currency:"INR",
-
-           value:{
-             "@type":"QuantitativeValue",
-
-             minValue:Number(job.minAmount),
-
-             maxValue:Number(
-              job.maxAmount ||
-              job.minAmount
-             ),
-
-             unitText:"MONTH"
-           }
-         }
-       : undefined,
-
-      hiringOrganization:{
-       "@type":"Organization",
-
-       name: job.companyName || "C Found",
-
-       sameAs:"https://www.cfound.in",
-
-       logo:"https://www.cfound.in/og-image.png"
-      },
-
-      jobLocation: {
-       "@type":"Place",
-
-       address:{
-
-        "@type":"PostalAddress",
-
-        streetAddress:
-         job.streetAddress?.trim(),
-
-        addressLocality:
-         job.city || "",
-
-        addressRegion:
-         job.state || "",
-
-        postalCode:
-         job.postalCode?.trim(),
-
-        addressCountry:"IN"
-       }
-      },
-      applicantLocationRequirements:{
-       "@type":"Country",
-
-       name:"India",
-
-       sameAs:"https://www.wikidata.org/wiki/Q668"
-      }
-    })
-  }}
-/>
-
+          baseSalary: job.minAmount
+            ? {
+                "@type": "MonetaryAmount",
+                currency: "INR",
+                value: {
+                  "@type": "QuantitativeValue",
+                  minValue: Number(job.minAmount),
+                  maxValue: Number(job.maxAmount || job.minAmount),
+                  unitText: "MONTH"
+                }
+              }
+            : undefined
+        })
+      }}
+    />
     <CareerClient
       initialJob={job}
       slug={id}
