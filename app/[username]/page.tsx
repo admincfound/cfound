@@ -297,16 +297,25 @@ async function generateResumePDF(profile: PublicProfile): Promise<void> {
     sectionTitle('Projects');
     for (const proj of projects) {
       checkPage(14);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...colors.heading);
+      // Project Title
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(...colors.heading);
       doc.text(proj.title, marginL, y);
-      if (proj.subtitle) {
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...colors.muted);
-        doc.text(` · ${proj.subtitle}`, marginL + doc.getTextWidth(proj.title) + 1, y);
-      }
       y += 5;
-      if (proj.tech.length) {
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...colors.accent);
-        doc.text(proj.tech.join(', '), marginL, y); y += 5;
+
+      // Domain + Technologies
+      const meta = [
+        proj.subtitle,
+        proj.tech.length ? proj.tech.join(' • ') : ''
+      ].filter(Boolean).join(' | ');
+
+      if (meta) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8.8);
+        doc.setTextColor(...colors.accent);
+        doc.text(meta, marginL, y);
+        y += 5;
       }
       if (proj.description) {
         const descLines = doc.splitTextToSize(proj.description.substring(0, 400), contentW);
@@ -656,10 +665,27 @@ export default function PublicProfilePage() {
   };
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(profileUrl);
-    setCopied(true);
-    toast.success('Profile link copied!');
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+
+      setCopied(true);
+      toast.success("Profile link copied!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error(err);
+
+      // Fallback for browsers where Clipboard API fails
+      const input = document.createElement("input");
+      input.value = profileUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+
+      setCopied(true);
+      toast.success("Profile link copied!");
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleDownload = useCallback(async (format: 'pdf' | 'docx') => {
@@ -907,7 +933,6 @@ export default function PublicProfilePage() {
                   </>
                 )}
               </div>
-
               {/* Social bar */}
               <div className="mt-6 flex justify-center lg:justify-start">
                 <SocialBar profile={profile} />
@@ -1200,6 +1225,33 @@ export default function PublicProfilePage() {
                   </button>
                 </div>
                 <p className="text-[11px] text-gray-400 leading-relaxed">Share this link with recruiters and collaborators.</p>
+                <div className="mt-4 space-y-2">
+                  <button
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: `${profile.displayName}'s Profile`,
+                          text: `Check out ${profile.displayName}'s profile on C Found`,
+                          url: profileUrl,
+                        });
+                      } else {
+                        copyLink();
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-100 transition"
+                  >
+                    <Share2 size={16} />
+                    Share Profile
+                  </button>
+
+                  <button
+                    onClick={() => handleDownload("pdf")}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                  >
+                    <Download size={16} />
+                    Download Resume
+                  </button>
+                </div>
               </div>
             </motion.div>
 

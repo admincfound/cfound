@@ -7,6 +7,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { uploadToImageKit, deleteFromImageKit } from '../lib/imagekitUpload';
 import { useAuth } from '../context/AuthContext';
+import MarkdownEditor from '../components/MarkdownEditor';
 import {
   validateUsernameFormat, normalizeUsername, isUsernameAvailable,
   claimUsername, changeUsername,
@@ -879,19 +880,13 @@ function ProfileContent() {
             </div>
 
             <div className="mt-4">
-              {isEditing ? (
-                <EditableTextarea
-                  isEditing={isEditing}
-                  value={formData.bio}
-                  onChange={(v: string) => setFormData({ ...formData, bio: v })}
-                  placeholder="Write a professional summary..."
-                  minHeight="min-h-[100px]"
-                />
-              ) : (
-                <p className="text-gray-600 leading-7 text-[15px]">
-                  {formData.bio || 'Tell recruiters about yourself...'}
-                </p>
-              )}
+              <MarkdownEditor
+                isEditing={isEditing}
+                value={formData.bio}
+                onChange={(v: string) => setFormData({ ...formData, bio: v })}
+                placeholder="Tell recruiters about yourself..."
+                minHeight="min-h-[300px]"
+              />
             </div>
 
             {!isEditing && (
@@ -1295,7 +1290,7 @@ function ProfileContent() {
                 title="Certifications" icon={<Award size={22} />}
                 items={formData.certifications} isCollapsed={collapsed.certifications}
                 onToggle={() => toggleCollapse('certifications')}
-                onAdd={() => addItem('certifications', { name: '', org: '', issueMonth: '', issueYear: '', url: '' })}
+                onAdd={() => addItem('certifications', { name: '', org: '', issueMonth: '', issueYear: '', url: '', description: '' })}
                 itemRenderer={(cert: any) => (
                   <CertificationItem
                     isEditing={isEditing} key={cert.id} cert={cert}
@@ -1315,7 +1310,7 @@ function ProfileContent() {
                 title="Publications" icon={<BookMarked size={22} />}
                 items={formData.publications} isCollapsed={collapsed.publications}
                 onToggle={() => toggleCollapse('publications')}
-                onAdd={() => addItem('publications', { title: '', publisher: '', dateMonth: '', dateYear: '', url: '' })}
+                onAdd={() => addItem('publications', { title: '', publisher: '', dateMonth: '', dateYear: '', url: '', description: '' })}
                 itemRenderer={(pub: any) => (
                   <PublicationItem
                     isEditing={isEditing} key={pub.id} pub={pub}
@@ -1793,7 +1788,7 @@ function ProfileSection({ title, icon, children, isCollapsed, onToggle, sectionI
     <motion.div
       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       data-section={sectionId}
-      className="p-4 sm:p-5 lg:p-7 bg-white border border-gray-100 rounded-2xl shadow-sm max-w-full overflow-hidden"
+      className="p-4 sm:p-5 lg:p-7 bg-white border border-gray-100 rounded-2xl shadow-sm max-w-full"
     >
       <button type="button" onClick={onToggle} className="w-full flex items-center justify-between gap-3 mb-6 group">
         <div className="flex items-center gap-3 min-w-0">
@@ -1875,7 +1870,7 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing, isIncomplete, miss
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={exp.id}
-      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -1959,7 +1954,7 @@ function ExperienceItem({ exp, onUpdate, onDelete, isEditing, isIncomplete, miss
         </InputGroup>
       </div>
       <InputGroup label="Description">
-        <EditableTextarea isEditing={isEditing} value={exp.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Responsibilities and achievements..." minHeight="min-h-[90px]" />
+        <MarkdownEditor isEditing={isEditing} value={exp.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Responsibilities and achievements..." minHeight="min-h-[300px]" />
       </InputGroup>
     </motion.div>
   );
@@ -1970,7 +1965,7 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing, isIncomplete, missin
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={proj.id}
-      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -2032,7 +2027,7 @@ function ProjectItem({ proj, onUpdate, onDelete, isEditing, isIncomplete, missin
         </InputGroup>
       </div>
       <InputGroup label="Description">
-        <EditableTextarea isEditing={isEditing} value={proj.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Project summary..." minHeight="min-h-[90px]"
+        <MarkdownEditor isEditing={isEditing} value={proj.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Project summary..." minHeight="min-h-[300px]"
           hasError={isIncomplete && !proj.description?.trim()} />
       </InputGroup>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
@@ -2048,7 +2043,7 @@ function EducationItem({ edu, onUpdate, onDelete, isEditing, isIncomplete, missi
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={edu.id}
-      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -2105,7 +2100,7 @@ function CertificationItem({ cert, onUpdate, onDelete, isEditing, isIncomplete, 
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={cert.id}
-      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -2147,6 +2142,11 @@ function CertificationItem({ cert, onUpdate, onDelete, isEditing, isIncomplete, 
           <EditableInput isEditing={isEditing} value={cert.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." />
         </InputGroup>
       </div>
+      <div className="mt-5">
+        <InputGroup label="Description">
+          <MarkdownEditor isEditing={isEditing} value={cert.description} onChange={(e: any) => onUpdate('description', e)} placeholder="What this certification covers..." minHeight="min-h-[300px]" />
+        </InputGroup>
+      </div>
     </motion.div>
   );
 }
@@ -2156,7 +2156,7 @@ function PublicationItem({ pub, onUpdate, onDelete, isEditing, isIncomplete, mis
     <motion.div
       layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       data-card-id={pub.id}
-      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full overflow-hidden ${
+      className={`p-4 sm:p-5 lg:p-6 rounded-xl relative group transition-all max-w-full ${
         isIncomplete && isEditing
           ? 'bg-red-50/40 border-2 border-red-300'
           : 'bg-gray-50 border border-gray-200 hover:border-gray-300'
@@ -2198,6 +2198,11 @@ function PublicationItem({ pub, onUpdate, onDelete, isEditing, isIncomplete, mis
           <EditableInput isEditing={isEditing} value={pub.url} onChange={(e: any) => onUpdate('url', e)} placeholder="https://..." />
         </InputGroup>
       </div>
+      <div className="mt-5">
+        <InputGroup label="Description">
+          <MarkdownEditor isEditing={isEditing} value={pub.description} onChange={(e: any) => onUpdate('description', e)} placeholder="Summary of the publication..." minHeight="min-h-[300px]" />
+        </InputGroup>
+      </div>
     </motion.div>
   );
 }
@@ -2224,19 +2229,6 @@ function EditableInput({ isEditing, value, onChange, placeholder, hasError }: an
         hasError ? 'border-2 border-red-400 bg-white focus:outline-none focus:border-red-500' :
         isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 hover:border-gray-400' :
         'bg-transparent border-0 text-gray-700 cursor-default p-0'
-      }`}
-    />
-  );
-}
-
-function EditableTextarea({ isEditing, value, onChange, placeholder, minHeight, hasError }: any) {
-  return (
-    <textarea
-      disabled={!isEditing} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-      className={`w-full px-4 py-2.5 rounded-lg text-sm transition-all resize-none ${minHeight} ${
-        hasError ? 'border-2 border-red-400 bg-white focus:outline-none focus:border-red-500' :
-        isEditing ? 'bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 hover:border-gray-400' :
-        'bg-transparent border-0 text-gray-600 cursor-default p-0'
       }`}
     />
   );
