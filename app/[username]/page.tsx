@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { resolveUidForUsername } from '../lib/usernameUtils';
+import DOMPurify from 'dompurify';
 import {
   MapPin, Eye, Download, Users, Calendar, ShieldCheck, Briefcase,
   BookOpen, Globe, Github, Linkedin, ExternalLink, Copy, Check,
@@ -168,6 +169,44 @@ function shouldCountView(profileUid: string): boolean {
   } catch { return true; }
 }
 
+// ─── HTML utilities (Tiptap content is stored as HTML) ────────────────────────
+
+/**
+ * Strips HTML tags to produce a plain-text version of Tiptap content.
+ * Used anywhere we need plain text (e.g. PDF/DOCX generation, which can't
+ * render HTML) rather than the raw markup.
+ */
+function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  // If it doesn't look like HTML at all, just return as-is (legacy plain/markdown text).
+  if (!/<[a-z][\s\S]*>/i.test(html)) return html;
+  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+    // Fallback for non-browser environments: naive tag strip.
+    return html
+      .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+  const parser = new DOMParser();
+  const docEl = parser.parseFromString(html, 'text/html');
+  docEl.querySelectorAll('li').forEach(li => { li.textContent = `• ${li.textContent}`; });
+  docEl.querySelectorAll('p, div, li, h1, h2, h3, h4, h5, h6, br').forEach(el => {
+    el.insertAdjacentText('afterend', '\n');
+  });
+  return (docEl.body.textContent || '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/** Returns true if a string appears to contain HTML markup (Tiptap output). */
+function isHtmlContent(value: string): boolean {
+  return /<[a-z][\s\S]*>/i.test(value || '');
+}
+
 // ─── PDF Generation ───────────────────────────────────────────────────────────
 
 async function generateResumePDF(profile: PublicProfile): Promise<void> {
@@ -227,7 +266,7 @@ async function generateResumePDF(profile: PublicProfile): Promise<void> {
     doc.text(socialParts.join('  ·  '), marginL, y); y += 5;
   }
   hline();
-  const about = getAbout(profile);
+  const about = htmlToPlainText(getAbout(profile));
   if (about) {
     sectionTitle('Summary');
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...colors.text);
@@ -253,7 +292,8 @@ async function generateResumePDF(profile: PublicProfile): Promise<void> {
       }
       y += 5;
       if (exp.description) {
-        const lines = exp.description.split('\n').filter(l => l.trim());
+        const plainDesc = htmlToPlainText(exp.description);
+        const lines = plainDesc.split('\n').filter(l => l.trim());
         for (const line of lines) {
           const clean = line.replace(/^[\s]*[-*•]\s+/, '');
           const isBullet = /^[\s]*[-*•]\s+/.test(line);
@@ -318,7 +358,8 @@ async function generateResumePDF(profile: PublicProfile): Promise<void> {
         y += 5;
       }
       if (proj.description) {
-        const descLines = doc.splitTextToSize(proj.description.substring(0, 400), contentW);
+        const plainDesc = htmlToPlainText(proj.description);
+        const descLines = doc.splitTextToSize(plainDesc.substring(0, 400), contentW);
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...colors.text);
         for (const dl of descLines) { checkPage(5); doc.text(dl, marginL, y); y += 4.5; }
       }
@@ -365,7 +406,7 @@ async function generateResumeDOCX(profile: PublicProfile): Promise<void> {
   const experiences = getExperiences(profile);
   const certifications = getCertifications(profile);
   const projects = getProjects(profile);
-  const about = getAbout(profile);
+  const about = htmlToPlainText(getAbout(profile));
   function makeDivider() {
     return new Paragraph({ border: { bottom: { color: '2563EB', style: BorderStyle.SINGLE, size: 4 } }, spacing: { after: 80 } });
   }
@@ -402,7 +443,8 @@ async function generateResumeDOCX(profile: PublicProfile): Promise<void> {
         new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: exp.company, bold: true, size: 18, color: '2563EB', font: 'Calibri' })] }),
       );
       if (exp.description) {
-        const lines = exp.description.split('\n').filter(l => l.trim());
+        const plainDesc = htmlToPlainText(exp.description);
+        const lines = plainDesc.split('\n').filter(l => l.trim());
         for (const line of lines) {
           const clean = line.replace(/^[\s]*[-*•]\s+/, '');
           const isBullet = /^[\s]*[-*•]\s+/.test(line);
@@ -430,7 +472,7 @@ async function generateResumeDOCX(profile: PublicProfile): Promise<void> {
     for (const proj of projects) {
       children.push(new Paragraph({ spacing: { after: 20 }, children: [new TextRun({ text: proj.title, bold: true, size: 22, font: 'Calibri', color: '0F172A' })] }));
       if (proj.tech.length) children.push(new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: proj.tech.join(', '), size: 18, color: '2563EB', font: 'Calibri' })] }));
-      if (proj.description) children.push(new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: proj.description, size: 19, font: 'Calibri', color: '374151' })] }));
+      if (proj.description) children.push(new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: htmlToPlainText(proj.description), size: 19, font: 'Calibri', color: '374151' })] }));
       children.push(new Paragraph({ spacing: { after: 60 }, children: [] }));
     }
   }
@@ -465,8 +507,50 @@ async function generateResumeDOCX(profile: PublicProfile): Promise<void> {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+/**
+ * Renders rich text content that may come from either:
+ *  - Tiptap (HTML markup, e.g. "<p>Hello</p>", "<ul><li>...</li></ul>")
+ *  - Legacy plain/markdown-ish text (line breaks + "- " bullets)
+ *
+ * HTML content is sanitized with DOMPurify and rendered via
+ * dangerouslySetInnerHTML. Legacy plain text keeps the old bullet/paragraph
+ * parsing behavior so old data still displays correctly.
+ */
 function FormattedText({ text, className = '' }: { text: string; className?: string }) {
   if (!text) return null;
+
+  if (isHtmlContent(text)) {
+    const clean = typeof window !== 'undefined'
+      ? DOMPurify.sanitize(text, {
+          ALLOWED_TAGS: [
+            'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike',
+            'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'code', 'pre', 'span',
+          ],
+          ALLOWED_ATTR: ['href', 'target', 'rel'],
+        })
+      : text;
+    return (
+      <div
+        className={`
+          [&_p]:mb-2.5 [&_p:last-child]:mb-0
+          [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-1.5 [&_ul]:mb-2.5 [&_ul]:marker:text-gray-300
+          [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:space-y-1.5 [&_ol]:mb-2.5
+          [&_li]:break-words [&_li]:text-gray-500
+          [&_strong]:font-bold [&_strong]:text-gray-700
+          [&_em]:italic
+          [&_a]:text-blue-600 [&_a]:font-semibold [&_a]:hover:underline
+          [&_h1]:font-black [&_h1]:text-gray-900 [&_h1]:mb-2
+          [&_h2]:font-black [&_h2]:text-gray-900 [&_h2]:mb-2
+          [&_h3]:font-bold [&_h3]:text-gray-900 [&_h3]:mb-1.5
+          [&_blockquote]:border-l-2 [&_blockquote]:border-gray-200 [&_blockquote]:pl-3 [&_blockquote]:italic
+          break-words ${className}
+        `}
+        dangerouslySetInnerHTML={{ __html: clean }}
+      />
+    );
+  }
+
+  // Legacy plain-text / markdown-ish fallback
   const blocks = text.split(/\n\s*\n/);
   return (
     <div className={`space-y-2.5 ${className}`}>
