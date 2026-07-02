@@ -352,6 +352,42 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      {/* For Employers */}
+      <section className="py-20 px-6 bg-[var(--bg-card)] border-t border-[var(--border-main)]">
+        <div className="max-w-5xl mx-auto text-center">
+          <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+            For Employers
+          </span>
+          <h2 className="text-2xl md:text-4xl font-black italic tracking-tight text-[var(--text-main)] mt-3 mb-4">
+            Hiring for your company?
+          </h2>
+          <p className="text-sm md:text-base text-[var(--text-muted)] max-w-xl mx-auto mb-8">
+            Post jobs, manage applicants, and grow your team with the C Found
+            Employer Portal.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/employer"
+              className="bg-slate-900 text-white px-8 py-4 rounded-lg font-bold hover:bg-slate-800 transition-colors inline-block"
+            >
+              Employer Login
+            </Link>
+            <Link
+              href="/employer"
+              className="bg-blue-600 text-white px-8 py-4 rounded-lg font-bold hover:bg-blue-700 transition-colors inline-block"
+            >
+              Post Jobs
+            </Link>
+            <Link
+              href="/employer"
+              className="border border-[var(--border-main)] text-[var(--text-main)] px-8 py-4 rounded-lg font-bold hover:bg-[var(--bg-main)] transition-colors inline-block"
+            >
+              Create Employer Account
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /employer/dashboard
+Disallow: /employer/company
+Disallow: /employer/jobs
+Disallow: /employer/applicants
+Disallow: /employer/recruiters
+Disallow: /employer/messages
+Disallow: /employer/analytics
+Disallow: /employer/settings
+Disallow: /employer/billing
+Disallow: /employer/profile
 
 Sitemap: https://www.cfound.in/sitemap.xml

@@ -1,12 +1,19 @@
 "use client";
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Mail, Instagram, Github, Linkedin, Twitter } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Footer() {
   const { isAdmin } = useAuth();
-  
+  const pathname = usePathname();
+
+  // The Employer Portal is a fully separate product with its own footer.
+  if (pathname?.startsWith('/employer')) {
+    return null;
+  }
+
   return (
     <footer className="bg-[var(--bg-card)] border-t border-[var(--border-main)] pt-12 pb-8 px-6">
       <div className="max-w-7xl mx-auto">

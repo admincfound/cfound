@@ -88,6 +88,11 @@ export default function Navbar() {
 
   const isInAdminSection = pathname.startsWith('/admin');
 
+  // The Employer Portal is a fully separate product with its own navigation.
+  if (pathname.startsWith('/employer')) {
+    return null;
+  }
+
   const userLinks = [
     { name: 'Projects', path: '/projects' },
     { name: 'Services', path: '/services' },
