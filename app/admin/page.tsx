@@ -374,9 +374,12 @@ export default function AdminDashboard() {
 
             {/* Employer Verification Queue */}
             <section className="p-10 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[3rem] shadow-2xl">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-6 flex items-center gap-3">
-                <Building2 size={16} className="text-primary-500" /> Employer Verification
-              </h4>
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] flex items-center gap-3">
+                  <Building2 size={16} className="text-primary-500" /> Employer Verification
+                </h4>
+                <Link href="/admin/employers" className="text-[9px] font-black uppercase tracking-widest text-primary-600 hover:text-primary-700">Open &rarr;</Link>
+              </div>
               <div className="text-center py-8">
                 <BadgeCheck size={28} className="mx-auto mb-4 text-[var(--text-muted)] opacity-30" />
                 <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest leading-relaxed">
@@ -400,6 +403,7 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 <QuickAction icon={<Briefcase size={16} />} label="New Job" href="/admin/jobs/new" />
                 <QuickAction icon={<Users size={16} />} label="Talent" href="/dashboard/admin/users" />
+                <QuickAction icon={<Building2 size={16} />} label="Employers" href="/admin/employers" />
                 <QuickAction icon={<Newspaper size={16} />} label="Blog" href="/blog" />
                 <QuickAction icon={<Settings size={16} />} label="Config" href="/admin/api-settings" />
               </div>
